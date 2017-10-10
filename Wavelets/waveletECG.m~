@@ -70,4 +70,4 @@ fft_table = table(frequencies, amplitudes);
 disp(fft_table)
 xfrequencies = (1:QRSlength)*samplefreq/QRSlength;
 figure
-plot(xfrequencies, abs(real(fourierQRS)), '-o')
+plot(xfrequencies, abs(real(fourierQRS)), 'ro')
