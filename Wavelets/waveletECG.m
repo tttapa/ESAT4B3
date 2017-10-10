@@ -1,0 +1,42 @@
+%% Initialization
+load('100m.mat')
+seconds = 2;
+offset = 0;
+ecg = val(1,1+offset:360*seconds+offset); % Neem één frame uit de input-data
+time = (0+offset:360*seconds-1+offset)/360; % de tijd in seconden van elke sample
+
+noise = 360*sin(time*2*pi/2) + 36*sin(time*2*pi*50) + 60*wgn(360*seconds,1,0)'; % 0.5 and 50 Hz + white gaussian noise
+noisy = ecg + noise;
+
+figure
+hold on
+plot(time, ecg)
+plot(time, noisy)
+
+%% Wavelet transformaties
+wv = 'sym4'; % Symlet 4 heeft ongeveer dezelfde vorm als een QRS complex, en is orthogonaal, dus kan real-time berekend worden
+
+wtecg = modwt(ecg, wv); % pas de discrete wavelet-transformatie toe op het ECG-signaal
+wtrec = zeros(size(wtecg)); % maak een matrix met dezelfde dimensies als het resultaat en vul ze met nullen
+wtrec(4:5,:) = wtecg(4:5,:); % kopiëer level 4 en 5 van het resultaat naar de nieuwe matrix
+ecgfiltered = imodwt(wtrec, wv); % voer de inverse discrete wavelet-transformatie toe op de nieuwe matrix
+
+% do the same thing for the noisy signal
+wtnoisy = modwt(noisy,wv);
+wtrecnoisy = zeros(size(wtnoisy));
+wtrecnoisy(4:5,:) = wtnoisy(4:5,:);
+noisyfiltered = imodwt(wtrecnoisy,wv);
+
+%% Plotting
+%plot(time, ecgfiltered)
+%plot(time, noisyfiltered)
+plot(time, ecgfiltered.^2/30)
+plot(time, noisyfiltered.^2/30)
+
+%% Energy distribution
+levels = floor(log2(length(ecg)))
+
+energy_by_scales = sum(wtecg.^2,2)
+Levels = (1:levels+1)'
+energy_table = table(Levels,energy_by_scales);
+disp(energy_table)
