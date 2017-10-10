@@ -1,11 +1,12 @@
 %% Initialization
 load('100m.mat')
+samplefreq = 360;
 seconds = 2;
 offset = 0;
-ecg = val(1,1+offset:360*seconds+offset); % Neem één frame uit de input-data
-time = (0+offset:360*seconds-1+offset)/360; % de tijd in seconden van elke sample
+ecg = val(1,1+offset:samplefreq*seconds+offset); % Neem één frame uit de input-data
+time = (0+offset:samplefreq*seconds-1+offset)/samplefreq; % de tijd in seconden van elke sample
 
-noise = 360*sin(time*2*pi/2) + 36*sin(time*2*pi*50) + 60*wgn(360*seconds,1,0)'; % 0.5 and 50 Hz + white gaussian noise
+noise = 360*sin(time*2*pi/2) + 36*sin(time*2*pi*50) + 60*wgn(samplefreq*seconds,1,0)'; % 0.5 and 50 Hz + white gaussian noise
 noisy = ecg + noise;
 
 figure
@@ -34,9 +35,21 @@ plot(time, ecgfiltered.^2/30)
 plot(time, noisyfiltered.^2/30)
 
 %% Energy distribution
-levels = floor(log2(length(ecg)))
+QRSoffset = 55;
+QRSlength = 43;
+QRS = val(1,1+QRSoffset:QRSlength+QRSoffset) - 960; % Neem één QRS-peak uit de input-data
+QRStime = (QRSoffset:QRSoffset+QRSlength-1); % / samplefreq;
 
-energy_by_scales = sum(wtecg.^2,2)
-Levels = (1:levels+1)'
+figure
+plot(QRStime, QRS)
+
+wtQRS = modwt(QRS, wv);
+
+levels = floor(log2(length(QRS))) + 1
+
+energy_by_scales = sum(wtQRS.^2,2);
+Levels = (1:levels)';
 energy_table = table(Levels,energy_by_scales);
 disp(energy_table)
+figure
+plot(Levels', energy_by_scales','-o')
