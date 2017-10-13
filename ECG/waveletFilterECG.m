@@ -6,7 +6,7 @@ if nargin == 1
     frequencyWeights = [0, 0, 0, 1, 1, 0];
 end
 
-maxlevels = floor(log2(length(ecgsig)))
+maxlevels = floor(log2(length(ecgsig)));
 assert(levels <= maxlevels, 'Number of levels too high for sample this short')
 
 weightMatrix = diag(frequencyWeights);
