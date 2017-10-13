@@ -3,11 +3,13 @@ wv = 'sym4'; % Symlet 4 heeft ongeveer dezelfde vorm als een QRS complex, en is 
 
 if nargin == 1
     levels = 5;
-    frequencyWeights = [0, 0, 0, 1, 1, 0];
+    frequencyWeights = [0, 0, 1, 1, 1, 0];
 end
 
 maxlevels = floor(log2(length(ecgsig)));
 assert(levels <= maxlevels, 'Number of levels too high for sample this short')
+
+assert(levels + 1 == length(frequencyWeights), 'Wrong number of frequency weightss')
 
 weightMatrix = diag(frequencyWeights);
 
