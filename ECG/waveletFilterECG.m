@@ -14,6 +14,6 @@ assert(levels + 1 == length(frequencyWeights), 'Wrong number of frequency weight
 weightMatrix = diag(frequencyWeights);
 
 wtecg = modwt(ecgsig, wv, levels); % pas de discrete wavelet-transformatie toe op het ECG-signaal
-wtrec = weightMatrix * wtecg;
+wtrec = weightMatrix * wtecg; % selecteer de gewenste levels met de juiste weights
 filtered = imodwt(wtrec, wv); % voer de inverse discrete wavelet-transformatie toe op de nieuwe matrix
 end
