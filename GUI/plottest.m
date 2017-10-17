@@ -1,3 +1,6 @@
+addpath('../ECG/')
+addpath('../Wavelets/')
+
 load('100m.mat')
 t = testapp
 
