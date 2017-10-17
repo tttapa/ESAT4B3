@@ -39,10 +39,10 @@ timeElapsed / ((rows/100)-viewportwidth)
 fs = 360;
 
 % Transport phenomena reduction
-transportPhenomenaReduction = 0.15;
+transportPhenomenaReduction = 0.05;
 
 % Buffer length in seconds
-bufferLengthSeconds = 5;
+bufferLengthSeconds = 2.0;
 bufferLength = bufferLengthSeconds * fs;
 
 % New data buffer length in seconds
@@ -98,10 +98,10 @@ while 1
 		waveletFilteredBuffer = waveletFilterECG(buffer(bufferLength - bufferFilledCount + 1:bufferLength));
 		plot(waveletFilteredBuffer);
         
-        lowerBound = floor(length(waveletFilteredBuffer) * transportPhenomenaReduction);
+        lowerBound = floor(length(waveletFilteredBuffer) * transportPhenomenaReduction) + 1;
         upperBound = floor(length(waveletFilteredBuffer) * (1 - transportPhenomenaReduction));
         
-		title(calculate_bpm2(waveletFilteredBuffer(lowerBound:upperBound)', fs, 220));
+		title(calculate_bpm2(waveletFilteredBuffer(lowerBound:upperBound)', fs, 150));
 		
 	end
 
