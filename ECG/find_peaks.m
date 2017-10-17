@@ -73,8 +73,8 @@ if mem_next > mem_cur
    
     % Verify that the height is greater than minPeakHeight
     if ~checkHeight || (checkHeight && mem_next > INPUT_minPeakHeight)
-        tempPeaks(length(tempPeaks), 1) = mem_next;
-        tempLocations(length(tempLocations), 1) = totalCount + 1;
+        tempPeaks(length(tempPeaks)+1, 1) = mem_next;
+        tempLocations(length(tempLocations)+1, 1) = totalCount + 1;
     end
     
 end
