@@ -17,6 +17,6 @@ plot(waveletFilteredECG);
 
 % Max BPM expected
 maxBPM = 150;        
-[bpm, locations] = calculate_bpm2(waveletFilteredECG', samplefreq, maxBPM);
+[bpm, locations] = calculate_bpm3(waveletFilteredECG', samplefreq, maxBPM);
 
 scatter(locations, ecg(locations),20,'r')
