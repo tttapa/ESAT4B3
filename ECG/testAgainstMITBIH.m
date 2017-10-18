@@ -1,7 +1,8 @@
 addpath('../BIH')
+dataset = '103';
 
 nb_samples = 360*100; % how many samples to test
-[ samplefreq, dualecg, annotations, annotationSamples ] = readSignalAndAnnotations('../BIH/', '200', nb_samples); % directory containing data, dataset number, number of samples
+[ samplefreq, dualecg, annotations, annotationSamples ] = readSignalAndAnnotations('../BIH/', dataset, nb_samples); % directory containing data, dataset number, number of samples
 
 ecg = dualecg(:,1); % only look at the first signal
 Rpeaks = annotationSamples(annotations(:) == 1)+1; % only use the annotations for R-peaks (https://www.physionet.org/physiotools/wfdb/lib/ecgcodes.h) TODO
