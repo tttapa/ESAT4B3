@@ -39,21 +39,23 @@ timeElapsed / ((rows/100)-viewportwidth)
 close all;
 
 % Sample rate
-fs = 360;
+fs = 250;
 
 % Max BPM expected
-maxBPM = 150;
+minBPM = 40;
+maxBPM = 220;
 
 % Transport phenomena reduction
 transportPhenomenaReduction = 0.05;
 
-% Buffer length in seconds
-bufferLengthSeconds = 2.0;
-bufferLength = bufferLengthSeconds * fs;
+% Buffer length in seconds (long enough to record the slowest BPM)
+bufferLengthSeconds = round(60 / minBPM * 2, 2); % PREVIOUSLY 2.0
+bufferLength = floor(bufferLengthSeconds * fs);
 
-% New data buffer length in seconds
-newBufferLengthSeconds = 0.1;
-newBufferLength = newBufferLengthSeconds * fs;
+% New data buffer length in seconds (short enough to push fastest BPM into
+% the main buffer before the next peak hits)
+newBufferLengthSeconds = round(60 / maxBPM / 2, 2); % PREVIOUSLY 0.1
+newBufferLength = floor(newBufferLengthSeconds * fs);
 
 % Start a new figure
 figure
@@ -110,7 +112,7 @@ while ishandle(1)
         lowerBound = floor(length(waveletFilteredBuffer) * transportPhenomenaReduction) + 1;
         upperBound = floor(length(waveletFilteredBuffer) * (1 - transportPhenomenaReduction));
         
-        [bpm, locations] = calculate_bpm2(waveletFilteredBuffer(lowerBound:upperBound)', fs, maxBPM);
+        [bpm, locations] = calculate_bpm3(waveletFilteredBuffer(lowerBound:upperBound)', fs, maxBPM);
         
 		title(bpm);
         
@@ -119,7 +121,6 @@ while ishandle(1)
         markerFaceColor = [1 0 0];
         markerLineWidth = 1;
         
-        hold on;
         scatter(locations + floor(length(waveletFilteredBuffer) * transportPhenomenaReduction), zeros(length(locations), 1), ...
             markerSize, 'MarkerEdgeColor', markerEdgeColor, 'MarkerFaceColor', markerFaceColor, 'LineWidth', markerLineWidth);
         
