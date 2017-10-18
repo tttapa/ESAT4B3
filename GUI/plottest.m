@@ -119,7 +119,6 @@ while ishandle(1)
         markerFaceColor = [1 0 0];
         markerLineWidth = 1;
         
-        hold on;
         scatter(locations + floor(length(waveletFilteredBuffer) * transportPhenomenaReduction), zeros(length(locations), 1), ...
             markerSize, 'MarkerEdgeColor', markerEdgeColor, 'MarkerFaceColor', markerFaceColor, 'LineWidth', markerLineWidth);
         
