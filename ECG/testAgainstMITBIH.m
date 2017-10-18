@@ -25,6 +25,6 @@ waveletFilteredECG = waveletFilterECG(ecg, 5, [0,0,1,1,1,0]); % perform the wave
 plot(waveletFilteredECG); % plot the wavelet filtered signal
 
 maxBPM = 200; % Max BPM expected
-[bpm, locations] = calculate_bpm2(waveletFilteredECG', samplefreq, maxBPM); % find the peaks and BPM
+[bpm, locations] = calculate_bpm3(waveletFilteredECG', samplefreq, maxBPM); % find the peaks and BPM
 
 scatter(locations, rawecg(locations),20,'r') % plot the detected R-peaks
