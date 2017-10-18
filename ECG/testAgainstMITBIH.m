@@ -24,17 +24,8 @@ scatter(Rpeaks, rawecg(Rpeaks),50,'b') % plot the expert annotations
 waveletFilteredECG = waveletFilterECG(ecg, 5, [0,0,1,1,1,0]); % perform the wavelet transformation filter
 plot(waveletFilteredECG); % plot the wavelet filtered signal
 
-<<<<<<< HEAD
 % Max BPM expected
 maxBPM = 150;        
 [bpm, locations] = calculate_bpm3(waveletFilteredECG', samplefreq, maxBPM);
-=======
-maxBPM = 200; % Max BPM expected
-<<<<<<< HEAD
-[bpm, locations] = calculate_bpm3(waveletFilteredECG', samplefreq, maxBPM); % find the peaks and BPM
-=======
-[bpm, locations] = calculate_bpm2(waveletFilteredECG', samplefreq, maxBPM); % find the peaks and BPM
->>>>>>> c5ec48b1b8b6c9f60e87b4b3a5ddefc1a5d8fdbf
->>>>>>> 3cc3d6a1f248d8b3652db126dc0f6674907824c5
 
 scatter(locations, rawecg(locations),20,'r') % plot the detected R-peaks
