@@ -1,8 +1,8 @@
 addpath('../ECG/')
 addpath('../Wavelets/')
 
-load('100m.mat')
-%load('ecg_fs250.mat')
+%load('100m.mat')
+load('ecg_fs250.mat')
 t = testapp
 
 samplefreq = 360;
