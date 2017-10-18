@@ -1,4 +1,4 @@
-function [ RESULT_BPM ] = calculate_bpm2( INPUT_data, INPUT_fs, INPUT_maxBPM )
+function [ RESULT_BPM, RESULT_LOCATIONS ] = calculate_bpm2( INPUT_data, INPUT_fs, INPUT_maxBPM )
 %CALCULATE_BPM Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -14,6 +14,8 @@ if length(result2) > 1
 else
     RESULT_BPM = 0;
 end
+
+RESULT_LOCATIONS = result2;
 
 end
 

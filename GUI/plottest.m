@@ -2,6 +2,7 @@ addpath('../ECG/')
 addpath('../Wavelets/')
 
 load('100m.mat')
+%load('ecg_fs250.mat')
 t = testapp
 
 samplefreq = 360;
@@ -35,8 +36,13 @@ timeElapsed / ((rows/100)-viewportwidth)
 
 %%
 
+close all;
+
 % Sample rate
 fs = 360;
+
+% Max BPM expected
+maxBPM = 150;
 
 % Transport phenomena reduction
 transportPhenomenaReduction = 0.05;
@@ -66,8 +72,8 @@ newBufferFilledCount = 0;
 bufferFilledCount = 0;
 
 
-% Continue to receive data
-while 1
+% Continue to receive data until the figure is closed
+while ishandle(1)
 
 	% Read in the next byte
 	newValue = val(1, totalSamplesRead + 1);
@@ -78,8 +84,8 @@ while 1
 	
 	
 	% If the new buffer is filled...
-	if newBufferFilledCount >= newBufferLength
-		
+    if newBufferFilledCount >= newBufferLength
+        
 		% Push the data from the new buffer to the main buffer
 		buffer(1:bufferLength-newBufferLength) = buffer(newBufferLength+1:bufferLength);
 		buffer(bufferLength-newBufferLength+1:bufferLength) = newBuffer;
@@ -94,16 +100,34 @@ while 1
 			bufferFilledCount = bufferLength;
 		end
 		
-		% Calculate the bpm on the main buffer        
+		% Calculate the bpm on the main buffer  
 		waveletFilteredBuffer = waveletFilterECG(buffer(bufferLength - bufferFilledCount + 1:bufferLength));
-		plot(waveletFilteredBuffer);
+        plot(waveletFilteredBuffer);
+        
+        hold on; plot(buffer(bufferLength - bufferFilledCount + 1:bufferLength));
+        %ylim([-300 500]);
         
         lowerBound = floor(length(waveletFilteredBuffer) * transportPhenomenaReduction) + 1;
         upperBound = floor(length(waveletFilteredBuffer) * (1 - transportPhenomenaReduction));
         
-		title(calculate_bpm2(waveletFilteredBuffer(lowerBound:upperBound)', fs, 150));
-		
-	end
-
-	pause (1/fs);
+        [bpm, locations] = calculate_bpm2(waveletFilteredBuffer(lowerBound:upperBound)', fs, maxBPM);
+        
+		title(bpm);
+        
+        markerSize = 50;
+        markerEdgeColor = [0 0 0];
+        markerFaceColor = [1 0 0];
+        markerLineWidth = 1;
+        
+        hold on;
+        scatter(locations + floor(length(waveletFilteredBuffer) * transportPhenomenaReduction), zeros(length(locations), 1), ...
+            markerSize, 'MarkerEdgeColor', markerEdgeColor, 'MarkerFaceColor', markerFaceColor, 'LineWidth', markerLineWidth);
+        
+        hold off;
+        drawnow;    % Force MatLab to draw (we need this when we use Thread.sleep)
+        
+    end
+    
+    java.lang.Thread.sleep(1/fs * 1000);    % Works much better than pause
+	%pause (1/fs);
 end
