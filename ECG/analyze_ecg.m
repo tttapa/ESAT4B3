@@ -1,4 +1,4 @@
-function [ RESULT_peaks, RESULT_locations ] = analyze_ecg( INPUT_data, INPUT_fs, INPUT_maxBPM )
+function [ RESULT_peaks, RESULT_locations ] = analyze_ecg3( INPUT_data, INPUT_fs, INPUT_maxBPM )
 %ANALYZE_ECG Displays an analyzed graph of the ECG input data
 %   inputData -> column vector of data
 %   fs -> sample rate
@@ -14,7 +14,7 @@ function [ RESULT_peaks, RESULT_locations ] = analyze_ecg( INPUT_data, INPUT_fs,
 minSamplesPerHeartbeat = floor(INPUT_fs * 60 / INPUT_maxBPM);
 
 % Maximum number of heartbeats that we will analyze per interval
-heartbeatsPerInterval = 8;
+%heartbeatsPerInterval = 8;
 
 % Calculate the interval size!
 %
@@ -23,11 +23,11 @@ heartbeatsPerInterval = 8;
 %
 % CASE 2: length(inputData) <= (minSamplesPerHeartbeat * heartbeatsPerInterval)
 %   -> Use the size of the input data for the interval size
-samplesPerInterval = min([heartbeatsPerInterval * minSamplesPerHeartbeat, length(INPUT_data)]);
+%samplesPerInterval = min([heartbeatsPerInterval * minSamplesPerHeartbeat, length(INPUT_data)]);
 
 % Keep track of which sample we are on
-counter = 1;
-totalCount = length(INPUT_data);
+%counter = 1;
+%totalCount = length(INPUT_data);
 
 % Result variables
 RESULT_peaks = [];
@@ -39,7 +39,7 @@ RESULT_locations = [];
 %
 
 % Go through the input data, one interval at a time
-while counter <= totalCount
+%while counter <= totalCount
     
     % Get the next interval:
     %   -> Lower limit = counter
@@ -49,20 +49,20 @@ while counter <= totalCount
     %      CASE 2: length(inputData) <= (counter + interval size)
     %           -> use the upper limit of the input data for the interval's
     %              upper limit
-    upperLim = min([counter+samplesPerInterval, length(INPUT_data)]);
-    subData = INPUT_data(counter:upperLim, 1);
+    %upperLim = min([counter+samplesPerInterval, length(INPUT_data)]);
+    %subData = INPUT_data(counter:upperLim, 1);
     
 
     
     % Detrend the data (subtract it by a polynomial of the sixth degree)
-    [p,~,mu] = polyfit((1:numel(subData))',subData,6);
-    f_y = polyval(p,(1:numel(subData))',[],mu);
-    detrendedData = subData - f_y;
+    %[p,~,mu] = polyfit((1:numel(subData))',subData,6);
+    %f_y = polyval(p,(1:numel(subData))',[],mu);
+    %detrendedData = subData - f_y;
     
     
     % Find the highest value in the interval, and calculate our cut-off
     % value (40% of the maximum value)
-    highestValue = max(detrendedData);
+    highestValue = max(INPUT_data);
     cutOffValue = highestValue*2/5;
     
     % Plot to see exacty what interval the function is looking at
@@ -73,11 +73,11 @@ while counter <= totalCount
     %   -> MinPeakHeight = cut-off value
     %   -> MinPeakDistance = min samples per heartbeat (unless detrended
     %                        data is shorter than the previous value)
-    [curPeaks, curLocations] = findpeaks(detrendedData, 'MinPeakHeight',cutOffValue,'MinPeakDistance',min([minSamplesPerHeartbeat, length(detrendedData) - 2]));
+    [curPeaks, curLocations] = find_peaks(INPUT_data, cutOffValue, min([minSamplesPerHeartbeat, length(INPUT_data) - 2]));
     
     % Add (counter-1) to each of the locations because with each interval
     % the locations start at 1. They should start at 'counter'.
-    curLocations = curLocations + counter - 1;
+    %curLocations = curLocations + counter - 1;
 
     
     % Save the results for this loop
@@ -85,9 +85,9 @@ while counter <= totalCount
     RESULT_locations = [RESULT_locations;curLocations]; 
     
     % Increment the counter, so we can move onto the next interval
-    counter = counter + samplesPerInterval;
+    %counter = counter + samplesPerInterval;
     
-end
+%end
 
 end
 
