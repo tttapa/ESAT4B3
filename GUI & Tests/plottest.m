@@ -39,7 +39,7 @@ timeElapsed / ((rows/100)-viewportwidth)
 close all;
 
 % Sample rate
-fs = 360;
+fs = 800;
 
 % Max BPM expected
 minBPM = 40;
@@ -104,7 +104,8 @@ while ishandle(1)
 		
         % Calculate the bpm on the main buffer  
 
-        waveletFilteredBuffer = waveletFilterECG(buffer(bufferLength - bufferFilledCount + 1:bufferLength));
+        %waveletFilteredBuffer = waveletFilterECG(buffer(bufferLength - bufferFilledCount + 1:bufferLength));
+        waveletFilteredBuffer = waveletFilterECG2(buffer(bufferLength - bufferFilledCount + 1:bufferLength));
         plot(waveletFilteredBuffer);
 
         hold on; plot(buffer(bufferLength - bufferFilledCount + 1:bufferLength));

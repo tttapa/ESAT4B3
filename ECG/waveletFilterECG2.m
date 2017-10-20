@@ -4,7 +4,7 @@ wv = 'sym4'; % Symlet 4 heeft ongeveer dezelfde vorm als een QRS complex, en is 
 levels = floor(log2(length(ecgsig)));
 frequencyWeights = zeros(1, levels + 1);
 frequencyWeights(1, floor(length(frequencyWeights) / 4)) = 1;
-frequencyWeights(1, floor(length(frequencyWeights) / 2)) = 2;
+frequencyWeights(1, floor(length(frequencyWeights) / 2)) = 1;
 frequencyWeights(1, floor(length(frequencyWeights) * 3 / 4)) = 1;
 
 weightMatrix = diag(frequencyWeights);
