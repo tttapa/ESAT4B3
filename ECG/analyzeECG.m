@@ -1,4 +1,4 @@
-function [ RESULT_peaks, RESULT_locations ] = analyze_ecg3( INPUT_data, INPUT_fs, INPUT_maxBPM )
+function [ RESULT_peaks, RESULT_locations ] = analyzeECG( INPUT_data, INPUT_fs, INPUT_maxBPM )
 %ANALYZE_ECG Displays an analyzed graph of the ECG input data
 %   inputData -> column vector of data
 %   fs -> sample rate
@@ -73,7 +73,7 @@ RESULT_locations = [];
     %   -> MinPeakHeight = cut-off value
     %   -> MinPeakDistance = min samples per heartbeat (unless detrended
     %                        data is shorter than the previous value)
-    [curPeaks, curLocations] = find_peaks(INPUT_data, cutOffValue, min([minSamplesPerHeartbeat, length(INPUT_data) - 2]));
+    [curPeaks, curLocations] = getPeaks(INPUT_data, cutOffValue, min([minSamplesPerHeartbeat, length(INPUT_data) - 2]));
     
     % Add (counter-1) to each of the locations because with each interval
     % the locations start at 1. They should start at 'counter'.

@@ -1,4 +1,4 @@
-function [ RESULT_peaks, RESULT_locations ] = find_peaks( INPUT_data, INPUT_minPeakHeight, INPUT_minPeakDistance )
+function [ RESULT_peaks, RESULT_locations ] = getPeaks( INPUT_data, INPUT_minPeakHeight, INPUT_minPeakDistance )
 %FIND_PEAKS Summary of this function goes here
 %   Detailed explanation goes here
 

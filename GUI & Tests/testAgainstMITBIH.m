@@ -1,6 +1,7 @@
 close all;
 
 addpath('../BIH')
+addpath('../ECG')
 dataset = '100';
 
 nb_samples = 360*10; % how many samples to test
@@ -30,7 +31,7 @@ plot(waveletFilteredECG-500); % plot the wavelet filtered signal
 
 % Max BPM expected
 maxBPM = 220;        
-[bpm, locations] = calculate_bpm(waveletFilteredECG', samplefreq, maxBPM);
+[bpm, locations] = calculateBPM(waveletFilteredECG', samplefreq, maxBPM);
 
 scatter(locations, rawecg(locations),20,'r') % plot the detected R-peaks
 

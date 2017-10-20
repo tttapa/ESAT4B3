@@ -1,8 +1,8 @@
-function [ RESULT_BPM, RESULT_LOCATIONS ] = calculate_bpm( INPUT_data, INPUT_fs, INPUT_maxBPM )
+function [ RESULT_BPM, RESULT_LOCATIONS ] = calculateBPM( INPUT_data, INPUT_fs, INPUT_maxBPM )
 %CALCULATE_BPM Summary of this function goes here
 %   Detailed explanation goes here
 
-[~, locations] = analyze_ecg(INPUT_data, INPUT_fs, INPUT_maxBPM);
+[~, locations] = analyzeECG(INPUT_data, INPUT_fs, INPUT_maxBPM);
 
 if length(locations) > 1
     firstBeat = locations(1);
