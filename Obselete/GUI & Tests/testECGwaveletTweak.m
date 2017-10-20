@@ -1,3 +1,4 @@
+addpath('../../Data')
 load('100m.mat')
 samplefreq = 360;
 seconds = 2;

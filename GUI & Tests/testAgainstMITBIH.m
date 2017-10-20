@@ -8,7 +8,7 @@ nb_samples = 360*10; % how many samples to test
 [ samplefreq, dualecg, annotations, annotationSamples ] = readSignalAndAnnotations('../BIH/', dataset, nb_samples); % directory containing data, dataset number, number of samples
 
 samples = 1:nb_samples; % X axis
-rawecg = dualecg(:,2)'; % only look at the first signal
+rawecg = dualecg(:,1)'; % only look at the first signal
 Rpeaks = annotationSamples(annotations(:) == 1)+1; % only use the annotations for R-peaks (https://www.physionet.org/physiotools/wfdb/lib/ecgcodes.h) TODO
 
 time = samples/samplefreq;
@@ -16,7 +16,7 @@ whitenoise = 60*wgn(nb_samples,1,0)';
 noise = 360*sin(time*2*pi/2) + 36*sin(time*2*pi*50) + whitenoise; % 0.5 and 50 Hz + white gaussian noise
 
 ecg = rawecg;
-% ecg = ecg + noise;
+ecg = ecg + noise;
 
 figure
 hold on
@@ -25,6 +25,7 @@ plot(samples, rawecg) % plot the raw ECG signal
 scatter(Rpeaks, rawecg(Rpeaks),50,'b') % plot the expert annotations
 
 waveletFilteredECG = waveletFilterECG(ecg, 5, [0,0,1,1,1,0]); % perform the wavelet transformation filter
+%waveletFilteredECG = waveletFilterECG2(ecg);
 plot(waveletFilteredECG.^2/200); % plot the square of the wavelet filtered signal
 plot(waveletFilteredECG-500); % plot the wavelet filtered signal
 
