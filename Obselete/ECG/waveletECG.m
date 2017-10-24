@@ -51,10 +51,12 @@ levels = floor(log2(length(QRS))) + 1
 lowfrequencies = zeros(levels, 1);
 highfrequencies = zeros(levels, 1);
 
-for i = 1:levels
+for i = 1:(levels-1)
     lowfrequencies(i) = samplefreq / 2.^(i+1);
     highfrequencies(i) = samplefreq / 2.^i;
 end
+lowfrequencies(levels) = 0;
+highfrequencies(levels) = samplefreq / 2.^levels;
 
 energy_by_scales = sum(wtQRS.^2,2);
 Levels = (1:levels)';
@@ -71,4 +73,6 @@ amplitudes = abs(real(fourierQRS(1:6)))';
 fft_table = table(frequencies, amplitudes);
 disp(fft_table)
 figure
-plot(xfrequencies, abs(real(fourierQRS)), '-o')
+semilogy(xfrequencies(1:QRSlength/2), abs(real(fourierQRS(1:QRSlength/2))), '-o')
+figure
+plot(xfrequencies(1:QRSlength/2), 10*log10(abs(real(fourierQRS(1:QRSlength/2)))), '-o')
