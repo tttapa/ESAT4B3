@@ -67,9 +67,9 @@ plot(Levels', energy_by_scales','-o')
 
 %% Fourier analysis
 fourierQRS = fft(QRS);
-xfrequencies = (1:QRSlength) * samplefreq / QRSlength;
-frequencies = xfrequencies(1:6)';
-amplitudes = abs(real(fourierQRS(1:6)))';
+xfrequencies = ((1:QRSlength)-1) * samplefreq / QRSlength;
+frequencies = xfrequencies(1:10)';
+amplitudes = abs(real(fourierQRS(1:10)))';
 fft_table = table(frequencies, amplitudes);
 disp(fft_table)
 figure
