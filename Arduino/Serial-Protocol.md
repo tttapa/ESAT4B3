@@ -6,7 +6,7 @@ The format is as follows:
 | Byte 1 |     |     |     |     |     |     |     |     | 
 |:-------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | bit    |  7  |  6  |  5  |  4  |  3  |  2  |  1  |  0  | 
-| value  | *1* | *t* | *t* | *t* | *x* | *m* | *m* | *m* | 
+| value  | *1* | *m* | *m* | *m* | *x* | *t* | *t* | *t* | 
 
 | Byte 2 |     |     |     |     |     |     |     |     | 
 |:-------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:| 
@@ -15,8 +15,8 @@ The format is as follows:
 
 *`t`:* message type (3-bit)  
 *`x`:* reserved (1-bit)  
-*`m`:* three most significant bits of 10-bit value (3-bit)  
-*`l`:* seven least significant bits of 10-bit value (7-bit)  
+*`m`:* three most significant bits of the 10-bit value (3-bit)  
+*`l`:* seven least significant bits of the 10-bit value (7-bit)  
 
 #### Message types
 `000`: ECG  
@@ -26,35 +26,72 @@ The format is as follows:
 `100`: Pressure B  
 `101`: Pressure C  
 `110`: Pressure D  
-`111`: Panic button  
+`111`: Command  
+
+#### Commands
+`000`: Cancel panic  
+`001`: Panic button
+`010`: LED off
+`011`: LED on  
+`100`: Buzzer off
+`101`: Buzzer on 
 
 ### Implementation
-#### Sender
 
 ```arduino
-uint16_t encode(uint16_t value, uint8_t type);  // Function prototype
+enum message_type {
+  ECG         = 0b000,
+  PPG_RED     = 0b001,
+  PPG_IR      = 0b010,
+  PRESSURE_A  = 0b011,
+  PRESSURE_B  = 0b100,
+  PRESSURE_C  = 0b101,
+  PRESSURE_D  = 0b110,
+  COMMAND     = 0b111
+};
 
-void setup() {
-  Serial.begin(1000000);
+enum command_type : uint16_t {
+  NO_PANIC    = 0b0000,
+  PANIC       = 0b0001,
+  LED_OFF     = 0b0010,
+  LED_ON      = 0b0011,
+  BUZZER_OFF  = 0b0100,
+  BUZZER_ON   = 0b0101
+};
+
+void encode(uint8_t (&buffer)[2], uint16_t value, message_type type = COMMAND) {
+  buffer[1] = value & 0b01111111;         // l
+  buffer[0] = (value >> 3) & 0b01110000;  // m
+  buffer[0] |= (type & 0b0111);           // t
+  buffer[0] |= 0b10000000;                // set msb
 }
-const uint8_t type = 0;
-const unsigned long interval = round(1e6 / 360e0);
 
-void loop() {
-  static unsigned long prevmicros = micros();
-  if (micros() - prevmicros >= interval) {
-    uint16_t value = analogRead(A0);
-    uint16_t messageToSend = encode(value, type);
-    Serial.write((uint8_t*)&messageToSend, sizeof(messageToSend));
-    prevmicros += interval;
+void decode(uint8_t (&buffer)[2], uint16_t &value, message_type &type) {
+  value = buffer[1] | ((buffer[0] & 0b01110000) << 3);
+  type = buffer[0] & 0b0111;
+}
+
+void send(uint16_t value, message_type type = COMMAND) {
+  uint8_t messageToSend[2];
+  encode(messageToSend, value, type);
+  Serial.write(messageToSend, sizeof(messageToSend));
+}
+
+bool receive(uint16_t &value, message_type &type) {
+  if (!Serial.available())
+    return false;
+  static uint8_t messageReceived[2] = {};
+  uint8_t data = Serial.read();
+  if (data & 0b10000000) {  // If it's a header byte (first byte)
+    messageReceived[0] = data;
+    return false;
+  } else if (messageReceived[0]) {  // If it's a data byte (second byte) and a first byte has been received
+    messageReceived[1] = data;
+    decode(messageReceived, value, type);
+    messageReceived[0] = 0;
+    return true;
+  } else {
+    return false;
   }
-}
-
-uint16_t encode(uint16_t value, uint8_t type) {
-  uint8_t LSB = value & 0b01111111;     // l
-  uint8_t MSB = (value >> 7) & 0b0111;  // m
-  MSB |= (type & 0b0111) << 4;          // t
-  MSB |= 0b10000000;                    // MSB set msb
-  return (uint16_t) LSB << 8 | MSB;  // AVR is little endian, so MSB goes to LSB position to correct byte order when transmitting byte by byte
 }
 ```
