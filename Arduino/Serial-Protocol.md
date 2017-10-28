@@ -3,12 +3,12 @@
 Serial messages consist of 2 bytes. To prevent framing errors, the first header byte has the msb (most significant bit) set to 1, and the following data byte has the msb set to 0.    
 The format is as follows:  
 
-| Byte 1 |     |     |     |     |     |     |     |     | 
+| Byte 0 |     |     |     |     |     |     |     |     | 
 |:-------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | bit    |  7  |  6  |  5  |  4  |  3  |  2  |  1  |  0  | 
 | value  | *1* | *m* | *m* | *m* | *x* | *t* | *t* | *t* | 
 
-| Byte 2 |     |     |     |     |     |     |     |     | 
+| Byte 1 |     |     |     |     |     |     |     |     | 
 |:-------|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:| 
 | bit    |  7  |  6  |  5  |  4  |  3  |  2  |  1  |  0  | 
 | value  | *0* | *l* | *l* | *l* | *l* | *l* | *l* | *l* |
