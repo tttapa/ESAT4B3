@@ -30,11 +30,11 @@ The format is as follows:
 
 #### Commands
 `000`: Cancel panic  
-`001`: Panic button
-`010`: LED off
+`001`: Panic button  
+`010`: LED off  
 `011`: LED on  
-`100`: Buzzer off
-`101`: Buzzer on 
+`100`: Buzzer off  
+`101`: Buzzer on  
 
 ### Implementation
 
