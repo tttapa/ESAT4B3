@@ -25,7 +25,11 @@ global h value msgtype ecgbuffer bufferlen
         clear instrfind;
     end
 
-    s = serial('COM9','BaudRate',1000000);
+    if isunix % Linux
+        s = serial('/dev/ttyACM0','BaudRate',1000000);
+    elseif ispc % Windows
+        s = serial('COM9','BaudRate',1000000);
+    end
     
     s.BytesAvailableFcn = @cb;
     s.BytesAvailableFcnCount = 1;
