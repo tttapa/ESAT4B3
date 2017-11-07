@@ -1,5 +1,5 @@
 function main
-global h value msgtype ecgbuffer bufferlen
+global h value msgtype ecgbuffer bufferlen samplefreq
     addpath('../GUI & Tests/')
     close all
 
@@ -26,12 +26,13 @@ global h value msgtype ecgbuffer bufferlen
         s = serial('COM9','BaudRate',1000000);
     end
     
+    tic;
+    
     s.BytesAvailableFcn = @cb; % Callback function
-    s.BytesAvailableFcnCount = 1; % On every byte received
+    s.BytesAvailableFcnCount = 100; % On every byte received
     s.BytesAvailableFcnMode = 'byte';
 
     fopen(s); % Open the serial port
-
     h = axes;
     while ishandle(h)
 
@@ -39,27 +40,31 @@ global h value msgtype ecgbuffer bufferlen
 end
 
 function cb (s, event, time) % Callback function that executes when a new byte arrives on the serial port
-global h value msgtype ecgbuffer bufferlen
-    % s.BytesAvailable
-    x = uint16(fread(s, 1)); % Read a byte
+global h value msgtype ecgbuffer bufferlen samplefreq
+    % Print how many samples (2 Bytes) it should have received in the time it received one sample
+    disp(toc * samplefreq * 2 / s.BytesAvailableFcnCount) 
+    tic;
+    x = uint16(fread(s, s.BytesAvailableFcnCount)); % Read the data from the buffer
 
-    % https://github.com/tttapa/ESAT4B3/blob/master/Arduino/Serial-Protocol.md
-    if bitand(x, 128) ~= 0 % 128 == 0b10000000
-        % if it's a header byte
-        msgtype = bitand(x, 7); % 7 == 0b0111
-        value = bitshift(bitand(x, 112), 3); % 112 == 0b01110000 
-    else 
-        % if it's a data byte
-        value = bitor(value, x);
-        if msgtype == 0 % ECG signal
-            ecgbuffer(1:(bufferlen-1)) = ecgbuffer(2:bufferlen); % shift the buffer
-            ecgbuffer(bufferlen) = value; % add the new value to the buffer
-            value;
-            value = uint16(0);
-            if ishandle(h)
-                plot(h, ecgbuffer); % Plot the buffer
-                drawnow
+    for i = 1:s.BytesAvailableFcnCount
+        % https://github.com/tttapa/ESAT4B3/blob/master/Arduino/Serial-Protocol.md
+        if bitand(x(i), 128) ~= 0 % 128 == 0b10000000
+            % if it's a header byte
+            msgtype = bitand(x(i), 7); % 7 == 0b0111
+            value = bitshift(bitand(x(i), 112), 3); % 112 == 0b01110000 
+        else 
+            % if it's a data byte
+            value = bitor(value, x(i));
+            if msgtype == 0 % ECG signal
+                ecgbuffer(1:(bufferlen-1)) = ecgbuffer(2:bufferlen); % shift the buffer
+                ecgbuffer(bufferlen) = value; % add the new value to the buffer
+                value;
+                value = uint16(0);
             end
         end
+    end
+    if ishandle(h)
+        plot(h, ecgbuffer); % Plot the buffer
+        drawnow
     end
 end
