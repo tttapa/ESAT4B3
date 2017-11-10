@@ -118,36 +118,8 @@ bool receive(int fd, uint16_t &value, message_type &type)
     }
 }
 
-#include <chrono>
-
-class Timer
-{
-  public:
-    Timer() : m_beg(clock_::now())
-    {
-    }
-    void reset()
-    {
-        m_beg = clock_::now();
-    }
-
-    double elapsed() const
-    {
-        return std::chrono::duration_cast<std::chrono::milliseconds>(
-                   clock_::now() - m_beg)
-            .count();
-    }
-
-  private:
-    typedef std::chrono::high_resolution_clock clock_;
-    typedef std::chrono::duration<double, std::ratio<1>> second_;
-    std::chrono::time_point<clock_> m_beg;
-};
-
 int main()
 {
-    printf("CLOCKS_PER_SEC: %ld\r\n", CLOCKS_PER_SEC);
-
     const char *portname = "/dev/ttyACM0";
 
     int fd = open(portname, O_RDWR | O_NOCTTY | O_SYNC);
@@ -159,22 +131,22 @@ int main()
     }
 
     set_interface_attribs(fd, B115200, 0); // set speed to 115,200 bps, 8n1 (no parity)
-    set_blocking(fd, 1);                   // set no blocking
+    set_blocking(fd, 0);                   // set no blocking
 
     uint16_t value;
     message_type type;
-    Timer tmr;
-    tmr.reset();
+
+    std::chrono::time_point<std::chrono::high_resolution_clock> start = std::chrono::high_resolution_clock::now();
+    std::chrono::time_point<std::chrono::high_resolution_clock> end;
+
     while (1)
     {
-
-        printf("CLOCKS_PER_SEC: %ld\r\n", CLOCKS_PER_SEC);
-
         if (receive(fd, value, type))
         {
-            double t = tmr.elapsed();
-            tmr.reset();
-            printf("%d\t%lf\r\n", t);
+            end = std::chrono::high_resolution_clock::now();
+            double duration = (std::chrono::duration_cast<std::chrono::milliseconds>(end - start)).count();
+            printf("%d\t%lf ms\r\n", value, duration);
+            start = end;
         }
     }
 }
