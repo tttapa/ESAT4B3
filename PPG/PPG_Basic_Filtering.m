@@ -12,7 +12,7 @@ fs = 15;
 f_nyquist = fs/2;
 
 % Signal    
-signal =(signal_start:signal_end);
+signal =S1(signal_start:signal_end);
 signal_length = length(signal);
 
 % Length has to be even
