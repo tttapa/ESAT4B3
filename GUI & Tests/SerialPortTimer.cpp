@@ -1,3 +1,5 @@
+// g++ -Wall -g -std=c++11 SerialPortTimer.cpp -o SerialPortTimer.out && ./SerialPortTimer.out
+
 #include <stdio.h>
 #include <errno.h>
 #include <fcntl.h>
