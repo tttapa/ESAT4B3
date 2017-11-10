@@ -22,20 +22,21 @@ xfrec=(0:fs/(length(fft_signal)-1):fs);
 plot(xfrec,10*log10(abs(fft_signal))), title('Frequentie rood');
 
 % High pass filter om 'foute' schuine lijn eruit te halen
-%{
 figure;
 order = 3; fc = 0.0003;                                % cut-off waarde schatten        
 [b, a] = butter(order, fc/(fs/2),'high');
 high = filter(b, a, signal);
 plot(xtime,high), title('High pass filter rood')
-%}
 
+% High pass filter die schuine lijn eruit haalt en direct naar beneden
+% trekt (-> AC)
+%{
 figure;
 order = 1; fc = 0.5;                                % cut-off waarde schatten        
 [b, a] = butter(order, fc/(fs/2),'high');
 high = filter(b, a, signal);
 plot(xtime,high), title('High pass filter rood')
-
+%}
 
 % High pass frequentie
 %{
@@ -63,9 +64,11 @@ plot(xtime,f-g)                             % enkel kleine golfjes overhouden, p
 linkaxes([ax1,ax3],'x')
 legend('AC component')
 
-peaks1=find_peaks(f-g,-20,1)                     % 1e stukje: 4.995*10^4       Van f en f-g amplitude berekenen
-plot(peaks1), title('Find peaks rood')
+%peaks1=find_peaks(f-g,-20,1)                     % 1e stukje: 4.995*10^4       Van f en f-g amplitude berekenen
+%plot(peaks1), title('Find peaks rood')
 
+median(g)
+median(f)
 
 
 
@@ -83,5 +86,5 @@ fft_signalfilter=fft(low,windowsize);
 plot(xfrec,10*log10(abs(fft_signalfilter))), title('Frequentie low pass rood');
 %}
 
-peaks1=find_peaks(f-g,-20,1)                     % 1e stukje: 4.995*10^4       Van f en f-g amplitude berekenen
-plot(peaks1), title('Find peaks rood')
+%peaks1=find_peaks(f-g,-20,1)                     % 1e stukje: 4.995*10^4       Van f en f-g amplitude berekenen
+%plot(peaks1), title('Find peaks rood')
