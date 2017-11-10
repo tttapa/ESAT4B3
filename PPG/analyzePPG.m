@@ -1,4 +1,4 @@
-function [ RESULT_peaks, RESULT_locations ] = analyzePPG( INPUT_data, INPUT_fs, INPUT_maxBPM )
+function [ RESULT_peaks, RESULT_locations, RESULT_AC, RESULT_DC ] = analyzePPG( INPUT_unfiltered, INPUT_data, INPUT_fs, INPUT_maxBPM )
 %
 % ANALYZE_ECG returns a list of peaks and their respective locations in the
 % data.
@@ -17,7 +17,7 @@ function [ RESULT_peaks, RESULT_locations ] = analyzePPG( INPUT_data, INPUT_fs, 
 minHeartbeatLength = floor(INPUT_fs * 60 / INPUT_maxBPM);
 
 % Percentage of highest value that will be the cut-off value
-cutOffFactor = 0.4;
+%cutOffFactor = 0.4;
 
 
 %%
@@ -25,12 +25,15 @@ cutOffFactor = 0.4;
 %
     
 % Find the highest value in the interval, and calculate the cut-off value
-highestValue = max(INPUT_data);
-cutOffValue = highestValue*cutOffFactor;
+%highestValue = max(INPUT_data);
+%cutOffValue = highestValue*cutOffFactor;
 
 % Find the peaks within this interval
 %   -> Parameter 3: minDistance must be <= length(INPUT_data) - 2
-[RESULT_peaks, RESULT_locations] = getPeaks(INPUT_data, cutOffValue, min([minHeartbeatLength, length(INPUT_data) - 2]));
+[RESULT_peaks, RESULT_locations] = getPeaks(INPUT_data, 0, min([minHeartbeatLength, length(INPUT_data) - 2]));
+
+RESULT_AC = mean(RESULT_peaks);
+RESULT_DC = mean(INPUT_unfiltered);
 
 end
 
