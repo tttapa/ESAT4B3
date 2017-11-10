@@ -1,4 +1,4 @@
-function [ RESULT_saturation ] = calculateSaturation( INPUT_redSignal, INPUT_infraredSignal, INPUT_fs, INPUT_startSample, INPUT_endSample )
+function [ RESULT_saturation ] = calculateSaturation( INPUT_redSignal, INPUT_infraredSignal, INPUT_fs, INPUT_maxBPM, INPUT_startSample, INPUT_endSample )
 %CALCULATE_SATURATION calculates the oxygen saturation using Beer-Lambert's
 % law
 %
@@ -11,10 +11,10 @@ function [ RESULT_saturation ] = calculateSaturation( INPUT_redSignal, INPUT_inf
 % SETUP
 %
 
-if nargin == 3
+if nargin == 4
     INPUT_startSample = 1;
     INPUT_endSample = length(INPUT_redSignal);
-elseif nargin == 4
+elseif nargin == 5
     INPUT_endSample = length(INPUT_redSignal);
 end
 
@@ -27,18 +27,25 @@ if INPUT_endSample > length(INPUT_redSignal)
 end
 
 
+% Remove unneccesary parts of the signal
+INPUT_redSignal = INPUT_redSignal(INPUT_startSample:INPUT_endSample);
+INPUT_infraredSignal = INPUT_infraredSignal(INPUT_startSample:INPUT_endSample);
+
+
 %%
 % FILTERING
 %
-filteredRedSignal = filter_PPG(INPUT_redSignal, fs, INPUT_startSample, INPUT_endSample);
-filteredInfraredSignal = filter_PPG(INPUT_infraredSignal, fs, INPUT_startSample, INPUT_endSample);
+filteredRedSignal = filter_PPG(INPUT_redSignal, INPUT_fs);
+filteredInfraredSignal = filter_PPG(INPUT_infraredSignal, INPUT_fs);
 
 
 %%
 % CALCULATION
 %
 
-[~, ~, acRed, dcRed] = analyzePPG(INPUT_redSignal(INPUT_startSample:INPUT_endSample), filteredRedSignal(INPUT_startSample:INPUT_endSample), fs, 120);
-[~, ~, acInfrared, dcInfrared] = analyzePPG(INPUT_infraredSignal(INPUT_startSample:INPUT_endSample), filteredInfraredSignal(INPUT_startSample:INPUT_endSample), fs, 120);
+noiseEnd = 50;
+
+[~, ~, acRed, dcRed] = analyzePPG(INPUT_redSignal(noiseEnd:end), filteredRedSignal(noiseEnd:end), INPUT_fs, INPUT_maxBPM);
+[~, ~, acInfrared, dcInfrared] = analyzePPG(INPUT_infraredSignal(noiseEnd:end), filteredInfraredSignal(noiseEnd:end), INPUT_fs, INPUT_maxBPM);
 
 RESULT_saturation = (110 - 25 * (acRed/acInfrared) * (dcInfrared/dcRed));

@@ -9,7 +9,15 @@ if nargin == 2
     signal_end = length(signal);
 elseif nargin == 3
     signal_end = length(signal); 
-end    
+end
+
+if signal_start < 1
+   signal_start = 1; 
+end
+
+if signal_end > length(signal)
+   signal_end = length(signal); 
+end
 
 f_nyquist = fs/2;
 
