@@ -1,6 +1,7 @@
 clear
 % Importing Data
 load('Rood.mat');
+load('Infrarood.mat');
 data_number = 2;
 
 % Selecting Interval of the data with start and end value
@@ -13,12 +14,14 @@ f_nyquist = fs/2;
 
 % Signal    
 signal = S1(signal_start:signal_end);
+signal2 = S2(signal_start:signal_end);
 signal_length = length(signal);
 
 % Length has to be even
 if rem(signal_length, 2) ~= 0 
     signal_end = signal_end -1;
     signal = S1(signal_start:signal_end);
+    signal2 = S2(signal_start:signal_end);
     signal_length = length(signal);  
 end 
 %%
@@ -86,7 +89,8 @@ fc_highpass = 0.5;
 % _________________________________________________________________________
 % FILTERING
 % _________________________________________________________________________                       
-filtered_signal = filter(b_lowpass, a_lowpass,filter(b_highpass, a_highpass, signal));                
+filtered_signal = filter(b_lowpass, a_lowpass,filter(b_highpass, a_highpass, signal));
+filtered_signal2 = filter(b_lowpass, a_lowpass, filter(b_highpass, a_highpass, signal2));
 filtered_signal_length = length(filtered_signal);
 
 %%
@@ -99,39 +103,25 @@ red_signal_start = signal_start + noise_end;
 % Define reduced x for signal plot
 red_x = (1:1:length(signal(red_signal_start:end)))./fs; 
 
-% Define reduced x for fft_signal plot
-red_x_freq = 0:fs/length(signal(red_signal_start:end)):fs/2; 
-
-% Define reduced x for fft_signal plot
-red_x_freq_fft = 0:fs/length(signal(red_signal_start:end)):fs/2; 
-
-% Fft_signal + rescale
-red_fft_signal = fft(signal(red_signal_start:end));       
-red_fft_signal = red_fft_signal(1:length(signal(red_signal_start:end))/2+1);
-red_fft_signal = (1/(fs*(signal_length-noise_end)))*abs(red_fft_signal).^2;
-red_fft_signal(2:end-1) = 2*red_fft_signal(2:end-1);
-
-% Fft_filtered_signal + rescale
-red_fft_filtered_signal =fft(filtered_signal(red_signal_start:end));       
-red_fft_filtered_signal =red_fft_filtered_signal(1:...
-                                length(filtered_signal(red_signal_start:end))/2+1);
-red_fft_filtered_signal =(1/(fs*(length(filtered_signal(red_signal_start:end))))) ...
-                        *abs(red_fft_filtered_signal).^2;
-red_fft_filtered_signal(2:end-1) = 2*red_fft_filtered_signal(2:end-1);
-
 % Signal and filtered signal plot
 figure;                           
 plot(red_x,filtered_signal(red_signal_start:end), 'red');
+hold on;
+plot(red_x,filtered_signal2(red_signal_start:end), 'blue');
 title('Filtered and non-filtered signal');
 xlabel('Tijd (s)');
-legend('Filtered signal');
-
-hold on;
+legend('Filtered Rood', 'Filtered Infrarood');
 
 [peaks, locations, ac, dc] = analyzePPG(signal(red_signal_start:end), filtered_signal(red_signal_start:end), fs, 120);
+[peaks2, locations2, ac2, dc2] = analyzePPG(signal2(red_signal_start:end), filtered_signal2(red_signal_start:end), fs, 120);
 
+disp("O2 Saturation:");
 disp(ac);
 disp(dc);
+disp(ac2);
+disp(dc2);
+disp(110 - 25 * (ac/ac2) * (dc2/dc))
+
 
 markerSize = 50;
 markerEdgeColor = [0 0 0];
@@ -139,6 +129,8 @@ markerFaceColor = [1 0 0];
 markerLineWidth = 1;
 
 scatter(locations/fs, filtered_signal(red_signal_start + locations - 1), ...
+    markerSize, 'MarkerEdgeColor', markerEdgeColor, 'MarkerFaceColor', markerFaceColor, 'LineWidth', markerLineWidth);
+scatter(locations2/fs, filtered_signal2(red_signal_start + locations2 - 1), ...
     markerSize, 'MarkerEdgeColor', markerEdgeColor, 'MarkerFaceColor', markerFaceColor, 'LineWidth', markerLineWidth);
 
 hold off;
