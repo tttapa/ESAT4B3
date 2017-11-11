@@ -15,7 +15,7 @@ function main
     baudrate = 1e6;             % Serial port baud rate
 
     bytesPerMessage = 2;
-    messagesPerSerialParse = 64;
+    messagesPerSerialParse = 6;
     
 %% Plot settings
 
@@ -41,6 +41,7 @@ function main
     ECG_bufferlen = ECG_windowsize * ECG_samplefreq;
     ECG_buffer = zeros(ECG_bufferlen,1); % create an empty buffer
     ECG_time = linspace(-ECG_windowsize, 0, ECG_bufferlen);
+    ECG_settings = ECG_setup(ECG_samplefreq);
     
     PPG_bufferlen = PPG_windowsize * PPG_samplefreq;
     PPG_buffer = zeros(PPG_bufferlen,1); % create an empty buffer
@@ -168,7 +169,7 @@ function main
 %% Draw everything to the app
 
     function drawAll
-        ECG_filtered = ECG_filter(ECG_buffer, ECG_samplefreq);
+        ECG_filtered = ECG_filter(ECG_buffer, ECG_settings);
         if ishandle(ECG_plot)
             set(ECG_plot,'YData',ECG_filtered);
         end
