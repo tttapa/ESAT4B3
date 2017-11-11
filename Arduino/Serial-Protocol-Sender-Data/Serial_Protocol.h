@@ -35,7 +35,7 @@ void encode(uint8_t (&buffer)[2], uint16_t value, message_type type = COMMAND) {
 
 void decode(uint8_t (&buffer)[2], uint16_t &value, message_type &type) {
   value = buffer[1] | ((buffer[0] & 0b01110000) << 3);
-  type = buffer[0] & 0b0111;
+  type = static_cast<message_type>(buffer[0] & 0b0111);
 }
 
 void send(uint16_t value, message_type type = COMMAND) {

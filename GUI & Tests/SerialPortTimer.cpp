@@ -98,7 +98,7 @@ void decode(uint8_t (&buffer)[2], uint16_t &value, message_type &type)
 bool receive(int fd, uint16_t &value, message_type &type)
 {
     uint8_t data;
-    int n = read(fd, &data, 1); // read up to 64 characters if ready to read
+    int n = read(fd, &data, 1); // read up to 1 byte if ready to read
     if (n == 0)
         return false;
     static uint8_t messageReceived[2] = {};
@@ -118,6 +118,15 @@ bool receive(int fd, uint16_t &value, message_type &type)
     {
         return false;
     }
+}
+
+double runningAverage(double value) {
+    static double counter = 1;
+    static double sum = 0;
+    sum = sum * (counter - 1) / counter;
+    sum += value / counter;
+    counter++;
+    return sum;
 }
 
 int main()
@@ -146,8 +155,8 @@ int main()
         if (receive(fd, value, type))
         {
             end = std::chrono::high_resolution_clock::now();
-            double duration = (std::chrono::duration_cast<std::chrono::milliseconds>(end - start)).count();
-            printf("%d\t%lf ms\r\n", value, duration);
+            double duration = (std::chrono::duration_cast<std::chrono::microseconds>(end - start)).count();
+            printf("%d\t%lf ms\r\n", value, runningAverage(duration / 1000.0));
             start = end;
         }
     }
