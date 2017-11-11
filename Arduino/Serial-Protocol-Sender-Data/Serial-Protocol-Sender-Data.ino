@@ -8,7 +8,7 @@ const size_t datalength  = sizeof(ecg) / sizeof(uint16_t);
 const float samplefreq = 360e0;
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(1000000);
 }
 
 const unsigned long interval = round(1e6 / samplefreq);

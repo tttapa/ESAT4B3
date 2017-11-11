@@ -29,7 +29,7 @@ function main
     tic;
     
     s.BytesAvailableFcn = @cb; % Callback function
-    s.BytesAvailableFcnCount = 100; % On every byte received
+    s.BytesAvailableFcnCount = 100; % On every x bytes received
     s.BytesAvailableFcnMode = 'byte';
 
     fopen(s); % Open the serial port

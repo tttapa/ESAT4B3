@@ -141,8 +141,8 @@ int main()
         return 1;
     }
 
-    set_interface_attribs(fd, B115200, 0); // set speed to 115,200 bps, 8n1 (no parity)
-    set_blocking(fd, 0);                   // set no blocking
+    set_interface_attribs(fd, B1000000, 0); // set speed to 1,000,000 baud, 8n1 (no parity)
+    set_blocking(fd, 0);                    // set no blocking
 
     uint16_t value;
     message_type type;
@@ -156,7 +156,7 @@ int main()
         {
             end = std::chrono::high_resolution_clock::now();
             double duration = (std::chrono::duration_cast<std::chrono::microseconds>(end - start)).count();
-            printf("%d\t%lf ms\r\n", value, runningAverage(duration / 1000.0));
+            printf("%d\t%lf µs\r\n", value, runningAverage(duration));
             start = end;
         }
     }
