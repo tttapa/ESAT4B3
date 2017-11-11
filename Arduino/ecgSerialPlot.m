@@ -95,7 +95,7 @@ grid(plotGrid);
 fopen(s);
 tic;
 while ishandle(plotGraph)
-       
+    pause(1); % Don't ramp up the CPU to 100%
 end
  
 %% Close serial sort when finished
@@ -108,7 +108,7 @@ disp('Done.')
 
 function cb (s, ~, ~) % Callback function that executes when a new byte arrives on the serial port
         % Print how many samples (2 Bytes) it should have received in the time it received one sample
-        disp(strcat({'Samples send / samples received = '}, string(toc * samplefreq * 2 / s.BytesAvailableFcnCount)));
+        disp(strcat({'Samples sent / samples received = '}, string(toc * samplefreq * 2 / s.BytesAvailableFcnCount)));
         tic;
         x = uint16(fread(s, s.BytesAvailableFcnCount)); % Read the data from the buffer
 

@@ -1,4 +1,4 @@
-classdef Layout < matlab.apps.AppBase
+classdef GUI_app < matlab.apps.AppBase
 
     % Properties that correspond to app components
     properties (Access = public)
@@ -462,7 +462,7 @@ classdef Layout < matlab.apps.AppBase
     methods (Access = public)
 
         % Construct app
-        function app = Layout()
+        function app = GUI_app()
 
             % Create and configure components
             createComponents(app)

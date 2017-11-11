@@ -1,8 +1,7 @@
-
-
-function ecgSerialPlot
+function ecgSerialPlotApp
 
 clc; close all
+addpath('../GUI & Tests');
  
 %% User Defined Properties 
 
@@ -72,7 +71,7 @@ elseif(~ismember(serialPort, seriallist))
     return;
 end
 
-%Open serial port
+% Open serial port
 s = serial(serialPort, 'BaudRate', baudrate);
 
 s.BytesAvailableFcn = @cb; % Callback function
@@ -84,33 +83,30 @@ s.BytesAvailableFcnMode = 'byte';
     
 %% Set up plot
 
-figure;
-plotGraph = plot(time,ecgbuffer,'-r','LineWidth',1);
-title(plotTitle,'FontSize',25);
-xlabel(xLabel,'FontSize',15);
-ylabel(yLabel,'FontSize',15);
-axis([-windowsize 0 0 1023]);
-grid(plotGrid);
+gui = GUI_app;
+
+plotGraph = plot(gui.UIAxes,time,ecgbuffer);
+set(gui.UIAxes,'XLim',[-windowsize 0],'YLim',[0 1023]);
 
 %% Main loop
 
 fopen(s);
 tic;
 while ishandle(plotGraph)
-       
+    pause(1); % Don't ramp up the CPU to 100%
 end
  
 %% Close serial sort when finished
 fclose(s);
 clear s;
 
-disp('Done.')
+disp('Done.');
 
 %% Serial callback
 
 function cb (s, ~, ~) % Callback function that executes when a new byte arrives on the serial port
         % Print how many samples (2 Bytes) it should have received in the time it received one sample
-        disp(strcat({'Samples send / samples received = '}, string(toc * samplefreq * 2 / s.BytesAvailableFcnCount)));
+        disp(strcat({'Samples sent / samples received = '}, string(toc * samplefreq * 2 / s.BytesAvailableFcnCount)));
         tic;
         x = uint16(fread(s, s.BytesAvailableFcnCount)); % Read the data from the buffer
 
@@ -133,7 +129,7 @@ function cb (s, ~, ~) % Callback function that executes when a new byte arrives 
         end
         if ishandle(plotGraph)
             set(plotGraph,'YData',ecgbuffer);
-            drawnow
+            % drawnow
         end
     end
 end
