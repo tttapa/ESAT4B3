@@ -21,12 +21,18 @@ function main
 
     framerate = 30; % frames per secondend
     
+    ECG_gain = 140;
+    ECG_Vref = 5;
+
     ECG_samplefreq = 360;
     ECG_windowsize = 10; % show 10 seconds of data
     
-    ECG_extrasamples = 1000;
+    % TODO: why are there transients at the start of the vector, but not at
+    % the end?
+    ECG_extrasamples = ECG_samplefreq * 2; % samples containing transients are cut off the plot
     
-    ECG_range = [-511 511];
+    ECG_range = [-6e-3 6e-3]; % [-inf inf];
+    ECG_baseline = int16(511);
     
     PPG_samplefreq = 30;
     PPG_windowsize = 10; % show 10 seconds of data
@@ -40,9 +46,10 @@ function main
 
     frameduration = 1000 / framerate;
     
+    ECG_scalingFactor = ECG_Vref / 1023.0 / ECG_gain;
     ECG_visiblesamples = ECG_windowsize * ECG_samplefreq;
     ECG_bufferlen = ECG_visiblesamples + ECG_extrasamples;
-    ECG_buffer = zeros(ECG_bufferlen,1); % create an empty buffer
+    ECG_buffer = int16(zeros(ECG_bufferlen,1)); % create an empty buffer
     ECG_time = linspace(-ECG_windowsize, 0, ECG_visiblesamples);
     ECG_settings = ECG_setup(ECG_samplefreq);
     
@@ -93,7 +100,7 @@ function main
     % Open serial port
     s = serial(serialPort, 'BaudRate', baudrate);
 
-    s.BytesAvailableFcn = @cb; % Callback function
+    s.BytesAvailableFcn = @serialcb; % Callback function for serial port
     s.BytesAvailableFcnCount = bytesPerMessage * messagesPerSerialParse; % On every x bytes received
     s.InputBufferSize = 2.^(ceil(log2(s.BytesAvailableFcnCount))+1);
     % disp(strcat({'Input buffer size: '}, string(s.InputBufferSize)));
@@ -129,7 +136,7 @@ function main
 
 %% Serial callback
 
-    function cb (s, ~, ~) % Callback function that executes when a new byte arrives on the serial port
+    function serialcb (s, ~, ~) % Callback function that executes when a new byte arrives on the serial port
         % Print how many samples (2 Bytes) it should have received in the time it received one sample
         disp(strcat({'Samples sent / samples received = '}, ...
             string(toc * ECG_samplefreq * 2 / s.BytesAvailableFcnCount)));
@@ -158,7 +165,7 @@ function main
         switch msgtype 
             case 'ECG'
                 ECG_buffer(1:(ECG_bufferlen-1)) = ECG_buffer(2:ECG_bufferlen); % shift the buffer
-                ECG_buffer(ECG_bufferlen) = value; % add the new value to the buffer
+                ECG_buffer(ECG_bufferlen) = int16(value) - ECG_baseline; % add the new value to the buffer
             case 'PPG_RED'
             case 'PPG_IR'
             case 'PRESSURE_A'
@@ -174,6 +181,7 @@ function main
     function drawAll
         ECG_filtered = ECG_filter(ECG_buffer, ECG_settings);
         ECG_filtered = ECG_filtered(ECG_extrasamples+1:ECG_bufferlen);
+        ECG_filtered = ECG_filtered * ECG_scalingFactor;
         if ishandle(ECG_plot)
             set(ECG_plot,'YData',ECG_filtered);
         end
