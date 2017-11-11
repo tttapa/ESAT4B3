@@ -17,8 +17,8 @@ plotGrid = 'off';               % do not show gridlines
 
 %%
 
-msgtype = 0; % initialization of variables used in callback function
-value = uint16(0); % '
+msgtype = message_type(0); % initialization of variables used in callback function
+value = uint16(0);         % '
 
 samplefreq = 360;
 bytesPerSample = 2;
@@ -116,12 +116,12 @@ function cb (s, ~, ~) % Callback function that executes when a new byte arrives 
             % https://github.com/tttapa/ESAT4B3/blob/master/Arduino/Serial-Protocol.md
             if bitand(x(i), 128) ~= 0 % 128 == 0b10000000
                 % if it's a header byte
-                msgtype = bitand(x(i), 7); % 7 == 0b0111
+                msgtype = message_type(bitand(x(i), 7)); % 7 == 0b0111
                 value = bitshift(bitand(x(i), 112), 3); % 112 == 0b01110000 
             else 
                 % if it's a data byte
                 value = bitor(value, x(i));
-                if msgtype == 0 % ECG signal
+                if msgtype == 'ECG' % ECG signal
                     ecgbuffer(1:(bufferlen-1)) = ecgbuffer(2:bufferlen); % shift the buffer
                     ecgbuffer(bufferlen) = value; % add the new value to the buffer
                     value;

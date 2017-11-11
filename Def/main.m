@@ -1,8 +1,10 @@
-function ecgSerialPlotApp
+function main
+%MAIN The main function for running the "slimme thuiszorgmonitor"
+%   Open a serial port for receiving data from the Arduino, start the GUI,
+%   and update the GUI with the filtererd incomming data
 
     clc; close all
-    addpath('../GUI & Tests');
-
+    
 %% Serial port settings
 
     % Comment out serialPortXXX for automatic selection
@@ -10,22 +12,24 @@ function ecgSerialPlotApp
     % serialPortLinux = '/dev/ttyACM0';           % define serial port for Linux
     % serialPortOSX   = '/dev/tty.usbmodemabcde'; % define serial port for Mac OSX
 
-    baudrate = 1000000;             % Serial port baud rate
+    baudrate = 1e6;             % Serial port baud rate
 
     bytesPerMessage = 2;
     messagesPerSerialParse = 64;
     
 %% Plot settings
 
-    framerate = 60; % frames per second
+    framerate = 30; % frames per second
     
     ECG_samplefreq = 360;
     ECG_windowsize = 10; % show 10 seconds of data
-    
-    ECG_range = [-511 511];
 
+    ECG_range = [-511 511];
+    
     PPG_samplefreq = 30;
     PPG_windowsize = 10; % show 10 seconds of data
+
+    PPG_range = [0 1023];
     
 %% Initializations
 
@@ -100,7 +104,7 @@ function ecgSerialPlotApp
     set(gui.UIAxes,'XLim',[-ECG_windowsize 0],'YLim',ECG_range);
     
     PPG_plot = plot(gui.UIAxes2, PPG_time,PPG_buffer);
-    set(gui.UIAxes2,'XLim',[-PPG_windowsize 0],'YLim',[0 1023]);
+    set(gui.UIAxes2,'XLim',[-PPG_windowsize 0],'YLim',PPG_range);
     
 %% Main loop
 
@@ -108,7 +112,7 @@ function ecgSerialPlotApp
     tic;
     while ishandle(ECG_plot)
         % java.lang.Thread.sleep(frameduration);
-        pause(frameduration/1000);
+        % pause(frameduration/1000);
         drawAll;
         drawnow;
     end
@@ -164,8 +168,9 @@ function ecgSerialPlotApp
 %% Draw everything to the app
 
     function drawAll
+        ECG_filtered = ECG_filter(ECG_buffer, ECG_samplefreq);
         if ishandle(ECG_plot)
-            set(ECG_plot,'YData',ECG_buffer);
+            set(ECG_plot,'YData',ECG_filtered);
         end
         if ishandle(PPG_plot)
             set(PPG_plot,'YData',PPG_buffer);
