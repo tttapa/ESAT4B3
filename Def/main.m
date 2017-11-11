@@ -19,11 +19,13 @@ function main
     
 %% Plot settings
 
-    framerate = 30; % frames per second
+    framerate = 30; % frames per secondend
     
     ECG_samplefreq = 360;
     ECG_windowsize = 10; % show 10 seconds of data
-
+    
+    ECG_extrasamples = 1000;
+    
     ECG_range = [-511 511];
     
     PPG_samplefreq = 30;
@@ -38,9 +40,10 @@ function main
 
     frameduration = 1000 / framerate;
     
-    ECG_bufferlen = ECG_windowsize * ECG_samplefreq;
+    ECG_visiblesamples = ECG_windowsize * ECG_samplefreq;
+    ECG_bufferlen = ECG_visiblesamples + ECG_extrasamples;
     ECG_buffer = zeros(ECG_bufferlen,1); % create an empty buffer
-    ECG_time = linspace(-ECG_windowsize, 0, ECG_bufferlen);
+    ECG_time = linspace(-ECG_windowsize, 0, ECG_visiblesamples);
     ECG_settings = ECG_setup(ECG_samplefreq);
     
     PPG_bufferlen = PPG_windowsize * PPG_samplefreq;
@@ -101,7 +104,7 @@ function main
 
     gui = GUI_app;
 
-    ECG_plot = plot(gui.UIAxes, ECG_time,ECG_buffer);
+    ECG_plot = plot(gui.UIAxes, ECG_time,ECG_buffer(ECG_extrasamples+1:ECG_bufferlen));
     set(gui.UIAxes,'XLim',[-ECG_windowsize 0],'YLim',ECG_range);
     
     PPG_plot = plot(gui.UIAxes2, PPG_time,PPG_buffer);
@@ -113,9 +116,9 @@ function main
     tic;
     while ishandle(ECG_plot)
         % java.lang.Thread.sleep(frameduration);
-        % pause(frameduration/1000);
+        pause(frameduration/1000);
         drawAll;
-        drawnow;
+        % drawnow;
     end
 
 %% Close serial port when finished
@@ -170,6 +173,7 @@ function main
 
     function drawAll
         ECG_filtered = ECG_filter(ECG_buffer, ECG_settings);
+        ECG_filtered = ECG_filtered(ECG_extrasamples+1:ECG_bufferlen);
         if ishandle(ECG_plot)
             set(ECG_plot,'YData',ECG_filtered);
         end
