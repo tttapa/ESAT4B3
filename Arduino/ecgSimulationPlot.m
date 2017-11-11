@@ -59,7 +59,6 @@ while ishandle(plotGraph)
     % while loop if the timer surpasses timeoutSeconds.
     if(s.BytesAvailable == 0)
         if(timeoutStarted)
-            disp(toc(timeoutStartTime));
             if(toc(timeoutStartTime) > timeoutSeconds)
                disp(['No data found in ' int2str(timeoutSeconds) ' seconds: timeout limit reached.']);
                break;
