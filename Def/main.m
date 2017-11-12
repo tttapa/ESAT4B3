@@ -1,5 +1,5 @@
 function main
-%MAIN The main function for running the "slimme thuiszorgmonitor"
+% MAIN The main function for running the "slimme thuiszorgmonitor"
 %   Open a serial port for receiving data from the Arduino, start the GUI,
 %   and update the GUI with the filtererd incomming data
 
@@ -106,10 +106,14 @@ function main
     % disp(strcat({'Input buffer size: '}, string(s.InputBufferSize)));
     % disp(strcat({'Bytes per redraw:  '}, string(s.BytesAvailableFcnCount)));
     s.BytesAvailableFcnMode = 'byte';
+    
+    s.ErrorFcn = @serialerror;
+    s.BreakInterruptFcn = @serialerror;
 
 %% Set up plot
 
     gui = GUI_app;
+    gui.UIFigure.DeleteFcn = @closeapp;
 
     ECG_plot = plot(gui.UIAxes, ECG_time,ECG_buffer(ECG_extrasamples+1:ECG_bufferlen));
     set(gui.UIAxes,'XLim',[-ECG_windowsize 0],'YLim',ECG_range);
@@ -121,26 +125,32 @@ function main
 
     fopen(s);
     tic;
-    while ishandle(ECG_plot)
+    running = true;
+    % disp(string(s.Port))
+    % disp(exist('/dev/ttyACM1','file'))
+    while running % && exist(string(s.Port),'file') % TODO: this doesn't work ... How to check if the serial device is still available?
+        drawAll;
         % java.lang.Thread.sleep(frameduration);
         pause(frameduration/1000);
-        drawAll;
         % drawnow;
     end
 
 %% Close serial port when finished
     fclose(s);
-    clear s;
-
+    delete(s);
     disp('Done.');
+
+    function closeapp(~, ~)
+        running = false;
+    end
+
+    function serialerror(Error, err_msg, time) % TODO: necessary?
+        running = false;
+    end
 
 %% Serial callback
 
     function serialcb (s, ~, ~) % Callback function that executes when a new byte arrives on the serial port
-        % Print how many samples (2 Bytes) it should have received in the time it received one sample
-        disp(strcat({'Samples sent / samples received = '}, ...
-            string(toc * ECG_samplefreq * 2 / s.BytesAvailableFcnCount)));
-        tic;
         x = uint16(fread(s, s.BytesAvailableFcnCount)); % Read the data from the buffer
 
         for i = 1:s.BytesAvailableFcnCount
@@ -156,7 +166,6 @@ function main
                 value = uint16(0);
             end
         end
-        
     end
 
 %% Handling of incoming messages
@@ -183,17 +192,13 @@ function main
         ECG_filtered = ECG_filter(ECG_buffer, ECG_settings);
         ECG_filtered = ECG_filtered(ECG_extrasamples+1:ECG_bufferlen);
         ECG_filtered = ECG_filtered * ECG_scalingFactor;
-        if ishandle(ECG_plot)
-            set(ECG_plot,'YData',ECG_filtered);
-        end
+        set(ECG_plot,'YData',ECG_filtered);
     % ECG peaks
         BPM = ECG_getBPM(ECG_filtered, ECG_samplefreq);
         gui.beatrateEditField.Value = BPM;
         gui.Gauge.Value = BPM;
     % PPG plot
-        if ishandle(PPG_plot)
-            set(PPG_plot,'YData',PPG_buffer);
-        end
+        set(PPG_plot,'YData',PPG_buffer);
     end
 
 end % end of main function
