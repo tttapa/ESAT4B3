@@ -187,7 +187,9 @@ function main
             set(ECG_plot,'YData',ECG_filtered);
         end
     % ECG peaks
-        gui.beatrateEditField.Value = ECG_getBPM(ECG_filtered, ECG_samplefreq);
+        BPM = ECG_getBPM(ECG_filtered, ECG_samplefreq);
+        gui.beatrateEditField.Value = BPM;
+        gui.Gauge.Value = BPM;
     % PPG plot
         if ishandle(PPG_plot)
             set(PPG_plot,'YData',PPG_buffer);
