@@ -22,7 +22,7 @@ function main
     framerate = 30; % frames per secondend
     
     ECG_gain = 140;
-    ECG_Vref = 5;
+    ECG_mVref = 5000;
 
     ECG_samplefreq = 360;
     ECG_windowsize = 10; % show 10 seconds of data
@@ -31,7 +31,7 @@ function main
     % the end?
     ECG_extrasamples = ECG_samplefreq * 2; % samples containing transients are cut off the plot
     
-    ECG_range = [-6e-3 6e-3]; % [-inf inf];
+    ECG_range = [-6e0 6e0]; % [-inf inf];
     ECG_baseline = int16(511);
     
     PPG_samplefreq = 30;
@@ -46,7 +46,7 @@ function main
 
     frameduration = 1000 / framerate;
     
-    ECG_scalingFactor = ECG_Vref / 1023.0 / ECG_gain;
+    ECG_scalingFactor = ECG_mVref / 1023.0 / ECG_gain;
     ECG_visiblesamples = ECG_windowsize * ECG_samplefreq;
     ECG_bufferlen = ECG_visiblesamples + ECG_extrasamples;
     ECG_buffer = int16(zeros(ECG_bufferlen,1)); % create an empty buffer
@@ -179,12 +179,16 @@ function main
 %% Draw everything to the app
 
     function drawAll
+    % ECG plot
         ECG_filtered = ECG_filter(ECG_buffer, ECG_settings);
         ECG_filtered = ECG_filtered(ECG_extrasamples+1:ECG_bufferlen);
         ECG_filtered = ECG_filtered * ECG_scalingFactor;
         if ishandle(ECG_plot)
             set(ECG_plot,'YData',ECG_filtered);
         end
+    % ECG peaks
+        gui.beatrateEditField.Value = ECG_getBPM(ECG_filtered, ECG_samplefreq);
+    % PPG plot
         if ishandle(PPG_plot)
             set(PPG_plot,'YData',PPG_buffer);
         end
