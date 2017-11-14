@@ -19,9 +19,9 @@ function main
     
 %% Plot settings
 
-    framerate = 30; % frames per secondend
+    framerate = 30; % frames per second
     
-    minute = 5;
+    secondsPerMinute = 60;
     
     % ECG 
     
@@ -267,12 +267,13 @@ function main
         BPM_minuteSum = BPM_minuteSum + BPM;
 
         % now = uint64(posixtime(datetime('now')));
-        if mod (now, minute) == 0
+        if mod (now, secondsPerMinute) == 0
             if recording
-                if (minute == BPM_invalid)
+                if (secondsPerMinute == BPM_invalid)
+                    disp('No BPM detected');
                     saveBPM(0);
                 else
-                    saveBPM(BPM_minuteSum / (minute - BPM_invalid));
+                    saveBPM(BPM_minuteSum / (secondsPerMinute - BPM_invalid));
                 end
             end
             BPM_minuteSum = 0;
@@ -285,6 +286,10 @@ function main
         disp(strcat({'Average BPM: '}, string(BPM)));
         BPM_averages = [BPM_averages BPM];
         assignin('base','BPM_averages',BPM_averages);
+        fileID = fopen('BPM.csv','a');
+        fprintf(fileID,'%d\t%f\r\n', now, BPM);
+        % fprintf(fileID,'%016X\t%f\r\n', now, BPM);
+        fclose(fileID);
     end
 
 end % end of main function
