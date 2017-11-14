@@ -19,7 +19,9 @@ function main
     
 %% Plot settings
 
-    framerate = 10; % frames per secondend
+    framerate = 30; % frames per second
+    
+    secondsPerMinute = 60;
     
     % ECG 
     
@@ -35,6 +37,12 @@ function main
     
     ECG_range = [-6e0 6e0]; % [-inf inf];
     ECG_baseline = int16(511);
+    
+    ECG_lineWidth = 2;
+    ECG_cursorWidth = 8;
+    
+    ECG_lineColor = 'g';
+    ECG_cursorColor = 'k';
     
     % PPG
     
@@ -54,13 +62,19 @@ function main
     ECG_visiblesamples = ECG_windowsize * ECG_samplefreq;
     ECG_bufferlen = ECG_visiblesamples + ECG_extrasamples;
     ECG_buffer = int16(zeros(ECG_bufferlen,1)); % create an empty buffer
-    ECG_time = linspace(-ECG_windowsize, 0, ECG_visiblesamples);
+    ECG_ringBuffer = double(zeros(ECG_visiblesamples,1)); % create an empty buffer
+    ECG_ringBufferIndex = uint16(1);
+    ECG_samplesSinceLastDraw = uint16(0);
+    ECG_filtered = double(zeros(ECG_bufferlen,1));
+    ECG_time = linspace(0, ECG_windowsize, ECG_visiblesamples);
     ECG_settings = ECG_setup(ECG_samplefreq);
     
-    ECG_BPM_counter = 0;
-    
-    bpmtime = tic;
-    
+    BPM_minuteSum = 0;
+    recording = false;
+    BPM_averages = double.empty();
+    BPM_minimumAllowedValue = 30;
+    BPM_invalid = 0;
+        
     PPG_bufferlen = PPG_windowsize * PPG_samplefreq;
     PPG_buffer = zeros(PPG_bufferlen,1); % create an empty buffer
     PPG_time = linspace(-PPG_windowsize, 0, PPG_bufferlen);
@@ -123,8 +137,11 @@ function main
     gui = GUI_app;
     gui.UIFigure.DeleteFcn = @closeapp;
 
-    ECG_plot = plot(gui.UIAxes, ECG_time,ECG_buffer(ECG_extrasamples+1:ECG_bufferlen));
-    set(gui.UIAxes,'XLim',[-ECG_windowsize 0],'YLim',ECG_range);
+    hold(gui.UIAxes,'on');
+    ECG_plot = plot(gui.UIAxes, ECG_time,ECG_buffer(ECG_extrasamples+1:ECG_bufferlen),'LineWidth',ECG_lineWidth, 'Color', ECG_lineColor);
+    ECG_cursor_plot = plot(gui.UIAxes,[0 0],[ECG_range(1)*0.95,ECG_range(2)],'LineWidth',ECG_cursorWidth, 'Color', ECG_cursorColor);
+    set(gui.UIAxes,'XLim',[0 ECG_windowsize],'YLim',ECG_range,'TickDir','out');
+    
     
     PPG_plot = plot(gui.UIAxes2, PPG_time,PPG_buffer);
     set(gui.UIAxes2,'XLim',[-PPG_windowsize 0],'YLim',PPG_range);
@@ -136,12 +153,22 @@ function main
     running = true;
     % disp(string(s.Port))
     % disp(exist('/dev/ttyACM1','file'))
+    
+    ECG_BPM_previousTime = uint64(posixtime(datetime('now')));
+    
     while running % && exist(string(s.Port),'file') % TODO: this doesn't work ... How to check if the serial device is still available?
         if toc(frametime) >= frameduration
             frametime = tic;
             drawAll;
         end
-        pause(frameduration/10);
+        
+        now = uint64(posixtime(datetime('now')));
+        if now - ECG_BPM_previousTime >= 1
+            displayBPM;
+            ECG_BPM_previousTime = ECG_BPM_previousTime + 1;
+        end
+            
+        pause(frameduration/3);
     end
 
 %% Close serial port when finished
@@ -184,6 +211,7 @@ function main
             case 'ECG'
                 ECG_buffer(1:(ECG_bufferlen-1)) = ECG_buffer(2:ECG_bufferlen); % shift the buffer
                 ECG_buffer(ECG_bufferlen) = int16(value) - ECG_baseline; % add the new value to the buffer
+                ECG_samplesSinceLastDraw = ECG_samplesSinceLastDraw + 1;
             case 'PPG_RED'
             case 'PPG_IR'
             case 'PRESSURE_A'
@@ -198,23 +226,70 @@ function main
 
     function drawAll
     % ECG plot
-        ECG_filtered = ECG_filter(ECG_buffer, ECG_settings);
-        % ECG_filtered = double(ECG_buffer);
-        ECG_filtered = ECG_filtered(ECG_extrasamples+1:ECG_bufferlen);
-        ECG_filtered = ECG_filtered * ECG_scalingFactor;
-        set(ECG_plot,'YData',ECG_filtered);
-    % ECG peaks
-        ECG_BPM_counter = ECG_BPM_counter + 1;
-        if ECG_BPM_counter == framerate
-            BPM = ECG_getBPM(ECG_filtered, ECG_samplefreq);
-            gui.beatrateEditField.Value = BPM;
-            gui.Gauge.Value = BPM;
-            ECG_BPM_counter = 0;
+        if ECG_samplesSinceLastDraw > 0
+            ECG_filtered = ECG_filter(ECG_buffer, ECG_settings);
+            % ECG_filtered = double(ECG_buffer);
+            ECG_filtered = ECG_filtered(ECG_extrasamples+1:ECG_bufferlen);
+            ECG_filtered = ECG_filtered * ECG_scalingFactor;
+
+            % set(ECG_plot,'YData',ECG_filtered);
+            
+            while(ECG_samplesSinceLastDraw > 0)
+                ECG_ringBuffer(ECG_ringBufferIndex) ...
+                   = ECG_filtered(ECG_visiblesamples-ECG_samplesSinceLastDraw+1);
+                ECG_ringBufferIndex = mod(ECG_ringBufferIndex, ECG_visiblesamples) + 1;
+                ECG_samplesSinceLastDraw = ECG_samplesSinceLastDraw - 1;
+            end
+            set(ECG_plot,'YData',ECG_ringBuffer);
+            cursorPos = double(ECG_ringBufferIndex) * ECG_windowsize / ECG_visiblesamples;
+            if cursorPos > ECG_lineWidth/ECG_windowsize/50
+                set(ECG_cursor_plot, 'XData',[cursorPos  cursorPos ]);
+            end
         end
-        disp(toc(bpmtime));
-        bpmtime = tic;
+        
+        
     % PPG plot
         set(PPG_plot,'YData',PPG_buffer);
+    end
+
+    function displayBPM
+        BPM = ECG_getBPM(ECG_filtered, ECG_samplefreq);
+        
+        if BPM < BPM_minimumAllowedValue
+            gui.beatrateEditField.Value = 0;
+            gui.Gauge.Value = 0;
+            BPM_invalid = BPM_invalid + 1;
+        else
+            gui.beatrateEditField.Value = BPM;
+            gui.Gauge.Value = BPM;
+        end
+        
+        BPM_minuteSum = BPM_minuteSum + BPM;
+
+        % now = uint64(posixtime(datetime('now')));
+        if mod (now, secondsPerMinute) == 0
+            if recording
+                if (secondsPerMinute == BPM_invalid)
+                    disp('No BPM detected');
+                    saveBPM(0);
+                else
+                    saveBPM(BPM_minuteSum / (secondsPerMinute - BPM_invalid));
+                end
+            end
+            BPM_minuteSum = 0;
+            BPM_invalid = 0;
+            recording = true;
+        end
+    end
+    
+    function saveBPM(BPM)
+        disp(strcat({'Average BPM: '}, string(BPM)));
+        BPM_averages = [BPM_averages BPM];
+        assignin('base','BPM_averages',BPM_averages);
+        fileID = fopen('BPM.csv','a');
+        fprintf(fileID,'%d\t%f\r\n', now, BPM);
+        % fprintf(fileID,'%016X\t%f\r\n', now, BPM);
+        fclose(fileID);
     end
 
 end % end of main function
