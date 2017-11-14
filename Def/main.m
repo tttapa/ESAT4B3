@@ -21,13 +21,15 @@ function main
 
     framerate = 30; % frames per secondend
     
+    minute = 5;
+    
     % ECG 
     
     ECG_gain = 140;
     ECG_mVref = 5000;
 
     ECG_samplefreq = 360;
-    ECG_windowsize = 10; % show 5 seconds of data
+    ECG_windowsize = 5; % show 5 seconds of data
     
     % TODO: why are there transients at the start of the vector, but not at
     % the end?
@@ -37,7 +39,10 @@ function main
     ECG_baseline = int16(511);
     
     ECG_lineWidth = 2;
-    ECG_cursorWidth = 4;
+    ECG_cursorWidth = 8;
+    
+    ECG_lineColor = 'g';
+    ECG_cursorColor = 'k';
     
     % PPG
     
@@ -66,11 +71,10 @@ function main
     
     BPM_minuteSum = 0;
     recording = false;
-
-    ECG_BPM_previousTime = uint64(0);
-    
-    bpmtime = tic;
-    
+    BPM_averages = double.empty();
+    BPM_minimumAllowedValue = 30;
+    BPM_invalid = 0;
+        
     PPG_bufferlen = PPG_windowsize * PPG_samplefreq;
     PPG_buffer = zeros(PPG_bufferlen,1); % create an empty buffer
     PPG_time = linspace(-PPG_windowsize, 0, PPG_bufferlen);
@@ -134,9 +138,10 @@ function main
     gui.UIFigure.DeleteFcn = @closeapp;
 
     hold(gui.UIAxes,'on');
-    ECG_plot = plot(gui.UIAxes, ECG_time,ECG_buffer(ECG_extrasamples+1:ECG_bufferlen),'LineWidth',ECG_lineWidth);
-    ECG_cursor_plot = plot(gui.UIAxes,[ECG_visiblesamples/2 ECG_visiblesamples/2],ECG_range,'LineWidth',ECG_cursorWidth);
-    set(gui.UIAxes,'XLim',[0 ECG_windowsize],'YLim',ECG_range);
+    ECG_plot = plot(gui.UIAxes, ECG_time,ECG_buffer(ECG_extrasamples+1:ECG_bufferlen),'LineWidth',ECG_lineWidth, 'Color', ECG_lineColor);
+    ECG_cursor_plot = plot(gui.UIAxes,[0 0],[ECG_range(1)*0.95,ECG_range(2)],'LineWidth',ECG_cursorWidth, 'Color', ECG_cursorColor);
+    set(gui.UIAxes,'XLim',[0 ECG_windowsize],'YLim',ECG_range,'TickDir','out');
+    
     
     PPG_plot = plot(gui.UIAxes2, PPG_time,PPG_buffer);
     set(gui.UIAxes2,'XLim',[-PPG_windowsize 0],'YLim',PPG_range);
@@ -148,21 +153,22 @@ function main
     running = true;
     % disp(string(s.Port))
     % disp(exist('/dev/ttyACM1','file'))
+    
+    ECG_BPM_previousTime = uint64(posixtime(datetime('now')));
+    
     while running % && exist(string(s.Port),'file') % TODO: this doesn't work ... How to check if the serial device is still available?
         if toc(frametime) >= frameduration
             frametime = tic;
             drawAll;
         end
+        
         now = uint64(posixtime(datetime('now')));
-        if ECG_BPM_previousTime == 0
-            ECG_BPM_previousTime = now;
-        end
         if now - ECG_BPM_previousTime >= 1
             displayBPM;
             ECG_BPM_previousTime = ECG_BPM_previousTime + 1;
         end
             
-        pause(frameduration/10);
+        pause(frameduration/3);
     end
 
 %% Close serial port when finished
@@ -236,7 +242,9 @@ function main
             end
             set(ECG_plot,'YData',ECG_ringBuffer);
             cursorPos = double(ECG_ringBufferIndex) * ECG_windowsize / ECG_visiblesamples;
-            set(ECG_cursor_plot, 'XData',[cursorPos  cursorPos ]);
+            if cursorPos > ECG_lineWidth/ECG_windowsize/50
+                set(ECG_cursor_plot, 'XData',[cursorPos  cursorPos ]);
+            end
         end
         
         
@@ -246,23 +254,37 @@ function main
 
     function displayBPM
         BPM = ECG_getBPM(ECG_filtered, ECG_samplefreq);
-        gui.beatrateEditField.Value = BPM;
-        gui.Gauge.Value = BPM;
+        
+        if BPM < BPM_minimumAllowedValue
+            gui.beatrateEditField.Value = 0;
+            gui.Gauge.Value = 0;
+            BPM_invalid = BPM_invalid + 1;
+        else
+            gui.beatrateEditField.Value = BPM;
+            gui.Gauge.Value = BPM;
+        end
         
         BPM_minuteSum = BPM_minuteSum + BPM;
-        
-        now = uint64(posixtime(datetime('now')));
-        if mod (now, 60) == 0
+
+        % now = uint64(posixtime(datetime('now')));
+        if mod (now, minute) == 0
             if recording
-                saveBPM(BPM_minuteSum / 60);
+                if (minute == BPM_invalid)
+                    saveBPM(0);
+                else
+                    saveBPM(BPM_minuteSum / (minute - BPM_invalid));
+                end
             end
             BPM_minuteSum = 0;
+            BPM_invalid = 0;
             recording = true;
         end
     end
     
     function saveBPM(BPM)
         disp(strcat({'Average BPM: '}, string(BPM)));
+        BPM_averages = [BPM_averages BPM];
+        assignin('base','BPM_averages',BPM_averages);
     end
 
 end % end of main function
