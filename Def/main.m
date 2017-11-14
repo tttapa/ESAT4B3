@@ -19,7 +19,7 @@ function main
     
 %% Plot settings
 
-    framerate = 10; % frames per secondend
+    framerate = 30; % frames per secondend
     
     % ECG 
     
@@ -27,7 +27,7 @@ function main
     ECG_mVref = 5000;
 
     ECG_samplefreq = 360;
-    ECG_windowsize = 5; % show 5 seconds of data
+    ECG_windowsize = 10; % show 5 seconds of data
     
     % TODO: why are there transients at the start of the vector, but not at
     % the end?
@@ -35,6 +35,9 @@ function main
     
     ECG_range = [-6e0 6e0]; % [-inf inf];
     ECG_baseline = int16(511);
+    
+    ECG_lineWidth = 2;
+    ECG_cursorWidth = 4;
     
     % PPG
     
@@ -54,10 +57,17 @@ function main
     ECG_visiblesamples = ECG_windowsize * ECG_samplefreq;
     ECG_bufferlen = ECG_visiblesamples + ECG_extrasamples;
     ECG_buffer = int16(zeros(ECG_bufferlen,1)); % create an empty buffer
-    ECG_time = linspace(-ECG_windowsize, 0, ECG_visiblesamples);
+    ECG_ringBuffer = double(zeros(ECG_visiblesamples,1)); % create an empty buffer
+    ECG_ringBufferIndex = uint16(1);
+    ECG_samplesSinceLastDraw = uint16(0);
+    ECG_filtered = double(zeros(ECG_bufferlen,1));
+    ECG_time = linspace(0, ECG_windowsize, ECG_visiblesamples);
     ECG_settings = ECG_setup(ECG_samplefreq);
     
-    ECG_BPM_counter = 0;
+    BPM_minuteSum = 0;
+    recording = false;
+
+    ECG_BPM_previousTime = uint64(0);
     
     bpmtime = tic;
     
@@ -123,8 +133,10 @@ function main
     gui = GUI_app;
     gui.UIFigure.DeleteFcn = @closeapp;
 
-    ECG_plot = plot(gui.UIAxes, ECG_time,ECG_buffer(ECG_extrasamples+1:ECG_bufferlen));
-    set(gui.UIAxes,'XLim',[-ECG_windowsize 0],'YLim',ECG_range);
+    hold(gui.UIAxes,'on');
+    ECG_plot = plot(gui.UIAxes, ECG_time,ECG_buffer(ECG_extrasamples+1:ECG_bufferlen),'LineWidth',ECG_lineWidth);
+    ECG_cursor_plot = plot(gui.UIAxes,[ECG_visiblesamples/2 ECG_visiblesamples/2],ECG_range,'LineWidth',ECG_cursorWidth);
+    set(gui.UIAxes,'XLim',[0 ECG_windowsize],'YLim',ECG_range);
     
     PPG_plot = plot(gui.UIAxes2, PPG_time,PPG_buffer);
     set(gui.UIAxes2,'XLim',[-PPG_windowsize 0],'YLim',PPG_range);
@@ -141,6 +153,15 @@ function main
             frametime = tic;
             drawAll;
         end
+        now = uint64(posixtime(datetime('now')));
+        if ECG_BPM_previousTime == 0
+            ECG_BPM_previousTime = now;
+        end
+        if now - ECG_BPM_previousTime >= 1
+            displayBPM;
+            ECG_BPM_previousTime = ECG_BPM_previousTime + 1;
+        end
+            
         pause(frameduration/10);
     end
 
@@ -184,6 +205,7 @@ function main
             case 'ECG'
                 ECG_buffer(1:(ECG_bufferlen-1)) = ECG_buffer(2:ECG_bufferlen); % shift the buffer
                 ECG_buffer(ECG_bufferlen) = int16(value) - ECG_baseline; % add the new value to the buffer
+                ECG_samplesSinceLastDraw = ECG_samplesSinceLastDraw + 1;
             case 'PPG_RED'
             case 'PPG_IR'
             case 'PRESSURE_A'
@@ -198,23 +220,49 @@ function main
 
     function drawAll
     % ECG plot
-        ECG_filtered = ECG_filter(ECG_buffer, ECG_settings);
-        % ECG_filtered = double(ECG_buffer);
-        ECG_filtered = ECG_filtered(ECG_extrasamples+1:ECG_bufferlen);
-        ECG_filtered = ECG_filtered * ECG_scalingFactor;
-        set(ECG_plot,'YData',ECG_filtered);
-    % ECG peaks
-        ECG_BPM_counter = ECG_BPM_counter + 1;
-        if ECG_BPM_counter == framerate
-            BPM = ECG_getBPM(ECG_filtered, ECG_samplefreq);
-            gui.beatrateEditField.Value = BPM;
-            gui.Gauge.Value = BPM;
-            ECG_BPM_counter = 0;
+        if ECG_samplesSinceLastDraw > 0
+            ECG_filtered = ECG_filter(ECG_buffer, ECG_settings);
+            % ECG_filtered = double(ECG_buffer);
+            ECG_filtered = ECG_filtered(ECG_extrasamples+1:ECG_bufferlen);
+            ECG_filtered = ECG_filtered * ECG_scalingFactor;
+
+            % set(ECG_plot,'YData',ECG_filtered);
+            
+            while(ECG_samplesSinceLastDraw > 0)
+                ECG_ringBuffer(ECG_ringBufferIndex) ...
+                   = ECG_filtered(ECG_visiblesamples-ECG_samplesSinceLastDraw+1);
+                ECG_ringBufferIndex = mod(ECG_ringBufferIndex, ECG_visiblesamples) + 1;
+                ECG_samplesSinceLastDraw = ECG_samplesSinceLastDraw - 1;
+            end
+            set(ECG_plot,'YData',ECG_ringBuffer);
+            cursorPos = double(ECG_ringBufferIndex) * ECG_windowsize / ECG_visiblesamples;
+            set(ECG_cursor_plot, 'XData',[cursorPos  cursorPos ]);
         end
-        disp(toc(bpmtime));
-        bpmtime = tic;
+        
+        
     % PPG plot
         set(PPG_plot,'YData',PPG_buffer);
+    end
+
+    function displayBPM
+        BPM = ECG_getBPM(ECG_filtered, ECG_samplefreq);
+        gui.beatrateEditField.Value = BPM;
+        gui.Gauge.Value = BPM;
+        
+        BPM_minuteSum = BPM_minuteSum + BPM;
+        
+        now = uint64(posixtime(datetime('now')));
+        if mod (now, 60) == 0
+            if recording
+                saveBPM(BPM_minuteSum / 60);
+            end
+            BPM_minuteSum = 0;
+            recording = true;
+        end
+    end
+    
+    function saveBPM(BPM)
+        disp(strcat({'Average BPM: '}, string(BPM)));
     end
 
 end % end of main function
