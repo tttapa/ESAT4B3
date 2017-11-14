@@ -19,7 +19,7 @@ function main
     
 %% Plot settings
 
-    framerate = 10; % frames per secondend
+    framerate = 30; % frames per secondend
     
     % ECG 
     
@@ -54,10 +54,14 @@ function main
     ECG_visiblesamples = ECG_windowsize * ECG_samplefreq;
     ECG_bufferlen = ECG_visiblesamples + ECG_extrasamples;
     ECG_buffer = int16(zeros(ECG_bufferlen,1)); % create an empty buffer
+    ECG_filtered = double(zeros(ECG_bufferlen,1));
     ECG_time = linspace(-ECG_windowsize, 0, ECG_visiblesamples);
     ECG_settings = ECG_setup(ECG_samplefreq);
     
-    ECG_BPM_counter = 0;
+    BPM_minuteSum = 0;
+    recording = false;
+
+    ECG_BPM_previousTime = uint64(0);
     
     bpmtime = tic;
     
@@ -141,6 +145,15 @@ function main
             frametime = tic;
             drawAll;
         end
+        now = uint64(posixtime(datetime('now')));
+        if ECG_BPM_previousTime == 0
+            ECG_BPM_previousTime = now;
+        end
+        if now - ECG_BPM_previousTime >= 1
+            displayBPM;
+            ECG_BPM_previousTime = ECG_BPM_previousTime + 1;
+        end
+            
         pause(frameduration/10);
     end
 
@@ -203,18 +216,31 @@ function main
         ECG_filtered = ECG_filtered(ECG_extrasamples+1:ECG_bufferlen);
         ECG_filtered = ECG_filtered * ECG_scalingFactor;
         set(ECG_plot,'YData',ECG_filtered);
-    % ECG peaks
-        ECG_BPM_counter = ECG_BPM_counter + 1;
-        if ECG_BPM_counter == framerate
-            BPM = ECG_getBPM(ECG_filtered, ECG_samplefreq);
-            gui.beatrateEditField.Value = BPM;
-            gui.Gauge.Value = BPM;
-            ECG_BPM_counter = 0;
-        end
-        disp(toc(bpmtime));
-        bpmtime = tic;
+        
+        
     % PPG plot
         set(PPG_plot,'YData',PPG_buffer);
+    end
+
+    function displayBPM
+        BPM = ECG_getBPM(ECG_filtered, ECG_samplefreq);
+        gui.beatrateEditField.Value = BPM;
+        gui.Gauge.Value = BPM;
+        
+        BPM_minuteSum = BPM_minuteSum + BPM;
+        
+        now = uint64(posixtime(datetime('now')));
+        if mod (now, 60) == 0
+            if recording
+                saveBPM(BPM_minuteSum / 60);
+            end
+            BPM_minuteSum = 0;
+            recording = true;
+        end
+    end
+    
+    function saveBPM(BPM)
+        disp(strcat({'Average BPM: '}, string(BPM)));
     end
 
 end % end of main function
