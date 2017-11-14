@@ -27,7 +27,7 @@ function main
     ECG_mVref = 5000;
 
     ECG_samplefreq = 360;
-    ECG_windowsize = 5; % show 5 seconds of data
+    ECG_windowsize = 10; % show 5 seconds of data
     
     % TODO: why are there transients at the start of the vector, but not at
     % the end?
@@ -35,6 +35,9 @@ function main
     
     ECG_range = [-6e0 6e0]; % [-inf inf];
     ECG_baseline = int16(511);
+    
+    ECG_lineWidth = 2;
+    ECG_cursorWidth = 4;
     
     % PPG
     
@@ -54,8 +57,11 @@ function main
     ECG_visiblesamples = ECG_windowsize * ECG_samplefreq;
     ECG_bufferlen = ECG_visiblesamples + ECG_extrasamples;
     ECG_buffer = int16(zeros(ECG_bufferlen,1)); % create an empty buffer
+    ECG_ringBuffer = double(zeros(ECG_visiblesamples,1)); % create an empty buffer
+    ECG_ringBufferIndex = uint16(1);
+    ECG_samplesSinceLastDraw = uint16(0);
     ECG_filtered = double(zeros(ECG_bufferlen,1));
-    ECG_time = linspace(-ECG_windowsize, 0, ECG_visiblesamples);
+    ECG_time = linspace(0, ECG_windowsize, ECG_visiblesamples);
     ECG_settings = ECG_setup(ECG_samplefreq);
     
     BPM_minuteSum = 0;
@@ -127,8 +133,10 @@ function main
     gui = GUI_app;
     gui.UIFigure.DeleteFcn = @closeapp;
 
-    ECG_plot = plot(gui.UIAxes, ECG_time,ECG_buffer(ECG_extrasamples+1:ECG_bufferlen));
-    set(gui.UIAxes,'XLim',[-ECG_windowsize 0],'YLim',ECG_range);
+    hold(gui.UIAxes,'on');
+    ECG_plot = plot(gui.UIAxes, ECG_time,ECG_buffer(ECG_extrasamples+1:ECG_bufferlen),'LineWidth',ECG_lineWidth);
+    ECG_cursor_plot = plot(gui.UIAxes,[ECG_visiblesamples/2 ECG_visiblesamples/2],ECG_range,'LineWidth',ECG_cursorWidth);
+    set(gui.UIAxes,'XLim',[0 ECG_windowsize],'YLim',ECG_range);
     
     PPG_plot = plot(gui.UIAxes2, PPG_time,PPG_buffer);
     set(gui.UIAxes2,'XLim',[-PPG_windowsize 0],'YLim',PPG_range);
@@ -197,6 +205,7 @@ function main
             case 'ECG'
                 ECG_buffer(1:(ECG_bufferlen-1)) = ECG_buffer(2:ECG_bufferlen); % shift the buffer
                 ECG_buffer(ECG_bufferlen) = int16(value) - ECG_baseline; % add the new value to the buffer
+                ECG_samplesSinceLastDraw = ECG_samplesSinceLastDraw + 1;
             case 'PPG_RED'
             case 'PPG_IR'
             case 'PRESSURE_A'
@@ -211,11 +220,24 @@ function main
 
     function drawAll
     % ECG plot
-        ECG_filtered = ECG_filter(ECG_buffer, ECG_settings);
-        % ECG_filtered = double(ECG_buffer);
-        ECG_filtered = ECG_filtered(ECG_extrasamples+1:ECG_bufferlen);
-        ECG_filtered = ECG_filtered * ECG_scalingFactor;
-        set(ECG_plot,'YData',ECG_filtered);
+        if ECG_samplesSinceLastDraw > 0
+            ECG_filtered = ECG_filter(ECG_buffer, ECG_settings);
+            % ECG_filtered = double(ECG_buffer);
+            ECG_filtered = ECG_filtered(ECG_extrasamples+1:ECG_bufferlen);
+            ECG_filtered = ECG_filtered * ECG_scalingFactor;
+
+            % set(ECG_plot,'YData',ECG_filtered);
+            
+            while(ECG_samplesSinceLastDraw > 0)
+                ECG_ringBuffer(ECG_ringBufferIndex) ...
+                   = ECG_filtered(ECG_visiblesamples-ECG_samplesSinceLastDraw+1);
+                ECG_ringBufferIndex = mod(ECG_ringBufferIndex, ECG_visiblesamples) + 1;
+                ECG_samplesSinceLastDraw = ECG_samplesSinceLastDraw - 1;
+            end
+            set(ECG_plot,'YData',ECG_ringBuffer);
+            cursorPos = double(ECG_ringBufferIndex) * ECG_windowsize / ECG_visiblesamples;
+            set(ECG_cursor_plot, 'XData',[cursorPos  cursorPos ]);
+        end
         
         
     % PPG plot
