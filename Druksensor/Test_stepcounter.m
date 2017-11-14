@@ -1,5 +1,5 @@
 load ('data_druk.mat')
-signal = A(1:4000, 2);
+signal = A(:, 2);
 
 plot(signal)
-[steps, last]=stepcounter(signal, 500)
+[steps, last] = stepcounter(signal,500);
