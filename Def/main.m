@@ -19,13 +19,15 @@ function main
     
 %% Plot settings
 
-    framerate = 30; % frames per secondend
+    framerate = 10; % frames per secondend
+    
+    % ECG 
     
     ECG_gain = 140;
     ECG_mVref = 5000;
 
     ECG_samplefreq = 360;
-    ECG_windowsize = 10; % show 10 seconds of data
+    ECG_windowsize = 5; % show 5 seconds of data
     
     % TODO: why are there transients at the start of the vector, but not at
     % the end?
@@ -33,6 +35,8 @@ function main
     
     ECG_range = [-6e0 6e0]; % [-inf inf];
     ECG_baseline = int16(511);
+    
+    % PPG
     
     PPG_samplefreq = 30;
     PPG_windowsize = 10; % show 10 seconds of data
@@ -44,7 +48,7 @@ function main
     msgtype = message_type(0); % initialization of variables used in callback function
     value = uint16(0);         % "
 
-    frameduration = 1000 / framerate;
+    frameduration = 1.0 / framerate;
     
     ECG_scalingFactor = ECG_mVref / 1023.0 / ECG_gain;
     ECG_visiblesamples = ECG_windowsize * ECG_samplefreq;
@@ -52,6 +56,10 @@ function main
     ECG_buffer = int16(zeros(ECG_bufferlen,1)); % create an empty buffer
     ECG_time = linspace(-ECG_windowsize, 0, ECG_visiblesamples);
     ECG_settings = ECG_setup(ECG_samplefreq);
+    
+    ECG_BPM_counter = 0;
+    
+    bpmtime = tic;
     
     PPG_bufferlen = PPG_windowsize * PPG_samplefreq;
     PPG_buffer = zeros(PPG_bufferlen,1); % create an empty buffer
@@ -124,15 +132,16 @@ function main
 %% Main loop
 
     fopen(s);
-    tic;
+    frametime = tic;
     running = true;
     % disp(string(s.Port))
     % disp(exist('/dev/ttyACM1','file'))
     while running % && exist(string(s.Port),'file') % TODO: this doesn't work ... How to check if the serial device is still available?
-        drawAll;
-        % java.lang.Thread.sleep(frameduration);
-        pause(frameduration/1000);
-        % drawnow;
+        if toc(frametime) >= frameduration
+            frametime = tic;
+            drawAll;
+        end
+        pause(frameduration/10);
     end
 
 %% Close serial port when finished
@@ -190,13 +199,20 @@ function main
     function drawAll
     % ECG plot
         ECG_filtered = ECG_filter(ECG_buffer, ECG_settings);
+        % ECG_filtered = double(ECG_buffer);
         ECG_filtered = ECG_filtered(ECG_extrasamples+1:ECG_bufferlen);
         ECG_filtered = ECG_filtered * ECG_scalingFactor;
         set(ECG_plot,'YData',ECG_filtered);
     % ECG peaks
-        BPM = ECG_getBPM(ECG_filtered, ECG_samplefreq);
-        gui.beatrateEditField.Value = BPM;
-        gui.Gauge.Value = BPM;
+        ECG_BPM_counter = ECG_BPM_counter + 1;
+        if ECG_BPM_counter == framerate
+            BPM = ECG_getBPM(ECG_filtered, ECG_samplefreq);
+            gui.beatrateEditField.Value = BPM;
+            gui.Gauge.Value = BPM;
+            ECG_BPM_counter = 0;
+        end
+        disp(toc(bpmtime));
+        bpmtime = tic;
     % PPG plot
         set(PPG_plot,'YData',PPG_buffer);
     end
