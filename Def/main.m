@@ -21,7 +21,7 @@ function main
 
     framerate = 30; % frames per second
     
-    secondsPerMinute = 60;
+    secondsPerMinute = 5;
     
     % ECG 
     
@@ -69,11 +69,9 @@ function main
     ECG_time = linspace(0, ECG_windowsize, ECG_visiblesamples);
     ECG_settings = ECG_setup(ECG_samplefreq);
     
-    BPM_minuteSum = 0;
-    recording = false;
+    BPM_minuteAverage = Average;
     BPM_averages = double.empty();
     BPM_minimumAllowedValue = 30;
-    BPM_invalid = 0;
         
     PPG_bufferlen = PPG_windowsize * PPG_samplefreq;
     PPG_buffer = zeros(PPG_bufferlen,1); % create an empty buffer
@@ -154,7 +152,8 @@ function main
     % disp(string(s.Port))
     % disp(exist('/dev/ttyACM1','file'))
     
-    ECG_BPM_previousTime = uint64(posixtime(datetime('now')));
+    SecondTimer_prevTime= uint64(posixtime(datetime('now')));
+    firstMinute = true;
     
     while running % && exist(string(s.Port),'file') % TODO: this doesn't work ... How to check if the serial device is still available?
         if toc(frametime) >= frameduration
@@ -163,9 +162,12 @@ function main
         end
         
         now = uint64(posixtime(datetime('now')));
-        if now - ECG_BPM_previousTime >= 1
-            displayBPM;
-            ECG_BPM_previousTime = ECG_BPM_previousTime + 1;
+        if now - SecondTimer_prevTime >= 1
+            everySecond;
+            if mod (now, secondsPerMinute) == 0
+                everyMinute;
+            end
+            SecondTimer_prevTime = SecondTimer_prevTime + 1;
         end
             
         pause(frameduration/3);
@@ -252,34 +254,28 @@ function main
         set(PPG_plot,'YData',PPG_buffer);
     end
 
-    function displayBPM
+    function everySecond
         BPM = ECG_getBPM(ECG_filtered, ECG_samplefreq);
         
         if BPM < BPM_minimumAllowedValue
             gui.beatrateEditField.Value = 0;
             gui.Gauge.Value = 0;
-            BPM_invalid = BPM_invalid + 1;
         else
             gui.beatrateEditField.Value = BPM;
             gui.Gauge.Value = BPM;
         end
-        
-        BPM_minuteSum = BPM_minuteSum + BPM;
+        BPM_minuteAverage.add(BPM);
+    end
 
-        % now = uint64(posixtime(datetime('now')));
-        if mod (now, secondsPerMinute) == 0
-            if recording
-                if (secondsPerMinute == BPM_invalid)
-                    disp('No BPM detected');
-                    saveBPM(0);
-                else
-                    saveBPM(BPM_minuteSum / (secondsPerMinute - BPM_invalid));
-                end
-            end
-            BPM_minuteSum = 0;
-            BPM_invalid = 0;
-            recording = true;
+    function everyMinute
+        if firstMinute
+            disp('first minute');
+            firstMinute = false;
+        else
+    % Save BPM minute average
+            saveBPM(BPM_minuteAverage.getAverage);
         end
+        BPM_minuteAverage.reset;
     end
     
     function saveBPM(BPM)
