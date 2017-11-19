@@ -8,35 +8,36 @@ gui = appdruksensor;
 % gui.Gauge.Value = percentage;
 
 
-huelb = 800;
+
+huelb = 1023;
 huelf = 723;
 huerb = 500;
-huerf = 0;
+huerf = 900;
 
 %% functie die de druk per deel van de voet aanduidt
 % left back (lb)
 [rflb gflb bflb] = step_color_category(huelb);                                % via callback
-gui.Lamp.Color = [rflb gflb bflb];
+gui.Lamplb.Color = [rflb gflb bflb];
 
 % left front (lf)
 [rflf gflf bflf] = step_color_category(huelf);                                % via callback
-gui.Lamp_5.Color = [rflf gflf bflf];
+gui.Lamplf.Color = [rflf gflf bflf];
 
 % right back (rb)
 [rfrb gfrb bfrb] = step_color_category(huerb);                                % via callback
-gui.Lamp_6.Color = [rfrb gfrb bfrb];
+gui.Lamprb.Color = [rfrb gfrb bfrb];
 
 % right front (rf)
 [rfrf gfrf bfrf] = step_color_category(huerf);                                % via callback
-gui.Lamp_7.Color = [rfrf gfrf bfrf];
+gui.Lamprf.Color = [rfrf gfrf bfrf];
 
 
 
 %% plot image
-imshow('voet.jpg','Parent',gui.UIAxes)
 
 imshow('colorbar.jpg','Parent',gui.UIAxes2)
 
+imshow('voet.jpg','Parent',gui.UIAxes)
 
 
 

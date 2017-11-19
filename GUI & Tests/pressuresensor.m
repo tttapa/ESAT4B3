@@ -8,25 +8,23 @@ gui = app1;
 % gui.Gauge.Value = percentage;
 
 
-% functie die de druk per deel van de voet aanduidt
+%% functie die de druk per deel van de voet aanduidt
 % left back (lb)
 [rflb gflb bflb] = step_color_category(huelb);                                % via callback
-gui.TextArea.BackgroundColor = [rflb gflb bflb];
-
+gui.Lamp.Color = [rflb gflb bflb];
 
 % left front (lf)
 [rflf gflf bflf] = step_color_category(huelf);                                % via callback
-gui.TextArea_2.BackgroundColor = [rflf gflf bflf];
-
-
-% right front (rf)
-[rfrf gfrf bfrf] = step_color_category(huerf);                                % via callback
-gui.TextArea_3.BackgroundColor = [rfrf gfrf bfrf];
-
+gui.Lamp_5.Color = [rflf gflf bflf];
 
 % right back (rb)
 [rfrb gfrb bfrb] = step_color_category(huerb);                                % via callback
-gui.TextArea_4.BackgroundColor = [rfrb gfrb bfrb];
+gui.Lamp_6.Color = [rfrb gfrb bfrb];
+
+% right front (rf)
+[rfrf gfrf bfrf] = step_color_category(huerf);                                % via callback
+gui.Lamp_7.Color = [rfrf gfrf bfrf];
+
 
 
 
