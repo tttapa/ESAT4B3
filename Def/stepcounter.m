@@ -1,29 +1,29 @@
-
-function [steps,mem_prev] = stepcounter(signal,threshold, mem_prev)                               %input: gefilterd s1 en gefilterd s2
-
-steps = 0;
-counter = 2;
-total_count = length(signal) - 1;
-
-if nargin == 2
-    mem_prev = false;
-end
-    
-while counter <= total_count
-    mem_cur = signal(counter, 1);
-    if mem_cur < threshold
-        mem_cur = false;
-    else
-        mem_cur = true;
+classdef StepCounter < handle
+    properties (SetAccess = private)
+        stepping = false;
+        steps = uint16(0);
+        highThres;
+        lowThres;
     end
-    
-    if mem_prev == false && mem_cur == true
-        steps = steps +1;
+    methods
+        function obj = StepCounter(highThres, lowThres)
+            obj.highThres = highThres;
+            obj.lowThres = lowThres;
+        end
+        function add(obj, value)
+            if obj.stepping
+                if value < obj.lowThres
+                    obj.stepping = false;
+                end
+            else 
+                if value > obj.highThres
+                    obj.stepping = true;
+                    obj.steps = obj.steps + 1;
+                end
+            end
+        end
+        function reset(obj)
+            obj.steps = 0;
+        end
     end
-    
-    mem_prev = mem_cur;
-    counter = counter + 1;
 end
-end
-
-
