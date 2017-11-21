@@ -21,7 +21,8 @@ function main
 
     framerate = 30; % frames per second
     
-    secondsPerMinute = 5;
+    secondsPerMinute = 5; % 60
+    secondsPerQuarterH = 5; % 15*60
     
     % ECG 
     
@@ -51,6 +52,12 @@ function main
 
     PPG_range = [0 1023];
     
+    % Pressure
+    
+    pressureAverageLen = 64;
+    PresHighThreshold = 600;
+    PresLowThreshold = 400;
+    
 %% Initializations
 
     msgtype = message_type(0); % initialization of variables used in callback function
@@ -72,10 +79,24 @@ function main
     BPM_minuteAverage = Average;
     BPM_averages = double.empty();
     BPM_minimumAllowedValue = 30;
-        
+
+    % PPG
+    
     PPG_bufferlen = PPG_windowsize * PPG_samplefreq;
     PPG_buffer = zeros(PPG_bufferlen,1); % create an empty buffer
     PPG_time = linspace(-PPG_windowsize, 0, PPG_bufferlen);
+    
+    % Pressure
+    
+    PresHL_average = RunningAverage(pressureAverageLen);
+    PresTL_average = RunningAverage(pressureAverageLen);
+    PresHR_average = RunningAverage(pressureAverageLen);
+    PresTR_average = RunningAverage(pressureAverageLen);
+    
+    PresL_stepCtr = StepCounter(PresHighThreshold, PresLowThreshold);
+    PresR_stepCtr = StepCounter(PresHighThreshold, PresLowThreshold);
+    
+    stepsPerQuarter = double.empty();
 
 %% Serial port stuff
 
@@ -167,6 +188,9 @@ function main
             if mod (now, secondsPerMinute) == 0
                 everyMinute;
             end
+            if mod (now, secondsPerQuarterH) == 0
+                everyQuarterH;
+            end
             SecondTimer_prevTime = SecondTimer_prevTime + 1;
         end
             
@@ -217,9 +241,15 @@ function main
             case 'PPG_RED'
             case 'PPG_IR'
             case 'PRESSURE_A'
+                PresHL_average.add(value);
+                PresL_stepCtr.add(value);
             case 'PRESSURE_B'
+                PresTL_average.add(value);
             case 'PRESSURE_C'
+                PresHR_average.add(value);
+                PresR_stepCtr.add(value);
             case 'PRESSURE_D'
+                PresTR_average.add(value);
             case 'COMMAND'
         end
     end
@@ -233,8 +263,6 @@ function main
             % ECG_filtered = double(ECG_buffer);
             ECG_filtered = ECG_filtered(ECG_extrasamples+1:ECG_bufferlen);
             ECG_filtered = ECG_filtered * ECG_scalingFactor;
-
-            % set(ECG_plot,'YData',ECG_filtered);
             
             while(ECG_samplesSinceLastDraw > 0)
                 ECG_ringBuffer(ECG_ringBufferIndex) ...
@@ -249,15 +277,21 @@ function main
             end
         end
         
-        
     % PPG plot
         set(PPG_plot,'YData',PPG_buffer);
+        
+    % Pressure
+        % set(PresHL,'Color',step_color_category(PresHL_average.getAverage));
+        % set(PresTL,'Color',step_color_category(PresTL_average.getAverage));
+        % set(PresHR,'Color',step_color_category(PresHR_average.getAverage));
+        % set(PresTR,'Color',step_color_category(PresTR_average.getAverage));
     end
 
     function everySecond
         BPM = ECG_getBPM(ECG_filtered, ECG_samplefreq);
         
         if BPM < BPM_minimumAllowedValue
+            BPM = 0;
             gui.beatrateEditField.Value = 0;
             gui.Gauge.Value = 0;
         else
@@ -268,8 +302,7 @@ function main
     end
 
     function everyMinute
-        if firstMinute
-            disp('first minute');
+        if firstMinute % ignore the first (incomplete) minute
             firstMinute = false;
         else
     % Save BPM minute average
@@ -277,15 +310,29 @@ function main
         end
         BPM_minuteAverage.reset;
     end
+
+    function everyQuarterH
+        saveSteps(PresL_stepCtr.steps + PresR_stepCtr.steps)
+        PresL_stepCtr.reset;
+        PresR_stepCtr.reset;
+    end
     
     function saveBPM(BPM)
         disp(strcat({'Average BPM: '}, string(BPM)));
         BPM_averages = [BPM_averages BPM];
-        assignin('base','BPM_averages',BPM_averages);
         fileID = fopen('BPM.csv','a');
         fprintf(fileID,'%d\t%f\r\n', now, BPM);
         % fprintf(fileID,'%016X\t%f\r\n', now, BPM);
         fclose(fileID);
     end
+
+    function saveSteps(steps)
+        disp(strcat({'Steps last 15 min: '}, string(steps)));
+        stepsPerQuarter = [stepsPerQuarter steps];
+        fileID = fopen('Steps.csv','a');
+        fprintf(fileID,'%d\t%du\r\n', now, steps);
+        % fprintf(fileID,'%016X\t%f\r\n', now, BPM);
+        fclose(fileID);
+    end        
 
 end % end of main function

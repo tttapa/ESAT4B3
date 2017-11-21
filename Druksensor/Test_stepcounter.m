@@ -1,5 +1,5 @@
 load ('data_druk.mat')
 signal = A(:, 2);
 
-plot(signal)
+figure, plot(signal);
 [steps, last] = stepcounter(signal,500);
