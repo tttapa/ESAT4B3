@@ -17,15 +17,14 @@ function main
     bytesPerMessage = 2;
     messagesPerSerialParse = 6;
     
-%% Plot settings
+%% Settings
 
     framerate = 30; % frames per second
     
     secondsPerMinute = 5; % 60
     secondsPerQuarterH = 5; % 15*60
     
-    % ECG 
-    
+% ECG
     ECG_gain = 140;
     ECG_mVref = 5000;
 
@@ -42,52 +41,44 @@ function main
     ECG_lineWidth = 2;
     ECG_cursorWidth = 8;
     
-    ECG_lineColor = 'g';
-    ECG_cursorColor = 'k';
+    BPM_minimumAllowedValue = 40;
     
-    % PPG
-    
+% PPG    
     PPG_samplefreq = 30;
     PPG_windowsize = 10; % show 10 seconds of data
 
     PPG_range = [0 1023];
     
-    % Pressure
-    
+% Pressure    
     pressureAverageLen = 64;
     PresHighThreshold = 600;
     PresLowThreshold = 400;
     
 %% Initializations
 
+% Serial
     msgtype = message_type(0); % initialization of variables used in callback function
     value = uint16(0);         % "
 
+% GUI
     frameduration = 1.0 / framerate;
+    gui = GUI_app;
+    gui.UIFigure.DeleteFcn = @closeapp;
     
-    ECG_scalingFactor = ECG_mVref / 1023.0 / ECG_gain;
-    ECG_visiblesamples = ECG_windowsize * ECG_samplefreq;
-    ECG_bufferlen = ECG_visiblesamples + ECG_extrasamples;
-    ECG_buffer = int16(zeros(ECG_bufferlen,1)); % create an empty buffer
-    ECG_ringBuffer = double(zeros(ECG_visiblesamples,1)); % create an empty buffer
-    ECG_ringBufferIndex = uint16(1);
-    ECG_samplesSinceLastDraw = uint16(0);
-    ECG_filtered = double(zeros(ECG_bufferlen,1));
-    ECG_time = linspace(0, ECG_windowsize, ECG_visiblesamples);
-    ECG_settings = ECG_setup(ECG_samplefreq);
-    
-    BPM_minuteAverage = Average;
-    BPM_averages = double.empty();
-    BPM_minimumAllowedValue = 30;
+% ECG
+    ecg = ECG(ECG_windowsize, ECG_extrasamples, ECG_samplefreq, ...
+        ECG_range, ECG_lineWidth, ECG_cursorWidth, ...
+        ECG_baseline, ECG_mVref, ECG_gain, ...
+        gui.UIAxes, gui.Gauge, gui.beatrateEditField, ...
+        BPM_minimumAllowedValue);
 
-    % PPG
+% PPG
     
     PPG_bufferlen = PPG_windowsize * PPG_samplefreq;
     PPG_buffer = zeros(PPG_bufferlen,1); % create an empty buffer
     PPG_time = linspace(-PPG_windowsize, 0, PPG_bufferlen);
     
-    % Pressure
-    
+% Pressure
     PresHL_average = RunningAverage(pressureAverageLen);
     PresTL_average = RunningAverage(pressureAverageLen);
     PresHR_average = RunningAverage(pressureAverageLen);
@@ -153,15 +144,6 @@ function main
 
 %% Set up plot
 
-    gui = GUI_app;
-    gui.UIFigure.DeleteFcn = @closeapp;
-
-    hold(gui.UIAxes,'on');
-    ECG_plot = plot(gui.UIAxes, ECG_time,ECG_buffer(ECG_extrasamples+1:ECG_bufferlen),'LineWidth',ECG_lineWidth, 'Color', ECG_lineColor);
-    ECG_cursor_plot = plot(gui.UIAxes,[0 0],[ECG_range(1)*0.95,ECG_range(2)],'LineWidth',ECG_cursorWidth, 'Color', ECG_cursorColor);
-    set(gui.UIAxes,'XLim',[0 ECG_windowsize],'YLim',ECG_range,'TickDir','out');
-    
-    
     PPG_plot = plot(gui.UIAxes2, PPG_time,PPG_buffer);
     set(gui.UIAxes2,'XLim',[-PPG_windowsize 0],'YLim',PPG_range);
     
@@ -170,9 +152,6 @@ function main
     fopen(s);
     frametime = tic;
     running = true;
-    % disp(string(s.Port))
-    % disp(exist('/dev/ttyACM1','file'))
-    
     SecondTimer_prevTime= uint64(posixtime(datetime('now')));
     firstMinute = true;
     
@@ -181,7 +160,6 @@ function main
             frametime = tic;
             drawAll;
         end
-        
         now = uint64(posixtime(datetime('now')));
         if now - SecondTimer_prevTime >= 1
             everySecond;
@@ -193,7 +171,6 @@ function main
             end
             SecondTimer_prevTime = SecondTimer_prevTime + 1;
         end
-            
         pause(frameduration/3);
     end
 
@@ -206,7 +183,7 @@ function main
         running = false;
     end
 
-    function serialerror(Error, err_msg, time) % TODO: necessary?
+    function serialerror(~, ~, ~) % TODO: necessary?
         running = false;
     end
 
@@ -235,9 +212,7 @@ function main
     function handleIncomingMessage (value, msgtype)
         switch msgtype 
             case 'ECG'
-                ECG_buffer(1:(ECG_bufferlen-1)) = ECG_buffer(2:ECG_bufferlen); % shift the buffer
-                ECG_buffer(ECG_bufferlen) = int16(value) - ECG_baseline; % add the new value to the buffer
-                ECG_samplesSinceLastDraw = ECG_samplesSinceLastDraw + 1;
+                ecg.add(value);
             case 'PPG_RED'
             case 'PPG_IR'
             case 'PRESSURE_A'
@@ -258,27 +233,10 @@ function main
 
     function drawAll
     % ECG plot
-        if ECG_samplesSinceLastDraw > 0
-            ECG_filtered = ECG_filter(ECG_buffer, ECG_settings);
-            % ECG_filtered = double(ECG_buffer);
-            ECG_filtered = ECG_filtered(ECG_extrasamples+1:ECG_bufferlen);
-            ECG_filtered = ECG_filtered * ECG_scalingFactor;
-            
-            while(ECG_samplesSinceLastDraw > 0)
-                ECG_ringBuffer(ECG_ringBufferIndex) ...
-                   = ECG_filtered(ECG_visiblesamples-ECG_samplesSinceLastDraw+1);
-                ECG_ringBufferIndex = mod(ECG_ringBufferIndex, ECG_visiblesamples) + 1;
-                ECG_samplesSinceLastDraw = ECG_samplesSinceLastDraw - 1;
-            end
-            set(ECG_plot,'YData',ECG_ringBuffer);
-            cursorPos = double(ECG_ringBufferIndex) * ECG_windowsize / ECG_visiblesamples;
-            if cursorPos > ECG_lineWidth/ECG_windowsize/50
-                set(ECG_cursor_plot, 'XData',[cursorPos  cursorPos ]);
-            end
-        end
+        ecg.draw;
         
     % PPG plot
-        set(PPG_plot,'YData',PPG_buffer);
+        % set(PPG_plot,'YData',PPG_buffer);
         
     % Pressure
         % set(PresHL,'Color',step_color_category(PresHL_average.getAverage));
@@ -288,17 +246,7 @@ function main
     end
 
     function everySecond
-        BPM = ECG_getBPM(ECG_filtered, ECG_samplefreq);
-        
-        if BPM < BPM_minimumAllowedValue
-            BPM = 0;
-            gui.beatrateEditField.Value = 0;
-            gui.Gauge.Value = 0;
-        else
-            gui.beatrateEditField.Value = BPM;
-            gui.Gauge.Value = BPM;
-        end
-        BPM_minuteAverage.add(BPM);
+        ecg.displayBPM;
     end
 
     function everyMinute
@@ -306,9 +254,9 @@ function main
             firstMinute = false;
         else
     % Save BPM minute average
-            saveBPM(BPM_minuteAverage.getAverage);
+            ecg.saveBPM;
         end
-        BPM_minuteAverage.reset;
+        ecg.resetBPM;
     end
 
     function everyQuarterH
@@ -317,15 +265,6 @@ function main
         PresR_stepCtr.reset;
     end
     
-    function saveBPM(BPM)
-        disp(strcat({'Average BPM: '}, string(BPM)));
-        BPM_averages = [BPM_averages BPM];
-        fileID = fopen('BPM.csv','a');
-        fprintf(fileID,'%d\t%f\r\n', now, BPM);
-        % fprintf(fileID,'%016X\t%f\r\n', now, BPM);
-        fclose(fileID);
-    end
-
     function saveSteps(steps)
         disp(strcat({'Steps last 15 min: '}, string(steps)));
         stepsPerQuarter = [stepsPerQuarter steps];
