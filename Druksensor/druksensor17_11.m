@@ -9,9 +9,9 @@ gui = appdruksensor;
 
 
 
-huelb = 1023;
-huelf = 723;
-huerb = 500;
+huelb = 1;
+huelf = 100;
+huerb = 20;
 huerf = 900;
 
 %% functie die de druk per deel van de voet aanduidt
@@ -35,9 +35,12 @@ gui.Lamprf.Color = [rfrf gfrf bfrf];
 
 %% plot image
 
-imshow('colorbar.jpg','Parent',gui.UIAxes2)
-
 imshow('voet.jpg','Parent',gui.UIAxes)
+
+imshow('grotetekst.jpg', 'Parent', gui.UIAxes2)
+
+
+
 
 
 

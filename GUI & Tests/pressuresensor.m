@@ -10,20 +10,20 @@ gui = app1;
 
 %% functie die de druk per deel van de voet aanduidt
 % left back (lb)
-[rflb gflb bflb] = step_color_category(huelb);                                % via callback
-gui.Lamp.Color = [rflb gflb bflb];
-
-% left front (lf)
-[rflf gflf bflf] = step_color_category(huelf);                                % via callback
-gui.Lamp_5.Color = [rflf gflf bflf];
-
-% right back (rb)
-[rfrb gfrb bfrb] = step_color_category(huerb);                                % via callback
-gui.Lamp_6.Color = [rfrb gfrb bfrb];
-
-% right front (rf)
-[rfrf gfrf bfrf] = step_color_category(huerf);                                % via callback
-gui.Lamp_7.Color = [rfrf gfrf bfrf];
+% [rflb gflb bflb] = step_color_category(huelb);                                % via callback
+% gui.Lamp.Color = [rflb gflb bflb];
+% 
+% % left front (lf)
+% [rflf gflf bflf] = step_color_category(huelf);                                % via callback
+% gui.Lamp_5.Color = [rflf gflf bflf];
+% 
+% % right back (rb)
+% [rfrb gfrb bfrb] = step_color_category(huerb);                                % via callback
+% gui.Lamp_6.Color = [rfrb gfrb bfrb];
+% 
+% % right front (rf)
+% [rfrf gfrf bfrf] = step_color_category(huerf);                                % via callback
+% gui.Lamp_7.Color = [rfrf gfrf bfrf];
 
 
 
