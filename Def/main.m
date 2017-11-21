@@ -21,7 +21,8 @@ function main
 
     framerate = 30; % frames per second
     
-    secondsPerMinute = 5;
+    secondsPerMinute = 60;
+    secondsPerQuarterH = 15*60;
     
     % ECG 
     
@@ -167,6 +168,9 @@ function main
             if mod (now, secondsPerMinute) == 0
                 everyMinute;
             end
+            if mod (now, secondsPerQuarterH) == 0
+                everyQuarterH;
+            end
             SecondTimer_prevTime = SecondTimer_prevTime + 1;
         end
             
@@ -233,8 +237,6 @@ function main
             % ECG_filtered = double(ECG_buffer);
             ECG_filtered = ECG_filtered(ECG_extrasamples+1:ECG_bufferlen);
             ECG_filtered = ECG_filtered * ECG_scalingFactor;
-
-            % set(ECG_plot,'YData',ECG_filtered);
             
             while(ECG_samplesSinceLastDraw > 0)
                 ECG_ringBuffer(ECG_ringBufferIndex) ...
@@ -248,7 +250,6 @@ function main
                 set(ECG_cursor_plot, 'XData',[cursorPos  cursorPos ]);
             end
         end
-        
         
     % PPG plot
         set(PPG_plot,'YData',PPG_buffer);
@@ -269,13 +270,16 @@ function main
 
     function everyMinute
         if firstMinute
-            disp('first minute');
             firstMinute = false;
         else
     % Save BPM minute average
             saveBPM(BPM_minuteAverage.getAverage);
         end
         BPM_minuteAverage.reset;
+    end
+
+    function everyQuarterH
+        
     end
     
     function saveBPM(BPM)
