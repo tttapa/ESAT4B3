@@ -19,6 +19,8 @@ function main
     
 %% Settings
 
+    windowsize = 5; % show 5 seconds of data
+
     framerate = 30; % frames per second
     
     secondsPerMinute = 5; % 60
@@ -29,13 +31,12 @@ function main
     ECG_mVref = 5000;
 
     ECG_samplefreq = 360;
-    ECG_windowsize = 5; % show 5 seconds of data
     
     % TODO: why are there transients at the start of the vector, but not at
     % the end?
     ECG_extrasamples = ECG_samplefreq * 2; % samples containing transients are cut off the plot
     
-    ECG_range = [-6e0 6e0]; % [-inf inf];
+    ECG_range = [-6e0 6e0]; % [-inf inf]; for automatic ranges
     ECG_baseline = int16(511);
     
     ECG_lineWidth = 2;
@@ -44,10 +45,13 @@ function main
     BPM_minimumAllowedValue = 40;
     
 % PPG    
-    PPG_samplefreq = 30;
-    PPG_windowsize = 10; % show 10 seconds of data
-
+    PPG_samplefreq = 50;
+    PPG_extrasamples = PPG_samplefreq * 2;
     PPG_range = [0 1023];
+    
+    PPG_lineWidth = 2;
+    PPG_cursorWidth = 8;
+    PPG_baseline = 0;
     
 % Pressure    
     pressureAverageLen = 64;
@@ -66,17 +70,18 @@ function main
     gui.UIFigure.DeleteFcn = @closeapp;
     
 % ECG
-    ecg = ECG(ECG_windowsize, ECG_extrasamples, ECG_samplefreq, ...
+    ecg = ECG(windowsize, ECG_extrasamples, ECG_samplefreq, ...
         ECG_range, ECG_lineWidth, ECG_cursorWidth, ...
         ECG_baseline, ECG_mVref, ECG_gain, ...
-        gui.UIAxes, gui.Gauge, gui.beatrateEditField, ...
+        gui.ECGAxesHome, gui.ECGButton, ...
         BPM_minimumAllowedValue);
 
 % PPG
     
-    PPG_bufferlen = PPG_windowsize * PPG_samplefreq;
-    PPG_buffer = zeros(PPG_bufferlen,1); % create an empty buffer
-    PPG_time = linspace(-PPG_windowsize, 0, PPG_bufferlen);
+    ppg = PPG(windowsize, PPG_extrasamples, PPG_samplefreq, ...
+        PPG_range, PPG_lineWidth, PPG_cursorWidth, ...
+        PPG_baseline, ...
+        gui.PPGAxesHome, gui.PPGButton);
     
 % Pressure
     PresHL_average = RunningAverage(pressureAverageLen);
@@ -144,8 +149,7 @@ function main
 
 %% Set up plot
 
-    PPG_plot = plot(gui.UIAxes2, PPG_time,PPG_buffer);
-    set(gui.UIAxes2,'XLim',[-PPG_windowsize 0],'YLim',PPG_range);
+    ; % Nothing?
     
 %% Main loop
 
@@ -214,7 +218,9 @@ function main
             case 'ECG'
                 ecg.add(value);
             case 'PPG_RED'
+                ppg.add_RD(value);
             case 'PPG_IR'
+                ppg.add_IR(value);
             case 'PRESSURE_A'
                 PresHL_average.add(value);
                 PresL_stepCtr.add(value);
@@ -234,11 +240,12 @@ function main
     function drawAll
     % ECG plot
         ecg.draw;
+        ppg.draw;
         
     % PPG plot
         % set(PPG_plot,'YData',PPG_buffer);
         
-    % Pressure
+    % Pressure % TODO
         % set(PresHL,'Color',step_color_category(PresHL_average.getAverage));
         % set(PresTL,'Color',step_color_category(PresTL_average.getAverage));
         % set(PresHR,'Color',step_color_category(PresHR_average.getAverage));
@@ -247,6 +254,7 @@ function main
 
     function everySecond
         ecg.displayBPM;
+        ppg.displaySPO2;
     end
 
     function everyMinute
@@ -255,8 +263,10 @@ function main
         else
     % Save BPM minute average
             ecg.saveBPM;
+            ppg.saveSPO2;
         end
         ecg.resetBPM;
+        ppg.resetSPO2;
     end
 
     function everyQuarterH

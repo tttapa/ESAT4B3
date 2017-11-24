@@ -20,15 +20,14 @@ classdef ECG < handle
         BPM_minimumAllowedValue;
         plot;
         cursor_plot;
-        BPM_gauge;
-        BPM_textfield;
+        button;
     end
     
     methods
         function o = ECG(windowsize, extrasamples, samplefreq, ...
                 range, lineWidth, cursorWidth, ...
                 baseline, mVref, gain, ...
-                axes, BPM_gauge, BPM_textfield, ...
+                axes, button, ...
                 BPM_minimumAllowedValue)
             o.scalingFactor   = mVref / 1023.0 / gain;
             o.windowsize      = windowsize;
@@ -51,8 +50,7 @@ classdef ECG < handle
             o.cursor_plot     = plot(axes,[0 0],[o.range(1)*0.95,o.range(2)], ...
                 'LineWidth',cursorWidth, 'Color', 'k');
             set(axes,'XLim',[0 windowsize],'YLim',o.range,'TickDir','out');
-            o.BPM_gauge       = BPM_gauge;
-            o.BPM_textfield   = BPM_textfield;            
+            o.button   = button;            
         end
         
         function add(o, value)
@@ -87,8 +85,7 @@ classdef ECG < handle
             if BPM < o.BPM_minimumAllowedValue
                 BPM = 0;
             end
-            o.BPM_textfield.Value = BPM;
-            o.BPM_gauge.Value = BPM;
+            o.button.Text = strcat(string(BPM),{' BPM'});
             o.BPM_minuteAverage.add(BPM);
         end
         function saveBPM(o)
