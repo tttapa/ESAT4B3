@@ -96,7 +96,7 @@ classdef PPG < handle
         function displaySPO2(o)
             SPO2 = 0.97; %PPG_getSPO2(o.filtered_RD(o.bufferlen), o.filtered_RD(o.bufferlen)); % TODO
 
-            o.button.Text = strcat(string(SPO2),{'%'});
+            o.button.Text = '97%'; % strcat(string(SPO2),{'%'});
             o.SPO2_minuteAverage.add(SPO2);
         end
         function saveSPO2(o)

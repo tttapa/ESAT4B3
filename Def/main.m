@@ -66,8 +66,8 @@ function main
 
 % GUI
     frameduration = 1.0 / framerate;
-    gui = GUI_app;
-    gui.UIFigure.DeleteFcn = @closeapp;
+    gui = HealthVision;
+    gui.SmarthomecaremonitorUIFigure.DeleteFcn = @closeapp;
     
 % ECG
     ecg = ECG(windowsize, ECG_extrasamples, ECG_samplefreq, ...
@@ -163,6 +163,7 @@ function main
         if toc(frametime) >= frameduration
             frametime = tic;
             drawAll;
+            drawnow;
         end
         now = uint64(posixtime(datetime('now')));
         if now - SecondTimer_prevTime >= 1
