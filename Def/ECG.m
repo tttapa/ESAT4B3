@@ -89,6 +89,23 @@ classdef ECG < handle
             end
             o.BPM_textfield.Value = BPM;
             o.BPM_gauge.Value = BPM;
+            
+            % If BPM in (0,60] -> low lamp on
+            % If BPM in (60,220-age) -> normal lamp on
+            % If BPM in [220-age
+            %if BPM > 0 && BPM <= 60
+                %o.LowLamp.Color = [0 0 1];
+                %o.NormalLamp.Color = [0.05 0.1 0.15];
+                %o.HighLamp.Color = [0.05 0.1 0.15];
+            %elseif BPM < 220 - age
+                %o.LowLamp.Color = [0.05 0.1 0.15];
+                %o.NormalLamp.Color = [0 1 0];
+                %o.HighLamp.Color = [0.05 0.1 0.15];
+            %else
+                %o.LowLamp.Color = [0.05 0.1 0.15];
+                %o.NormalLamp.Color = [0.05 0.1 0.15];
+                %o.HighLamp.Color = [1 0 0];
+            %end
             o.BPM_minuteAverage.add(BPM);
         end
         function saveBPM(o)
