@@ -104,5 +104,4 @@ classdef ECG < handle
             o.BPM_minuteAverage.reset;
         end
     end
-    
 end

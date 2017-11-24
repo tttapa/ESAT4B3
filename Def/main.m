@@ -269,7 +269,7 @@ function main
         disp(strcat({'Steps last 15 min: '}, string(steps)));
         stepsPerQuarter = [stepsPerQuarter steps];
         fileID = fopen('Steps.csv','a');
-        fprintf(fileID,'%d\t%du\r\n', now, steps);
+        fprintf(fileID,'%d\t%d\r\n', now, steps);
         % fprintf(fileID,'%016X\t%f\r\n', now, BPM);
         fclose(fileID);
     end        
