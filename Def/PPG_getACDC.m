@@ -1,4 +1,4 @@
-function [RESULT_AC, RESULT_DC, RESULT_locations] = PPG_getACDC(INPUT_data)
+function [RESULT_AC, RESULT_DC, RESULT_locations] = PPG_getACDC(INPUT_filtered, INPUT_unfiltered, INPUT_maxBPM, INPUT_fs)
 
 % ANALYZE_ECG returns a list of peaks and their respective locations in the
 % data.
@@ -23,7 +23,7 @@ minHeartbeatLength = floor(INPUT_fs * 60 / INPUT_maxBPM);
 
 % Find the peaks within this interval
 %   -> Parameter 3: minDistance must be <= length(INPUT_data) - 2
-[RESULT_peaks, RESULT_locations] = getPeaks(INPUT_data, 0, min([minHeartbeatLength, length(INPUT_data) - 2]));
+[RESULT_peaks, RESULT_locations] = getPeaks(INPUT_filtered, 0, min([minHeartbeatLength, length(INPUT_filtered) - 2]));
 
 RESULT_AC = mean(RESULT_peaks);
 RESULT_DC = mean(INPUT_unfiltered);
