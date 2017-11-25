@@ -66,14 +66,14 @@ function main
 
 % GUI
     frameduration = 1.0 / framerate;
-    gui = HealthVision;
-    gui.SmarthomecaremonitorUIFigure.DeleteFcn = @closeapp;
+    gui = GUI_app;
+    gui.UIFigure.DeleteFcn = @closeapp;
     
 % ECG
     ecg = ECG(windowsize, ECG_extrasamples, ECG_samplefreq, ...
         ECG_range, ECG_lineWidth, ECG_cursorWidth, ...
         ECG_baseline, ECG_mVref, ECG_gain, ...
-        gui.ECGAxesHome, gui.ECGButton, ...
+        gui.UIAxes, ...
         BPM_minimumAllowedValue);
 
 % PPG
@@ -81,7 +81,7 @@ function main
     ppg = PPG(windowsize, PPG_extrasamples, PPG_samplefreq, ...
         PPG_range, PPG_lineWidth, PPG_cursorWidth, ...
         PPG_baseline, ...
-        gui.PPGAxesHome, gui.PPGButton);
+        gui.UIAxes2);
     
 % Pressure
     PresHL_average = RunningAverage(pressureAverageLen);

@@ -22,14 +22,13 @@ classdef PPG < handle
         SPO2_averages = double.empty();
         plot;
         cursor_plot;
-        button;
     end
     
     methods
         function o = PPG(windowsize, extrasamples, samplefreq, ...
                 range, lineWidth, cursorWidth, ...
                 baseline, ...
-                axes, button)
+                axes)
             o.windowsize      = windowsize;
             o.visiblesamples  = windowsize * samplefreq;
             o.extrasamples    = extrasamples;
@@ -52,7 +51,6 @@ classdef PPG < handle
             o.cursor_plot     = plot(axes,[0 0],[o.range(1)*0.95,o.range(2)], ...
                 'LineWidth',cursorWidth, 'Color', 'k');
             set(axes,'XLim',[0 windowsize],'YLim',o.range,'TickDir','out');
-            o.button   = button;        
         end
         
         function add_RD(o, value)
@@ -95,8 +93,6 @@ classdef PPG < handle
         
         function displaySPO2(o)
             SPO2 = 0.97; %PPG_getSPO2(o.filtered_RD(o.bufferlen), o.filtered_RD(o.bufferlen)); % TODO
-
-            o.button.Text = '97%'; % strcat(string(SPO2),{'%'});
             o.SPO2_minuteAverage.add(SPO2);
         end
         function saveSPO2(o)
