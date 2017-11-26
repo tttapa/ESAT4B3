@@ -20,7 +20,8 @@ classdef PPG < handle
         baseline;
         SPO2_minuteAverage = Average;
         SPO2_averages = double.empty();
-        plot;
+        plot_RD;
+        plot_IR;
         cursor_plot;
     end
     
@@ -45,8 +46,11 @@ classdef PPG < handle
             o.settings        = PPG_setup(samplefreq);
             o.baseline        = baseline;
             hold(axes,'on');
-            o.plot            = plot(axes, o.time, ...
-                [ o.ringBuffer_RD o.ringBuffer_IR ], ...
+            o.plot_RD          = plot(axes, o.time, ...
+                o.ringBuffer_RD, ...
+                'LineWidth',lineWidth);
+            o.plot_IR          = plot(axes, o.time, ...
+                o.ringBuffer_IR, ...
                 'LineWidth',lineWidth);
             o.cursor_plot     = plot(axes,[0 0],[o.range(1)*0.95,o.range(2)], ...
                 'LineWidth',cursorWidth, 'Color', 'k');
@@ -54,13 +58,13 @@ classdef PPG < handle
         end
         
         function add_RD(o, value)
-            o.buffer_RD(1:(o.bufferlen-1)) = o.buffer_RD(2:o.bufferlen); % shift the buffer
-            o.buffer_RD(o.bufferlen) = int16(value) - o.baseline; % add the new value to the buffer
+            o.buffer_RD(1:(o.bufferlen-1)) = o.buffer_RD(2:o.bufferlen); % shift the buffer one place to the left
+            o.buffer_RD(o.bufferlen) = int16(value) - o.baseline; % add the new value to the end of the buffer
             o.samplesSinceLastDraw_RD = o.samplesSinceLastDraw_RD + 1;
         end
         function add_IR(o, value)
-            o.buffer_IR(1:(o.bufferlen-1)) = o.buffer_IR(2:o.bufferlen); % shift the buffer
-            o.buffer_IR(o.bufferlen) = int16(value) - o.baseline; % add the new value to the buffer
+            o.buffer_IR(1:(o.bufferlen-1)) = o.buffer_IR(2:o.bufferlen); % shift the buffer one place to the left
+            o.buffer_IR(o.bufferlen) = int16(value) - o.baseline; % add the new value to the end of the buffer
             o.samplesSinceLastDraw_IR = o.samplesSinceLastDraw_IR + 1;
         end
         
@@ -83,7 +87,9 @@ classdef PPG < handle
                     
                     o.ringBufferIndex = mod(o.ringBufferIndex, o.visiblesamples) + 1;
                 end
-                set(o.plot,'YData',[ o.ringBuffer_RD o.ringBuffer_IR ]);
+                
+                set(o.plot_RD,'YData', o.ringBuffer_RD);
+                set(o.plot_IR,'YData', o.ringBuffer_IR);
                 cursorPos = double(o.ringBufferIndex) * o.windowsize / o.visiblesamples;
                 if cursorPos > 0.01
                     set(o.cursor_plot, 'XData',[cursorPos  cursorPos ]);

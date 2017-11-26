@@ -16,7 +16,8 @@ classdef ECG < handle
         settings;
         baseline;
         BPM_minuteAverage = Average;
-        BPM_averages = double.empty();
+        BPM_averages;
+        BPM_averages_time;
         BPM_minimumAllowedValue;
         plot;
         cursor_plot;
@@ -49,6 +50,10 @@ classdef ECG < handle
             o.cursor_plot     = plot(axes,[0 0],[o.range(1)*0.95,o.range(2)], ...
                 'LineWidth',cursorWidth, 'Color', 'k');
             set(axes,'XLim',[0 windowsize],'YLim',o.range,'TickDir','out');
+            
+            
+            o.BPM_averages = double.empty(); % TODO: load from file
+            o.BPM_averages_time = int64.empty(); % TODO: load from file
         end
         
         function add(o, value)
