@@ -1,7 +1,8 @@
 gui = appdruksensor;
 
-%% beeld het percentage af op de gauge
-% gui.StepsLabel.Value = 700;        % totaal aantal gezette stappen, via callback
+% beeld het percentage af op de gauge
+%gui.StepsEditField.Value = 7000;        % totaal aantal gezette stappen, via callback
+%gui.StepsLabel.Value = 700;        % totaal aantal gezette stappen, via callback
 % gui.DailygoalEditField.Value = 10000;    % waarde die zelf ingevuld kan worden
 % percentage = (gui.StepsEditField.Value/gui.DailygoalEditField.Value)*100;
 % gui.Gauge.ScaleColorLimits = [0 percentage];
@@ -38,6 +39,8 @@ gui.Lamprf.Color = [rfrf gfrf bfrf];
 imshow('voet.jpg','Parent',gui.UIAxes)
 
 imshow('colorbar.jpg', 'Parent', gui.UIAxes2)
+
+
 
 
 
