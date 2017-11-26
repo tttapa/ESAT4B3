@@ -158,8 +158,14 @@ gui.ECGNormalLabel.FontColor = [0 1 1];
 gui.ECGHighLabel.FontColor = [0 1 1];
 
 
+% Steps Panel
 
+gui.StepsPanel.BackgroundColor = [0.05 0.1 0.15];
+gui.StepsProgressLabel.FontColor = [1 1 0];
+gui.StepsDailyGoalLabel.FontColor = [1 1 0];
 
+gui.StepsAxesDetail1.BackgroundColor = [0.05 0.1 0.15];
+gui.StepsAxesDetail2.BackgroundColor = [0.05 0.1 0.15];
 
 end
 
