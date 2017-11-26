@@ -19,6 +19,8 @@ function main
     
 %% Settings
 
+    windowsize = 5; % show 5 seconds of data
+
     framerate = 30; % frames per second
     
     secondsPerMinute = 5; % 60
@@ -29,13 +31,12 @@ function main
     ECG_mVref = 5000;
 
     ECG_samplefreq = 360;
-    ECG_windowsize = 5; % show 5 seconds of data
     
     % TODO: why are there transients at the start of the vector, but not at
     % the end?
     ECG_extrasamples = ECG_samplefreq * 2; % samples containing transients are cut off the plot
     
-    ECG_range = [-6e0 6e0]; % [-inf inf];
+    ECG_range = [-6e0 6e0]; % [-inf inf]; for automatic ranges
     ECG_baseline = int16(511);
     
     ECG_lineWidth = 2;
@@ -44,51 +45,19 @@ function main
     BPM_minimumAllowedValue = 40;
     
 % PPG    
-    PPG_samplefreq = 30;
-    PPG_windowsize = 10; % show 10 seconds of data
-
-    PPG_range = [0 1023];
+    PPG_samplefreq = 300;
+    PPG_extrasamples = PPG_samplefreq * 0;
+    PPG_range = [-512 512];
+    
+    PPG_lineWidth = 2;
+    PPG_cursorWidth = 8;
+    PPG_baseline = 0;
     
 % Pressure    
     pressureAverageLen = 64;
     PresHighThreshold = 600;
     PresLowThreshold = 400;
     
-%% Initializations
-
-% Serial
-    msgtype = message_type(0); % initialization of variables used in callback function
-    value = uint16(0);         % "
-
-% GUI
-    frameduration = 1.0 / framerate;
-    gui = GUI_app;
-    gui.UIFigure.DeleteFcn = @closeapp;
-    
-% ECG
-    ecg = ECG(ECG_windowsize, ECG_extrasamples, ECG_samplefreq, ...
-        ECG_range, ECG_lineWidth, ECG_cursorWidth, ...
-        ECG_baseline, ECG_mVref, ECG_gain, ...
-        gui.UIAxes, gui.Gauge, gui.beatrateEditField, ...
-        BPM_minimumAllowedValue);
-
-% PPG
-    
-    PPG_bufferlen = PPG_windowsize * PPG_samplefreq;
-    PPG_buffer = zeros(PPG_bufferlen,1); % create an empty buffer
-    PPG_time = linspace(-PPG_windowsize, 0, PPG_bufferlen);
-    
-% Pressure
-    PresHL_average = RunningAverage(pressureAverageLen);
-    PresTL_average = RunningAverage(pressureAverageLen);
-    PresHR_average = RunningAverage(pressureAverageLen);
-    PresTR_average = RunningAverage(pressureAverageLen);
-    
-    PresL_stepCtr = StepCounter(PresHighThreshold, PresLowThreshold);
-    PresR_stepCtr = StepCounter(PresHighThreshold, PresLowThreshold);
-    
-    stepsPerQuarter = double.empty();
-
 %% Serial port stuff
 
     % Close and delete open serial ports
@@ -142,11 +111,42 @@ function main
     s.ErrorFcn = @serialerror;
     s.BreakInterruptFcn = @serialerror;
 
-%% Set up plot
+%% Initializations
 
-    PPG_plot = plot(gui.UIAxes2, PPG_time,PPG_buffer);
-    set(gui.UIAxes2,'XLim',[-PPG_windowsize 0],'YLim',PPG_range);
+% Serial
+    msgtype = message_type(0); % initialization of variables used in callback function
+    value = uint16(0);         % "
+
+% GUI
+    frameduration = 1.0 / framerate;
+    gui = GUI_app;
+    gui.UIFigure.DeleteFcn = @closeapp;
     
+% ECG
+    ecg = ECG(windowsize, ECG_extrasamples, ECG_samplefreq, ...
+        ECG_range, ECG_lineWidth, ECG_cursorWidth, ...
+        ECG_baseline, ECG_mVref, ECG_gain, ...
+        gui.UIAxes, ...
+        BPM_minimumAllowedValue);
+
+% PPG
+    
+    ppg = PPG(windowsize, PPG_extrasamples, PPG_samplefreq, ...
+        PPG_range, PPG_lineWidth, PPG_cursorWidth, ...
+        PPG_baseline, ...
+        gui.UIAxes2);
+    
+% Pressure
+    PresHL_average = RunningAverage(pressureAverageLen); % Heel Left
+    PresTL_average = RunningAverage(pressureAverageLen); % Toes Left
+    PresHR_average = RunningAverage(pressureAverageLen); % Heel Right
+    PresTR_average = RunningAverage(pressureAverageLen); % Toes Right
+    
+    PresL_stepCtr = StepCounter(PresHighThreshold, PresLowThreshold);
+    PresR_stepCtr = StepCounter(PresHighThreshold, PresLowThreshold);
+    
+    stepsPerQuarter = double.empty();
+
 %% Main loop
 
     fopen(s);
@@ -159,6 +159,7 @@ function main
         if toc(frametime) >= frameduration
             frametime = tic;
             drawAll;
+            drawnow;
         end
         now = uint64(posixtime(datetime('now')));
         if now - SecondTimer_prevTime >= 1
@@ -214,7 +215,9 @@ function main
             case 'ECG'
                 ecg.add(value);
             case 'PPG_RED'
+                ppg.add_RD(value);
             case 'PPG_IR'
+                ppg.add_IR(value);
             case 'PRESSURE_A'
                 PresHL_average.add(value);
                 PresL_stepCtr.add(value);
@@ -234,11 +237,12 @@ function main
     function drawAll
     % ECG plot
         ecg.draw;
+        ppg.draw;
         
     % PPG plot
         % set(PPG_plot,'YData',PPG_buffer);
         
-    % Pressure
+    % Pressure % TODO
         % set(PresHL,'Color',step_color_category(PresHL_average.getAverage));
         % set(PresTL,'Color',step_color_category(PresTL_average.getAverage));
         % set(PresHR,'Color',step_color_category(PresHR_average.getAverage));
@@ -247,6 +251,7 @@ function main
 
     function everySecond
         ecg.displayBPM;
+        ppg.displaySPO2;
     end
 
     function everyMinute
@@ -255,8 +260,10 @@ function main
         else
     % Save BPM minute average
             ecg.saveBPM;
+            ppg.saveSPO2;
         end
         ecg.resetBPM;
+        ppg.resetSPO2;
     end
 
     function everyQuarterH
@@ -269,9 +276,9 @@ function main
         disp(strcat({'Steps last 15 min: '}, string(steps)));
         stepsPerQuarter = [stepsPerQuarter steps];
         fileID = fopen('Steps.csv','a');
-        fprintf(fileID,'%d\t%du\r\n', now, steps);
+        fprintf(fileID,'%d\t%d\r\n', now, steps);
         % fprintf(fileID,'%016X\t%f\r\n', now, BPM);
         fclose(fileID);
-    end        
+    end
 
 end % end of main function

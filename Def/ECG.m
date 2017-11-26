@@ -16,19 +16,18 @@ classdef ECG < handle
         settings;
         baseline;
         BPM_minuteAverage = Average;
-        BPM_averages = double.empty();
+        BPM_averages;
+        BPM_averages_time;
         BPM_minimumAllowedValue;
         plot;
         cursor_plot;
-        BPM_gauge;
-        BPM_textfield;
     end
     
     methods
         function o = ECG(windowsize, extrasamples, samplefreq, ...
                 range, lineWidth, cursorWidth, ...
                 baseline, mVref, gain, ...
-                axes, BPM_gauge, BPM_textfield, ...
+                axes, ...
                 BPM_minimumAllowedValue)
             o.scalingFactor   = mVref / 1023.0 / gain;
             o.windowsize      = windowsize;
@@ -51,8 +50,10 @@ classdef ECG < handle
             o.cursor_plot     = plot(axes,[0 0],[o.range(1)*0.95,o.range(2)], ...
                 'LineWidth',cursorWidth, 'Color', 'k');
             set(axes,'XLim',[0 windowsize],'YLim',o.range,'TickDir','out');
-            o.BPM_gauge       = BPM_gauge;
-            o.BPM_textfield   = BPM_textfield;            
+            
+            
+            o.BPM_averages = double.empty(); % TODO: load from file
+            o.BPM_averages_time = int64.empty(); % TODO: load from file
         end
         
         function add(o, value)
@@ -87,8 +88,23 @@ classdef ECG < handle
             if BPM < o.BPM_minimumAllowedValue
                 BPM = 0;
             end
-            o.BPM_textfield.Value = BPM;
-            o.BPM_gauge.Value = BPM;
+            
+            % If BPM in (0,60] -> low lamp on
+            % If BPM in (60,220-age) -> normal lamp on
+            % If BPM in [220-age
+            %if BPM > 0 && BPM <= 60
+                %o.LowLamp.Color = [0 0 1];
+                %o.NormalLamp.Color = [0.05 0.1 0.15];
+                %o.HighLamp.Color = [0.05 0.1 0.15];
+            %elseif BPM < 220 - age
+                %o.LowLamp.Color = [0.05 0.1 0.15];
+                %o.NormalLamp.Color = [0 1 0];
+                %o.HighLamp.Color = [0.05 0.1 0.15];
+            %else
+                %o.LowLamp.Color = [0.05 0.1 0.15];
+                %o.NormalLamp.Color = [0.05 0.1 0.15];
+                %o.HighLamp.Color = [1 0 0];
+            %end
             o.BPM_minuteAverage.add(BPM);
         end
         function saveBPM(o)

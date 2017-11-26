@@ -1,3 +1,4 @@
 # ESAT4B3
-Slimme thuiszorgmonitor
-Project KU Leuven
+Slimme thuiszorgmonitor  
+## Todo  
+Detecteer of er een ECG signaal is (geeft momenteel garbage BPM waarden).  
