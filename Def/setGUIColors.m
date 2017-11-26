@@ -2,23 +2,23 @@ function [ ] = setGUIColors( gui )
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 
- gui.SmarthomecaremonitorUIFigure.Color = [0.05 0.1 0.15];
+ gui.HealthVisionUIFigure.Color = [0.05 0.1 0.15];
  
 % HeaderPanel
   gui.HeaderPanel.BackgroundColor = [0.05 0.1 0.15];
  
-  gui.AgeEditField.Limits = [0 110];
-  gui.AgeEditField.FontColor = [1 1 1];
-  gui.AgeEditField.BackgroundColor = [0.05 0.1 0.2];
+  gui.HeaderAgeEditField.Limits = [0 110];
+  gui.HeaderAgeEditField.FontColor = [1 1 1];
+  gui.HeaderAgeEditField.BackgroundColor = [0.05 0.1 0.2];
  
-  gui.UserEditField.FontColor = [1 1 1];
-  gui.UserEditField.BackgroundColor = [0.05 0.1 0.2];
+  gui.HeaderUserEditField.FontColor = [1 1 1];
+  gui.HeaderUserEditField.BackgroundColor = [0.05 0.1 0.2];
             
-  gui.HeightEditField.FontColor = [1 1 1];
-  gui.HeightEditField.BackgroundColor = [0.05 0.1 0.2];   
+  gui.HeaderHeightEditField.FontColor = [1 1 1];
+  gui.HeaderHeightEditField.BackgroundColor = [0.05 0.1 0.2];   
   
-  gui.WeightEditField.FontColor = [1 1 1];
-  gui.WeightEditField.BackgroundColor = [0.05 0.1 0.2];   
+  gui.HeaderWeightEditField.FontColor = [1 1 1];
+  gui.HeaderWeightEditField.BackgroundColor = [0.05 0.1 0.2];   
   
 %   Mainpanel
   gui.MainPanel.BackgroundColor = [0.05 0.1 0.15];
@@ -100,7 +100,7 @@ gui.PPGButton6h.FontColor = [1 0 1];
 
 gui.PPGMinLabel.FontColor = [1 0 1];
 gui.PPGMaxLabel.FontColor = [1 0 1];
-gui.PPGAverageLabel.FontColor = [1 0 1];
+gui.PPGAvgLabel.FontColor = [1 0 1];
 
 gui.PPGLowLabel.FontColor = [1 0 1];
 gui.PPGNormalLabel.FontColor = [1 0 1];
@@ -119,21 +119,21 @@ gui.PPGLastTimeLabel.FontColor = [1 0 1];
 % ECGPanel
 gui.ECGPanel.BackgroundColor = [0.05 0.1 0.15];
                  
-gui.AvgEditField.FontColor = [0 1 1];
-gui.AvgEditField.BackgroundColor = [0.05 0.1 0.2];
+gui.ECGAvgEditField.FontColor = [0 1 1];
+gui.ECGAvgEditField.BackgroundColor = [0.05 0.1 0.2];
 
 gui.ECGLastTimeLabel.FontColor = [0 1 1];
 
-gui.MinEditField.FontColor = [0 1 1];
-gui.MinEditField.BackgroundColor = [0.05 0.1 0.2];
+gui.ECGMinEditField.FontColor = [0 1 1];
+gui.ECGMinEditField.BackgroundColor = [0.05 0.1 0.2];
 
-gui.MaxEditField.FontColor = [0 1 1];
-gui.MaxEditField.BackgroundColor = [0.05 0.1 0.2];
+gui.ECGMaxEditField.FontColor = [0 1 1];
+gui.ECGMaxEditField.BackgroundColor = [0.05 0.1 0.2];
 
-gui.Gauge.BackgroundColor = [0.05 0.1 0.2];
-gui.Gauge.FontColor = [0 1 1];
-gui.Gauge.ScaleColorLimits = [0 60; 60 220-gui.AgeEditField.Value; 220-gui.AgeEditField.Value 240 ];
-gui.Gauge.ScaleColors = [0 0 1; 0 1 0; 1 0 0];
+gui.ECGGauge.BackgroundColor = [0.05 0.1 0.2];
+gui.ECGGauge.FontColor = [0 1 1];
+gui.ECGGauge.ScaleColorLimits = [0 60; 60 220-gui.HeaderAgeEditField.Value; 220-gui.HeaderAgeEditField.Value 240 ];
+gui.ECGGauge.ScaleColors = [0 0 1; 0 1 0; 1 0 0];
 
 gui.ECGAxesDetail.XColor = [0 1 1];
 gui.ECGAxesDetail.YColor = [0 1 1];
@@ -144,22 +144,17 @@ gui.ECGStatisticsButtonGroup.Position = [32 178 129 144];
 gui.ECGStatisticsButtonGroup.ForegroundColor = [0 1 1];
 gui.ECGStatisticsButtonGroup.BackgroundColor = [0.05 0.1 0.2];
 
-gui.minButton.FontColor = [0 1 1];
+gui.ECGButton30m.FontColor = [0 1 1];
+gui.ECGButton2h.FontColor = [0 1 1];
+gui.ECGButton6h.FontColor = [0 1 1];
 
-gui.hrButton_3.FontColor = [0 1 1];
-
-gui.hrButton_2.FontColor = [0 1 1];
 
 gui.ECGMinLabel.FontColor = [0 1 1];
-
 gui.ECGMaxLabel.FontColor = [0 1 1];
-
 gui.ECGAvgLabel.FontColor = [0 1 1];
 
 gui.ECGLowLabel.FontColor = [0 1 1];
-
 gui.ECGNormalLabel.FontColor = [0 1 1];
-
 gui.ECGHighLabel.FontColor = [0 1 1];
 
 
