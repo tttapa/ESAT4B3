@@ -40,7 +40,7 @@ function main
     ECG_baseline = int16(511);
     
     ECG_lineWidth = 2;
-    ECG_cursorWidth = 8;
+    ECG_cursorWidth = 10;
     
     BPM_minimumAllowedValue = 40;
     
@@ -50,7 +50,7 @@ function main
     PPG_range = [-512 512];
     
     PPG_lineWidth = 2;
-    PPG_cursorWidth = 8;
+    PPG_cursorWidth = 10;
     PPG_baseline = 0;
     
 % Pressure    
@@ -59,13 +59,6 @@ function main
     PresLowThreshold = 400;
     
 %% Serial port stuff
-
-    % Close and delete open serial ports
-    if ~isempty(instrfind)
-        fclose(instrfind);
-        delete(instrfind);
-        clear instrfind;
-    end
 
     % Detect operating system and select correct port
     if ismac && exist('serialPortOSX', 'var')
@@ -78,44 +71,12 @@ function main
         serialPort = '';
     end
 
-    % Check if there are serial ports available on the system
-    if isempty(seriallist)
-        disp('No serial ports available.');
+    s = startSerial(serialPort, baudrate, bytesPerMessage * messagesPerSerialParse, @handleIncomingMessage, @serialerror);
+    if s == false
         return;
     end
-
-    % If no port specified, select the first serial port in the system
-    if strcmp(serialPort, '')
-        sl = seriallist;
-        serialPort = sl(1);
-        msg = strcat({'Selected serial port '}, serialPort, '.');
-        disp(msg);
-
-    % Exit script if port is not available
-    elseif(~ismember(serialPort, seriallist))
-        errmsg = strcat({'Serial port '}, serialPort, {' not available.'});
-        disp(errmsg);
-        return;
-    end
-
-    % Open serial port
-    s = serial(serialPort, 'BaudRate', baudrate);
-
-    s.BytesAvailableFcn = @serialcb; % Callback function for serial port
-    s.BytesAvailableFcnCount = bytesPerMessage * messagesPerSerialParse; % On every x bytes received
-    s.InputBufferSize = 2.^(ceil(log2(s.BytesAvailableFcnCount))+1);
-    % disp(strcat({'Input buffer size: '}, string(s.InputBufferSize)));
-    % disp(strcat({'Bytes per redraw:  '}, string(s.BytesAvailableFcnCount)));
-    s.BytesAvailableFcnMode = 'byte';
-    
-    s.ErrorFcn = @serialerror;
-    s.BreakInterruptFcn = @serialerror;
 
 %% Initializations
-
-% Serial
-    msgtype = message_type(0); % initialization of variables used in callback function
-    value = uint16(0);         % "
 
 % GUI
     frameduration = 1.0 / framerate;
@@ -186,26 +147,6 @@ function main
 
     function serialerror(~, ~, ~) % TODO: necessary?
         running = false;
-    end
-
-%% Serial callback
-
-    function serialcb (s, ~, ~) % Callback function that executes when a new byte arrives on the serial port
-        x = uint16(fread(s, s.BytesAvailableFcnCount)); % Read the data from the buffer
-
-        for i = 1:s.BytesAvailableFcnCount
-            % https://github.com/tttapa/ESAT4B3/blob/master/Arduino/Serial-Protocol.md
-            if bitand(x(i), 128) ~= 0 % 128 == 0b10000000
-                % if it's a header byte
-                msgtype = message_type(bitand(x(i), 7)); % 7 == 0b0111
-                value = bitshift(bitand(x(i), 112), 3);  % 112 == 0b01110000 
-            else 
-                % if it's a data byte
-                value = bitor(value, x(i));
-                handleIncomingMessage(value, msgtype);
-                value = uint16(0);
-            end
-        end
     end
 
 %% Handling of incoming messages
