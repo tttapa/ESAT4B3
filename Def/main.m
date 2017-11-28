@@ -12,16 +12,16 @@ function main
     % serialPortLinux = '/dev/ttyACM0';           % define serial port for Linux
     % serialPortOSX   = '/dev/tty.usbmodemabcde'; % define serial port for Mac OSX
 
-    baudrate = 1e6;             % Serial port baud rate
+    baudrate = 115200;             % Serial port baud rate
 
     bytesPerMessage = 2;
-    messagesPerSerialParse = 6;
+    messagesPerSerialParse = 16;
     
 %% Settings
 
     windowsize = 5; % show 5 seconds of data
 
-    framerate = 30; % frames per second
+    framerate = 15; % frames per second
     
     secondsPerMinute = 5; % 60
     secondsPerQuarterH = 5; % 15*60
@@ -45,9 +45,10 @@ function main
     BPM_minimumAllowedValue = 40;
     
 % PPG    
-    PPG_samplefreq = 300;
+    PPG_samplefreq = 50 ;
     PPG_extrasamples = PPG_samplefreq * 0;
     PPG_range = [-512 512];
+    SPO2_Bufferlen = 15;
     
     PPG_lineWidth = 2;
     PPG_cursorWidth = 10;
@@ -80,22 +81,23 @@ function main
 
 % GUI
     frameduration = 1.0 / framerate;
-    gui = GUI_app;
-    gui.UIFigure.DeleteFcn = @closeapp;
+    gui = HealthVision;
+    gui.HealthVisionUIFigure.DeleteFcn = @closeapp;
     
 % ECG
+    assignin('base', 'GraphPanel', gui.GraphPanel);
     ecg = ECG(windowsize, ECG_extrasamples, ECG_samplefreq, ...
         ECG_range, ECG_lineWidth, ECG_cursorWidth, ...
         ECG_baseline, ECG_mVref, ECG_gain, ...
-        gui.UIAxes, ...
+        gui.GraphPanel, gui.ECGAxesHome, gui.ECGAxesDetail, gui.ECGButton, ...
         BPM_minimumAllowedValue);
 
 % PPG
     
-    ppg = PPG(windowsize, PPG_extrasamples, PPG_samplefreq, ...
+    ppg = PPG(windowsize, PPG_extrasamples, PPG_samplefreq, SPO2_Bufferlen, ...
         PPG_range, PPG_lineWidth, PPG_cursorWidth, ...
         PPG_baseline, ...
-        gui.UIAxes2);
+        gui.PPGAxesHome, gui.PPGAxesDetail1, gui.PPGAxesDetail2, gui.PPGButton);
     
 % Pressure
     PresHL_average = RunningAverage(pressureAverageLen); % Heel Left
@@ -120,7 +122,7 @@ function main
         if toc(frametime) >= frameduration
             frametime = tic;
             drawAll;
-            drawnow;
+            % drawnow;
         end
         now = uint64(posixtime(datetime('now')));
         if now - SecondTimer_prevTime >= 1
@@ -200,8 +202,8 @@ function main
             firstMinute = false;
         else
     % Save BPM minute average
-            ecg.saveBPM;
-            ppg.saveSPO2;
+            ecg.saveBPM(now);
+            ppg.saveSPO2(now);
         end
         ecg.resetBPM;
         ppg.resetSPO2;

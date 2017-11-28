@@ -11,10 +11,10 @@ const size_t PPG_len  = sizeof(PPG_data) / sizeof(uint16_t);
 
 const float ECG_samplefreq  = 360;
 const float Pres_samplefreq = 50;
-const float PPG_samplefreq  = 300;
+const float PPG_samplefreq  = 50;
 
 void setup() {
-  Serial.begin(1000000);
+  Serial.begin(115200);
 }
 
 const unsigned long ECG_interval  = round(1e6 / ECG_samplefreq);
