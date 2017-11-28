@@ -19,15 +19,18 @@ classdef ECG < handle
         BPM_averages;
         BPM_averages_time;
         BPM_minimumAllowedValue;
-        plot;
+        GraphPanel;
+        plot_home;
         cursor_plot;
+        plot_BPM;
+        button;
     end
     
     methods
         function o = ECG(windowsize, extrasamples, samplefreq, ...
                 range, lineWidth, cursorWidth, ...
                 baseline, mVref, gain, ...
-                axes, ...
+                GraphPanel, axes_home, axes_BPM, button, ...
                 BPM_minimumAllowedValue)
             o.scalingFactor   = mVref / 1023.0 / gain;
             o.windowsize      = windowsize;
@@ -43,17 +46,31 @@ classdef ECG < handle
             o.settings        = ECG_setup(samplefreq);
             o.baseline        = baseline;
             o.BPM_minimumAllowedValue = BPM_minimumAllowedValue;
-            hold(axes,'on');
-            o.plot            = plot(axes, o.time, ...
+            o.GraphPanel = GraphPanel;
+            hold(axes_home,'on');
+            o.plot_home       = plot(axes_home, o.time, ...
                 o.buffer(o.extrasamples+1:o.bufferlen), ...
                 'LineWidth',lineWidth);
-            o.cursor_plot     = plot(axes,[0 0],[o.range(1)*0.95,o.range(2)], ...
+            o.cursor_plot     = plot(axes_home,[0 0],[o.range(1)*0.95,o.range(2)], ...
                 'LineWidth',cursorWidth, 'Color', 'k');
-            set(axes,'XLim',[0 windowsize],'YLim',o.range,'TickDir','out');
+            set(axes_home,'XLim',[0 windowsize],'YLim',o.range,'TickDir','out');
             
-            
-            o.BPM_averages = double.empty(); % TODO: load from file
-            o.BPM_averages_time = int64.empty(); % TODO: load from file
+            try
+                BPM_file_contents = double(dlmread('BPM.csv'));
+                o.BPM_averages = BPM_file_contents(:,2);
+                clear('BPM_file_contents');
+            catch
+                o.BPM_averages = double.empty();
+            end
+            try
+                BPM_file_contents = int64(dlmread('BPM.csv'));
+                o.BPM_averages_time = BPM_file_contents(:,1);
+                clear('BPM_file_contents');
+            catch
+                o.BPM_averages_time = double.empty();
+            end
+            o.plot_BPM        = plot(axes_BPM, o.BPM_averages);
+            o.button          = button;
         end
         
         function add(o, value)
@@ -74,11 +91,13 @@ classdef ECG < handle
                     o.ringBufferIndex = mod(o.ringBufferIndex, o.visiblesamples) + 1;
                     o.samplesSinceLastDraw = o.samplesSinceLastDraw - 1;
                 end
-                set(o.plot,'YData',o.ringBuffer);
-                cursorPos = double(o.ringBufferIndex) * o.windowsize / o.visiblesamples;
-                if cursorPos > 0.01
-                    set(o.cursor_plot, 'XData',[cursorPos  cursorPos ]);
-                end
+                % if o.GraphPanel.Visible == 'on'  % TODO: Doesn't work :( 
+                    set(o.plot_home,'YData',o.ringBuffer);
+                    cursorPos = double(o.ringBufferIndex) * o.windowsize / o.visiblesamples;
+                    if cursorPos > 0.01
+                        set(o.cursor_plot, 'XData',[cursorPos  cursorPos ]);
+                    end
+                % end
             end
         end
         
@@ -105,16 +124,23 @@ classdef ECG < handle
                 %o.NormalLamp.Color = [0.05 0.1 0.15];
                 %o.HighLamp.Color = [1 0 0];
             %end
+            BPM_text = char(strcat(string(uint8(round(BPM))), {' BPM'}));
+            o.button.Text = BPM_text;
             o.BPM_minuteAverage.add(BPM);
         end
-        function saveBPM(o)
+        function saveBPM(o, now)
             BPM = o.BPM_minuteAverage.getAverage;
+            if BPM == 0
+                return
+            end
             disp(strcat({'Average BPM: '}, string(BPM)));
-            o.BPM_averages = [o.BPM_averages BPM];
+            o.BPM_averages = [o.BPM_averages; BPM]; % TODO: doesn't work if o.BPM_averages is empty
             fileID = fopen('BPM.csv','a');
             fprintf(fileID,'%d\t%f\r\n', now, BPM);
             % fprintf(fileID,'%016X\t%f\r\n', now, BPM);
             fclose(fileID);
+            
+            set(o.plot_BPM, 'YData', o.BPM_averages);
         end
         function resetBPM(o)
             o.BPM_minuteAverage.reset;

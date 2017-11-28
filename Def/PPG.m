@@ -6,6 +6,8 @@ classdef PPG < handle
         samplefreq;
         range;
         bufferlen;
+        SPO2_Bufferlen;
+        SPO2_Buffer;
         buffer_RD;
         buffer_IR;
         ringBuffer_RD;
@@ -15,46 +17,53 @@ classdef PPG < handle
         samplesSinceLastDraw_IR = uint16(0);
         filtered_RD;
         filtered_IR;
-        time;
         settings;
         baseline;
         SPO2_minuteAverage = Average;
         SPO2_averages = double.empty();
+        plot_SPO2;
         plot_RD;
         plot_IR;
         cursor_plot;
+        button;
     end
     
     methods
-        function o = PPG(windowsize, extrasamples, samplefreq, ...
+        function o = PPG(windowsize, extrasamples, samplefreq, SPO2_windowsize, ...
                 range, lineWidth, cursorWidth, ...
                 baseline, ...
-                axes)
+                axes_home, axes_RD, axes_IR, button)
             o.windowsize      = windowsize;
             o.visiblesamples  = windowsize * samplefreq;
             o.extrasamples    = extrasamples;
             o.samplefreq      = samplefreq;
             o.range           = range;
             o.bufferlen       = o.visiblesamples + extrasamples;
+            o.SPO2_Bufferlen  = SPO2_windowsize * samplefreq;
+            o.SPO2_Buffer     = double(zeros(o.SPO2_Bufferlen,1));
             o.buffer_RD       = int16(zeros(o.bufferlen,1));
             o.buffer_IR       = int16(zeros(o.bufferlen,1));
             o.ringBuffer_RD   = double(zeros(o.visiblesamples,1));
             o.ringBuffer_IR   = double(zeros(o.visiblesamples,1));
             o.filtered_RD     = double(zeros(o.bufferlen,1));
             o.filtered_IR     = double(zeros(o.bufferlen,1));
-            o.time            = linspace(0, windowsize, o.visiblesamples);
             o.settings        = PPG_setup(samplefreq);
             o.baseline        = baseline;
-            hold(axes,'on');
-            o.plot_RD          = plot(axes, o.time, ...
+            SPO2_time         = linspace(0, SPO2_windowsize, o.SPO2_Bufferlen);
+            time              = linspace(0, windowsize, o.visiblesamples);
+            o.plot_SPO2       = plot(axes_home, SPO2_time, ...
+                o.SPO2_Buffer);
+            o.plot_RD         = plot(axes_RD, time, ...
                 o.ringBuffer_RD, ...
                 'LineWidth',lineWidth);
-            o.plot_IR          = plot(axes, o.time, ...
+            o.plot_IR          = plot(axes_IR, time, ...
                 o.ringBuffer_IR, ...
                 'LineWidth',lineWidth);
-            o.cursor_plot     = plot(axes,[0 0],[o.range(1)*0.95,o.range(2)], ...
+            o.cursor_plot     = plot(axes_home,[0 0],[o.range(1)*0.95,o.range(2)], ...
                 'LineWidth',cursorWidth, 'Color', 'k');
-            set(axes,'XLim',[0 windowsize],'YLim',o.range,'TickDir','out');
+            set(axes_home,'XLim',[0 windowsize],'YLim',o.range,'TickDir','out');
+            o.button = button;
+            
         end
         
         function add_RD(o, value)
@@ -99,9 +108,11 @@ classdef PPG < handle
         
         function displaySPO2(o)
             SPO2 = 0.97; %PPG_getSPO2(o.filtered_RD(o.bufferlen), o.filtered_RD(o.bufferlen)); % TODO
+            SPO2_text = char(strcat(string(round(SPO2*1000)/10.0),'%'));
+            o.button.Text = SPO2_text;
             o.SPO2_minuteAverage.add(SPO2);
         end
-        function saveSPO2(o)
+        function saveSPO2(o, now)
             SPO2 = o.SPO2_minuteAverage.getAverage;
             disp(strcat({'Average SPO2: '}, string(SPO2)));
             o.SPO2_averages = [o.SPO2_averages SPO2];
