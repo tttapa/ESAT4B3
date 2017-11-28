@@ -1,4 +1,4 @@
-function [ ] = setGUIColors( gui )
+function [ ] = GUI_setColors( gui )
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 
