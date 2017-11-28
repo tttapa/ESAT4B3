@@ -1,4 +1,4 @@
-function [ RESULT_testData ] = PPG_createTestResults( seconds, fs, smoothness )
+function [ RESULT_testData ] = TEST_createPPGHomeData( seconds, fs, smoothness )
 %CREATETESTDATA Summary of this function goes here
 %   Detailed explanation goes here
 
