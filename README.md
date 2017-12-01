@@ -10,3 +10,4 @@ Slimme thuiszorgmonitor
 7. Tekst ellipsis GUI
 8. BPM stats logic
 9. Daily goal en progress stappen
+10. Update alleen zichtbare GUI-onderdelen
