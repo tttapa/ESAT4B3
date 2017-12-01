@@ -31,7 +31,7 @@ S = load('TEST_PPGSignal.mat');
 TEST_PPGSignal = S.TEST_PPGSignal;
 
 % Original signal
-originalSignal = TEST_PPGSignal(1:seconds*fs);
+originalSignal = TEST_PPGSignal(seconds*fs+1:2*seconds*fs);
 
 % Mean/STD
 originalMean = mean(originalSignal);
@@ -41,7 +41,7 @@ rMean = 1890;
 rSTD = 5;
 
 irMean = 6150;
-irSTD = 40;
+irSTD = 30;
 
 % Create R/IR Signals
 normSignal = (originalSignal - originalMean) / originalSTD;
