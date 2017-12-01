@@ -90,15 +90,13 @@ if mem_next > mem_cur
     end
 end
 
-
+% Initialize the result variables, so we don't have to resize them
+% every time we find another peak.
+RESULT_peaks = zeros(length(tempPeaks), 1);
+RESULT_locations = zeros(length(tempLocations), 1);
 
 % Now do the minimum peak distance
 if checkDistance && length(tempPeaks) > 0
-   
-    % Initialize the result variables, so we don't have to resize them
-    % every time we find another peak.
-    RESULT_peaks = zeros(length(tempPeaks), 1);
-    RESULT_locations = zeros(length(tempLocations), 1);
     
     % Counters to compare the location of the next possible peak (counter)
     % and the location of the last peak in the result (resultIndex).

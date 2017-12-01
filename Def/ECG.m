@@ -24,6 +24,7 @@ classdef ECG < handle
         cursor_plot;
         plot_BPM;
         button;
+        buttongroup;
     end
     
     methods
@@ -31,6 +32,7 @@ classdef ECG < handle
                 range, lineWidth, cursorWidth, ...
                 baseline, mVref, gain, ...
                 GraphPanel, axes_home, axes_BPM, button, ...
+                buttongroup, ...
                 BPM_minimumAllowedValue)
             o.scalingFactor   = mVref / 1023.0 / gain;
             o.windowsize      = windowsize;
@@ -71,6 +73,8 @@ classdef ECG < handle
             end
             o.plot_BPM        = plot(axes_BPM, o.BPM_averages);
             o.button          = button;
+            o.buttongroup     = buttongroup;
+            o.buttongroup.SelectionChangedFcn = @o.SelChange;
         end
         
         function add(o, value)
@@ -144,6 +148,10 @@ classdef ECG < handle
         end
         function resetBPM(o)
             o.BPM_minuteAverage.reset;
+        end
+        
+        function SelChange(o, bg, ev)
+            disp(ev.NewValue);
         end
     end
     
