@@ -16,7 +16,9 @@ classdef PPG < handle
         samplesSinceLastDraw_RD = uint16(0);
         samplesSinceLastDraw_IR = uint16(0);
         filtered_RD;
+        DC_RD;
         filtered_IR;
+        DC_IR;
         settings;
         baseline;
         SPO2_minuteAverage = Average;
@@ -84,9 +86,11 @@ classdef PPG < handle
         
         function draw(o)
             if o.samplesSinceLastDraw_IR > 0 && o.samplesSinceLastDraw_RD > 0
+                o.DC_RD = mean(o.buffer_RD);
                 o.filtered_RD = PPG_filter(o.buffer_RD, o.settings);
                 o.filtered_RD = o.filtered_RD(o.extrasamples+1:o.bufferlen);
                 
+                o.DC_IR = mean(o.buffer_IR);
                 o.filtered_IR = PPG_filter(o.buffer_IR, o.settings);
                 o.filtered_IR = o.filtered_IR(o.extrasamples+1:o.bufferlen);
 
@@ -113,7 +117,8 @@ classdef PPG < handle
         end
         
         function displaySPO2(o)
-            SPO2 = 0.97; %PPG_getSPO2(o.filtered_RD(o.bufferlen), o.filtered_RD(o.bufferlen)); % TODO
+            SPO2 = PPG_getSPO2(o.filtered_RD, o.DC_RD, o.filtered_IR, o.DC_IR, 220, o.samplefreq);
+                      
             SPO2_text = char(strcat(string(round(SPO2*1000)/10.0),'%'));
             o.button.Text = SPO2_text;
             o.SPO2_minuteAverage.add(SPO2);
