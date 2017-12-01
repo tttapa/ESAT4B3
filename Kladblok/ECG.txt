@@ -1,0 +1,31 @@
+ECGPanel
+
+ECGStatisticsButton click: ECGButton30m
+change: ECGLastTime verandert naar 'last 30 min'
+	ECGMinEditfield
+	ECGAvgEditField
+	ECGMaxEditField
+	ECGAxesDetail
+
+ECGStatisticsButton click: ECGButton2h
+change: ECGLastTime verandert naar 'last 2 hour'
+	ECGMinEditfield
+	ECGAvgEditField
+	ECGMaxEditField
+	ECGAxesDetail
+
+ECGStatisticsButton click: ECGButton6h
+change: ECGLastTime verandert naar 'last 6 hour'
+	ECGMinEditfield
+	ECGAvgEditField
+	ECGMaxEditField
+	ECGAxesDetail
+
+Als waarde van ECGButton verandert  ,
+    * dan moeten de lampkleuren geupload worden
+	als te laag (<60) brandt blauwe lamp ( en gaat er een waarschuwing)
+	als normaal (60 - (220-HeaderAgeEditField) brandt groene lamp
+	als te hoog (> (220-HeaderAgeEditField) brandt rode lamp (en waarschuwing)
+
+    * waarde van de ECGGauge moet veranderen
+	
