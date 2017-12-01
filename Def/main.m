@@ -111,6 +111,9 @@ function main
     stepsPerQuarter = double.empty();
     
     dirty_feet = false;
+    
+    imshow('GUI_footImage.png','Parent',gui.StepsAxesDetail1);
+    imshow('GUI_colorBarImage.jpg', 'Parent', gui.StepsAxesDetail2);
 
 %% Main loop
 
