@@ -52,7 +52,7 @@ classdef ECG < handle
                 o.buffer(o.extrasamples+1:o.bufferlen), ...
                 'LineWidth',lineWidth);
             o.cursor_plot     = plot(axes_home,[0 0],[o.range(1)*0.95,o.range(2)], ...
-                'LineWidth',cursorWidth, 'Color', 'k');
+                'LineWidth',cursorWidth, 'Color', [0.05 0.1 0.2]);
             set(axes_home,'XLim',[0 windowsize],'YLim',o.range,'TickDir','out');
             
             try

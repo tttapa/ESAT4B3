@@ -18,3 +18,4 @@ filtered_signal = filter(settings.b_lowpass, settings.a_lowpass, ...
                   filter(settings.b_highpass, settings.a_highpass, signal));                
 
 end
+
