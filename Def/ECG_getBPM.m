@@ -35,12 +35,15 @@ function [ BPM ] = ECG_getBPM(signal, samplefreq)
         cutOffFactor = 0.4;
         
         % Ignore peaks that are lower than an absolute threshold
-        minimumAbsolutePeakHeight = 1e-3;
+        minimumAbsolutePeakHeight = 1;
         
         % Find the highest value in the interval, and calculate the cut-off value
         highestValue = max(signal);
         cutOffValue = highestValue * cutOffFactor;
-        cutOffValue = max(cutOffValue, minimumAbsolutePeakHeight);
+        cutOffValue = max([cutOffValue; minimumAbsolutePeakHeight]);
+        % cutOffValue = 1;
+        whos cutOffValue;
+        disp(cutOffValue);
 
         % Find the peaks within this interval
         %   -> Parameter 3: minDistance must be <= length(INPUT_data) - 2
