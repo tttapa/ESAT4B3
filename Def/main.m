@@ -172,6 +172,8 @@ function main
         pres.draw;
     end
 
+%% Exectute functions every X seconds
+
     function everySecond
         ecg.displayBPM;
         ppg.displaySPO2;
