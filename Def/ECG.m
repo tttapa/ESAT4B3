@@ -91,13 +91,13 @@ classdef ECG < handle
                     o.ringBufferIndex = mod(o.ringBufferIndex, o.visiblesamples) + 1;
                     o.samplesSinceLastDraw = o.samplesSinceLastDraw - 1;
                 end
-                % if o.GraphPanel.Visible == 'on'  % TODO: Doesn't work :( 
+                if strcmp(o.GraphPanel.Visible, 'on')
                     set(o.plot_home,'YData',o.ringBuffer);
                     cursorPos = double(o.ringBufferIndex) * o.windowsize / o.visiblesamples;
                     if cursorPos > 0.01
                         set(o.cursor_plot, 'XData',[cursorPos  cursorPos ]);
                     end
-                % end
+                end
             end
         end
         

@@ -37,7 +37,7 @@ function s = startSerial(serialPort, baudrate, BytesAvailableFcnCount, HandleFcn
 
     s.BytesAvailableFcn = @serialcb; % Callback function for serial port
     s.BytesAvailableFcnCount = BytesAvailableFcnCount; % On every x bytes received
-    s.InputBufferSize = 2.^(ceil(log2(s.BytesAvailableFcnCount))+1);
+    s.InputBufferSize = 2.^(ceil(log2(s.BytesAvailableFcnCount))+2);
     % disp(strcat({'Input buffer size: '}, string(s.InputBufferSize)));
     % disp(strcat({'Bytes per redraw:  '}, string(s.BytesAvailableFcnCount)));
     s.BytesAvailableFcnMode = 'byte';

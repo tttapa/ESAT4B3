@@ -24,7 +24,8 @@ classdef PPG < handle
         plot_SPO2;
         plot_RD;
         plot_IR;
-        cursor_plot;
+        cursor_plot_RD;
+        cursor_plot_IR;
         button;
     end
     
@@ -53,13 +54,17 @@ classdef PPG < handle
             time              = linspace(0, windowsize, o.visiblesamples);
             o.plot_SPO2       = plot(axes_home, SPO2_time, ...
                 o.SPO2_Buffer);
+            hold(axes_RD, 'on');
             o.plot_RD         = plot(axes_RD, time, ...
                 o.ringBuffer_RD, ...
                 'LineWidth',lineWidth);
+            o.cursor_plot_RD  = plot(axes_RD,[0 0],[o.range(1)*0.95,o.range(2)], ...
+                'LineWidth',cursorWidth, 'Color', 'k');
+            hold(axes_IR, 'on');
             o.plot_IR          = plot(axes_IR, time, ...
                 o.ringBuffer_IR, ...
                 'LineWidth',lineWidth);
-            o.cursor_plot     = plot(axes_home,[0 0],[o.range(1)*0.95,o.range(2)], ...
+            o.cursor_plot_IR  = plot(axes_IR,[0 0],[o.range(1)*0.95,o.range(2)], ...
                 'LineWidth',cursorWidth, 'Color', 'k');
             set(axes_home,'XLim',[0 windowsize],'YLim',o.range,'TickDir','out');
             o.button = button;
@@ -101,7 +106,8 @@ classdef PPG < handle
                 set(o.plot_IR,'YData', o.ringBuffer_IR);
                 cursorPos = double(o.ringBufferIndex) * o.windowsize / o.visiblesamples;
                 if cursorPos > 0.01
-                    set(o.cursor_plot, 'XData',[cursorPos  cursorPos ]);
+                    set(o.cursor_plot_RD, 'XData',[cursorPos  cursorPos ]);
+                    set(o.cursor_plot_IR, 'XData',[cursorPos  cursorPos ]);
                 end
             end
         end

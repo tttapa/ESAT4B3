@@ -100,15 +100,17 @@ function main
         gui.PPGAxesHome, gui.PPGAxesDetail1, gui.PPGAxesDetail2, gui.PPGButton);
     
 % Pressure
-    PresHL_average = RunningAverage(pressureAverageLen); % Heel Left
-    PresTL_average = RunningAverage(pressureAverageLen); % Toes Left
-    PresHR_average = RunningAverage(pressureAverageLen); % Heel Right
-    PresTR_average = RunningAverage(pressureAverageLen); % Toes Right
+    PresHL_average = 0; % Heel Left
+    PresTL_average = 0; % Toes Left
+    PresHR_average = 0; % Heel Right
+    PresTR_average = 0; % Toes Right
     
     PresL_stepCtr = StepCounter(PresHighThreshold, PresLowThreshold);
     PresR_stepCtr = StepCounter(PresHighThreshold, PresLowThreshold);
     
     stepsPerQuarter = double.empty();
+    
+    dirty_feet = false;
 
 %% Main loop
 
@@ -162,15 +164,20 @@ function main
             case 'PPG_IR'
                 ppg.add_IR(value);
             case 'PRESSURE_A'
-                PresHL_average.add(value);
+                PresHL_average = value;
                 PresL_stepCtr.add(value);
+                dirty_feet = true;
+                disp(value);
             case 'PRESSURE_B'
-                PresTL_average.add(value);
+                PresTL_average = value;
+                dirty_feet = true;
             case 'PRESSURE_C'
-                PresHR_average.add(value);
+                PresHR_average = value;
                 PresR_stepCtr.add(value);
+                dirty_feet = true;
             case 'PRESSURE_D'
-                PresTR_average.add(value);
+                PresTR_average = value;
+                dirty_feet = true;
             case 'COMMAND'
         end
     end
@@ -186,10 +193,21 @@ function main
         % set(PPG_plot,'YData',PPG_buffer);
         
     % Pressure % TODO
-        % set(PresHL,'Color',step_color_category(PresHL_average.getAverage));
-        % set(PresTL,'Color',step_color_category(PresTL_average.getAverage));
-        % set(PresHR,'Color',step_color_category(PresHR_average.getAverage));
-        % set(PresTR,'Color',step_color_category(PresTR_average.getAverage));
+        if dirty_feet
+            % Heel Left
+            [r, g, b] = step_color_category(double(PresHL_average));
+            gui.StepsLampLB.Color = [r, g, b];
+            % Toes Left
+            [r, g, b] = step_color_category(double(PresTL_average));
+            gui.StepsLampLF.Color = [r, g, b];
+            % Heel Right
+            [r, g, b] = step_color_category(double(PresHR_average));
+            gui.StepsLampRB.Color = [r, g, b];
+            % Toes Right
+            [r, g, b] = step_color_category(double(PresTR_average));
+            gui.StepsLampRF.Color = [r, g, b];
+            dirty_feet = false;
+        end
     end
 
     function everySecond
