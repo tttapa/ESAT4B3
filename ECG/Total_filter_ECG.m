@@ -49,7 +49,7 @@ b_notch = double(coeff_b./H_b(1));
 a_notch = 1;
 
 % Plot frequency response of the filter 
-figure, freqz(b_notch, a_notch, signal_length, fs);
+% figure, freqz(b_notch, a_notch, signal_length, fs);
 
 %%
 % _________________________________________________________________________
@@ -66,7 +66,7 @@ fc_lowpass = 35;
 [b_lowpass,a_lowpass]= butter(order_lowpass,fc_lowpass/f_nyquist);          
 
 % Plot frequency response of the filter 
-figure, freqz(b_lowpass, a_lowpass, signal_length, fs)
+% figure, freqz(b_lowpass, a_lowpass, signal_length, fs)
 
 %%
 % _________________________________________________________________________
@@ -81,7 +81,7 @@ b_highpass = [1 -1];
 a_highpass = [1 -0.995];
 
 % Plot frequency response of the filter 
-figure, freqz(b_highpass,a_highpass, signal_length, fs);
+% figure, freqz(b_highpass,a_highpass, signal_length, fs);
 
 %%
 % _________________________________________________________________________
@@ -185,49 +185,69 @@ figure, freqz(b, a, signal_length, fs);
 % % _________________________________________________________________________
 % % Plot without first segment (no start-up noise)
 % % _________________________________________________________________________
-% noise_end = 1001;
-% red_signal_start = signal_start + noise_end;
-% 
-% % Define reduced x for signal plot
-% red_x = (1:1:length(signal(red_signal_start:end)))./fs; 
-% 
-% % Define reduced x for fft_signal plot
-% red_x_freq = 0:fs/length(signal(red_signal_start:end)):fs/2; 
-% 
-% % Define reduced x for fft_signal plot
-% red_x_freq_fft = 0:fs/length(signal(red_signal_start:end)):fs/2; 
-% 
-% % Fft_signal + rescale
-% red_fft_signal = fft(signal(red_signal_start:end));       
-% red_fft_signal = red_fft_signal(1:length(signal(red_signal_start:end))/2+1);
-% red_fft_signal = (1/(fs*(signal_length-noise_end)))*abs(red_fft_signal).^2;
-% red_fft_signal(2:end-1) = 2*red_fft_signal(2:end-1);
-% 
-% % Fft_filtered_signal + rescale
-% red_fft_filtered_signal =fft(filtered_signal(red_signal_start:end));       
-% red_fft_filtered_signal =red_fft_filtered_signal(1:...
-%                                 length(filtered_signal(red_signal_start:end))/2+1);
-% red_fft_filtered_signal =(1/(fs*(length(filtered_signal(red_signal_start:end))))) ...
-%                         *abs(red_fft_filtered_signal).^2;
-% red_fft_filtered_signal(2:end-1) = 2*red_fft_filtered_signal(2:end-1);
-% 
-% % Signal and filtered signal plot
-% figure; 
-% plot(red_x,signal(red_signal_start:end)-700, 'color', [0 0 0] + 0.05 );          
-% hold on;                             
-% plot(red_x,filtered_signal(red_signal_start:end), 'red');
-% title('Filtered and non-filtered signal');
-% xlabel('Tijd (s)');
-% legend('Non filtered signal', 'Filtered signal');    
-% 
-% % Fft signal en fft filtered signal plot
-% figure;    
-% plot(red_x_freq,10*log10(abs(red_fft_signal)),'color',[0 0 0]+0.75); % Grey 
-% hold on;                             
-% plot(red_x_freq_fft,10*log10(((abs(red_fft_filtered_signal)))), ...
-%             'color',[0 0 0]+0.05); % Black
-% title('Filtered and non-filtered Fourier transformed signal');
-% xlabel('Frequentie (Hz)');
-% ylabel('Magnitude (dB)');
-% legend('Non filtered Fourier transformed signal',... 
-%         'Filtered Fourier transformed signal');
+noise_end = 1001;
+red_signal_start = signal_start + noise_end;
+
+% Define reduced x for signal plot
+red_x = (1:1:length(signal(red_signal_start:end)))./fs; 
+
+% Define reduced x for fft_signal plot
+red_x_freq = 0:fs/length(signal(red_signal_start:end)):fs/2; 
+
+% Define reduced x for fft_signal plot
+red_x_freq_fft = 0:fs/length(signal(red_signal_start:end)):fs/2; 
+
+% Fft_signal + rescale
+red_fft_signal = fft(signal(red_signal_start:end));       
+red_fft_signal = red_fft_signal(1:length(signal(red_signal_start:end))/2+1);
+red_fft_signal = (1/(fs*(signal_length-noise_end)))*abs(red_fft_signal).^2;
+red_fft_signal(2:end-1) = 2*red_fft_signal(2:end-1);
+
+% Fft_filtered_signal + rescale
+red_fft_filtered_signal =fft(filtered_signal(red_signal_start:end));       
+red_fft_filtered_signal =red_fft_filtered_signal(1:...
+                                length(filtered_signal(red_signal_start:end))/2+1);
+red_fft_filtered_signal =(1/(fs*(length(filtered_signal(red_signal_start:end))))) ...
+                        *abs(red_fft_filtered_signal).^2;
+red_fft_filtered_signal(2:end-1) = 2*red_fft_filtered_signal(2:end-1);
+
+% Signal and filtered signal plot
+figure 
+subplot 211
+plot(red_x,signal(red_signal_start:end), 'color', [0 0 0] + 0.05 )          
+title('Niet-gefilterd signaal')
+xlabel('Tijd (s)')
+xlim([0,5.5])
+ylim([850,1250])
+set(gca, 'PlotBoxAspectRatio', [3 1 1], ...
+    'LineWidth', 1, ...
+    'Box', 'on', ...
+    'FontSize', 16);
+subplot 212                             
+plot(red_x,filtered_signal(red_signal_start:end), 'color', [0 0 0] + 0.05 )
+title('Gefilterd signaal')
+xlabel('Tijd (s)')
+xlim([0,5.5])
+ylim([-100,250])
+set(gca, 'PlotBoxAspectRatio', [3 1 1], ...
+    'LineWidth', 1, ...
+    'Box', 'on', ...
+    'FontSize', 16);    
+
+% Fft signal en fft filtered signal plot
+figure;    
+plot(red_x_freq,10*log10(abs(red_fft_signal)),'color',[0 0 0]+0.75); % Grey 
+hold on;                             
+plot(red_x_freq_fft,10*log10(((abs(red_fft_filtered_signal)))), ...
+            'color',[0 0 0]+0.05); % Black
+title('Vermogensdichtheid van het gefilterd en niet-gefilterd signaal');
+xlabel('Frequentie (Hz)');
+ylabel('Magnitude (dB)');
+xlim([0,180])
+ylim([-60,30])
+set(gca, 'PlotBoxAspectRatio', [2 2 1], ...
+    'LineWidth', 1, ...
+    'Box', 'on', ...
+    'FontSize', 16); 
+legend('Niet-gefilterd signaal',... 
+        'Gefilterd signaal');
