@@ -55,7 +55,6 @@ function main
     PPG_baseline = 0;
     
 % Pressure    
-    pressureAverageLen = 64;
     PresHighThreshold = 600;
     PresLowThreshold = 400;
     
@@ -85,35 +84,22 @@ function main
     gui.HealthVisionUIFigure.DeleteFcn = @closeapp;
     
 % ECG
-    assignin('base', 'GraphPanel', gui.GraphPanel);
     ecg = ECG(windowsize, ECG_extrasamples, ECG_samplefreq, ...
         ECG_range, ECG_lineWidth, ECG_cursorWidth, ...
         ECG_baseline, ECG_mVref, ECG_gain, ...
         gui.GraphPanel, gui.ECGAxesHome, gui.ECGAxesDetail, gui.ECGButton, ...
         BPM_minimumAllowedValue);
 
-% PPG
-    
+% PPG    
     ppg = PPG(windowsize, PPG_extrasamples, PPG_samplefreq, SPO2_Bufferlen, ...
         PPG_range, PPG_lineWidth, PPG_cursorWidth, ...
         PPG_baseline, ...
         gui.PPGAxesHome, gui.PPGAxesDetail1, gui.PPGAxesDetail2, gui.PPGButton);
     
 % Pressure
-    PresHL_average = 0; % Heel Left
-    PresTL_average = 0; % Toes Left
-    PresHR_average = 0; % Heel Right
-    PresTR_average = 0; % Toes Right
-    
-    PresL_stepCtr = StepCounter(PresHighThreshold, PresLowThreshold);
-    PresR_stepCtr = StepCounter(PresHighThreshold, PresLowThreshold);
-    
-    stepsPerQuarter = double.empty();
-    
-    dirty_feet = false;
-    
-    imshow('GUI_footImage.png','Parent',gui.StepsAxesDetail1);
-    imshow('GUI_colorBarImage.jpg', 'Parent', gui.StepsAxesDetail2);
+    pres = Pressure(PresHighThreshold, PresLowThreshold, ...
+        gui.StepsAxesDetail1, gui.StepsAxesDetail2, ...
+        gui.StepsLampLB, gui.StepsLampLF, gui.StepsLampRB, gui.StepsLampRF);
 
 %% Main loop
 
@@ -167,20 +153,13 @@ function main
             case 'PPG_IR'
                 ppg.add_IR(value);
             case 'PRESSURE_A'
-                PresHL_average = value;
-                PresL_stepCtr.add(value);
-                dirty_feet = true;
-                disp(value);
+                pres.add_HL(value);
             case 'PRESSURE_B'
-                PresTL_average = value;
-                dirty_feet = true;
+                pres.add_TL(value);
             case 'PRESSURE_C'
-                PresHR_average = value;
-                PresR_stepCtr.add(value);
-                dirty_feet = true;
+                pres.add_HR(value);
             case 'PRESSURE_D'
-                PresTR_average = value;
-                dirty_feet = true;
+                pres.add_TR(value);
             case 'COMMAND'
         end
     end
@@ -188,30 +167,12 @@ function main
 %% Draw everything to the app
 
     function drawAll
-    % ECG plot
         ecg.draw;
         ppg.draw;
-        
-    % PPG plot
-        % set(PPG_plot,'YData',PPG_buffer);
-        
-    % Pressure % TODO
-        if dirty_feet
-            % Heel Left
-            [r, g, b] = step_color_category(double(PresHL_average));
-            gui.StepsLampLB.Color = [r, g, b];
-            % Toes Left
-            [r, g, b] = step_color_category(double(PresTL_average));
-            gui.StepsLampLF.Color = [r, g, b];
-            % Heel Right
-            [r, g, b] = step_color_category(double(PresHR_average));
-            gui.StepsLampRB.Color = [r, g, b];
-            % Toes Right
-            [r, g, b] = step_color_category(double(PresTR_average));
-            gui.StepsLampRF.Color = [r, g, b];
-            dirty_feet = false;
-        end
+        pres.draw;
     end
+
+%% Exectute functions every X seconds
 
     function everySecond
         ecg.displayBPM;
@@ -231,18 +192,8 @@ function main
     end
 
     function everyQuarterH
-        saveSteps(PresL_stepCtr.steps + PresR_stepCtr.steps)
-        PresL_stepCtr.reset;
-        PresR_stepCtr.reset;
-    end
-    
-    function saveSteps(steps)
-        disp(strcat({'Steps last 15 min: '}, string(steps)));
-        stepsPerQuarter = [stepsPerQuarter steps];
-        fileID = fopen('Steps.csv','a');
-        fprintf(fileID,'%d\t%d\r\n', now, steps);
-        % fprintf(fileID,'%016X\t%f\r\n', now, BPM);
-        fclose(fileID);
+        pres.saveSteps;
+        pres.resetSteps;
     end
 
 end % end of main function
