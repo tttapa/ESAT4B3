@@ -42,11 +42,13 @@ void send(uint16_t value, message_type type = COMMAND) {
   uint8_t messageToSend[2];
   encode(messageToSend, value, type);
 #ifdef DEBUG
-  for (uint8_t i = 0; i < sizeof(messageToSend); i++)
+  for (uint8_t i = 0; i < 2; i++)
     printBin(Serial, messageToSend[i]);
   Serial.println();
 #else
-  Serial.write(messageToSend, sizeof(messageToSend));
+  // Serial.write(messageToSend, 2);
+  Serial.print((char)messageToSend[0]);
+  Serial.print((char)messageToSend[1]);
 #endif
 }
 

@@ -6,7 +6,7 @@ time = datetime(timestamps,'ConvertFrom','posixtime');
 figure;
 bar_steps = bar(time, steps, 0.8);
 
-stepCSV = int64(dlmread('../Def/Steps.csv','\t'));
+stepCSV = int64(dlmread('../Def/Steps.csv'));
 
 x = stepCSV(:,1);
 

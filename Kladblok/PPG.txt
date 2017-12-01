@@ -1,0 +1,32 @@
+PPG-Panel
+
+PPGAxesDetail 1 = rood
+PPGAcesDetail2 = infrarood
+PPGAxesDetail3 = verandert door aanklinken 1 van de knoppen 
+
+PPGStatisticsButton click: Button30m
+change: PPGLastTime verandert naar 'last 30 min'
+	PPGMinEditfield
+	PPGAvgEditField
+	PPGMaxEditField
+	PPGAxesDetail3
+
+PPGStatisticsButton click: Button2h
+change: PPGLastTime verandert naar 'last 2 hour'
+	PPGMinEditfield
+	PPGAvgEditField
+	PPGMaxEditField
+	PPGAxesDetail3
+
+PPGStatisticsButton click: Button6h
+change: PPGLastTime verandert naar 'last 6 hour'
+	PPGMinEditfield
+	PPGAvgEditField
+	PPGMaxEditField
+	PPGAxesDetail3
+
+Als SPO2ValueEditField (= waarde van PPGButton ) ,
+	dan moeten de lampen(kleuren geupload worden)
+	als te laag (<95%) brandt blauwe lamp ( en gaat er een waarschuwing)
+	als normaal (95-100%) brandt groene lamp
+

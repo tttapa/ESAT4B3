@@ -28,7 +28,11 @@ classdef RunningAverage < handle
             obj.index = mod(obj.index, obj.length) + 1;
           end
           function average = getAverage(obj)
-              average = double(obj.sum) / double(obj.counter);
+              if obj.counter == 0
+                  average = 0;
+              else
+                  average = double(obj.sum) / double(obj.counter);
+              end
           end
        end
 end
