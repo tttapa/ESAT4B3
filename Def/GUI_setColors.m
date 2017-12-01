@@ -9,7 +9,7 @@ function [ ] = GUI_setColors( gui )
  gui.HealthVisionUIFigure.Color = [0.05 0.1 0.15];
 
 % HeaderPanel
-  gui.HeaderPanel.BackgroundColor = [0.05 0.1 0.15];
+  gui.HeaderPanel.BackgroundColor = [0.26 0.32 0.38];
  
   gui.HeaderAgeEditField.Limits = [0 110];
   gui.HeaderAgeEditField.FontColor = [1 1 1];
