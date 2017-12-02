@@ -5,6 +5,7 @@ classdef ECG < handle
         visiblesamples;
         extrasamples;
         samplefreq;
+        BPM_interval;
         range;
         bufferlen;
         buffer; % create an empty buffer
@@ -24,11 +25,12 @@ classdef ECG < handle
         cursor_plot;
         plot_BPM;
         button;
-        buttongroup;
+        statsTimeframe;
     end
     
     methods
-        function o = ECG(windowsize, extrasamples, samplefreq, ...
+        function o = ECG(windowsize, extrasamples, ...
+                samplefreq, BPM_interval, ...
                 range, lineWidth, cursorWidth, ...
                 baseline, mVref, gain, ...
                 GraphPanel, axes_home, axes_BPM, button, ...
@@ -39,6 +41,7 @@ classdef ECG < handle
             o.visiblesamples  = windowsize * samplefreq;
             o.extrasamples    = extrasamples;
             o.samplefreq      = samplefreq;
+            o.BPM_interval    = BPM_interval;
             o.range           = range;
             o.bufferlen       = o.visiblesamples + extrasamples;
             o.buffer          = int16(zeros(o.bufferlen,1)); % create an empty buffer
@@ -71,10 +74,12 @@ classdef ECG < handle
             catch
                 o.BPM_averages_time = double.empty();
             end
-            o.plot_BPM        = plot(axes_BPM, o.BPM_averages);
             o.button          = button;
-            o.buttongroup     = buttongroup;
-            o.buttongroup.SelectionChangedFcn = @o.SelChange;
+            o.statsTimeframe  = buttongroup.SelectedObject.UserData;
+            buttongroup.SelectionChangedFcn = @o.SelChange;
+            [timeX, BPM_statsToDisplay] = o.getStatsData;
+            o.plot_BPM = plot(axes_BPM, timeX, BPM_statsToDisplay, '-o');
+            o.updateStatsXLim;
         end
         
         function add(o, value)
@@ -139,19 +144,40 @@ classdef ECG < handle
             end
             disp(strcat({'Average BPM: '}, string(BPM)));
             o.BPM_averages = [o.BPM_averages; BPM]; % TODO: doesn't work if o.BPM_averages is empty
+            o.BPM_averages_time = [o.BPM_averages_time; now];
             fileID = fopen('BPM.csv','a');
             fprintf(fileID,'%d\t%f\r\n', now, BPM);
             % fprintf(fileID,'%016X\t%f\r\n', now, BPM);
             fclose(fileID);
-            
-            set(o.plot_BPM, 'YData', o.BPM_averages);
+            o.updateStats;
         end
         function resetBPM(o)
             o.BPM_minuteAverage.reset;
         end
         
         function SelChange(o, bg, ev)
-            disp(ev.NewValue);
+            o.statsTimeframe = ev.NewValue.UserData; % UserData contains number of seconds in the desired time frame
+            o.updateStats;
+        end
+        
+        function [timeX, BPM_statsToDisplay] = getStatsData(o)
+            startPosition = max([1, length(o.BPM_averages_time) - o.statsTimeframe/o.BPM_interval]);
+            while o.BPM_averages_time(startPosition) < o.BPM_averages_time(end) - o.statsTimeframe
+                startPosition = startPosition + 1;
+            end
+            timeX = datetime(o.BPM_averages_time(startPosition:end),'ConvertFrom','posixtime');
+            BPM_statsToDisplay = o.BPM_averages(startPosition:end);
+        end
+        
+        function updateStats(o)
+            [timeX, BPM_statsToDisplay] = o.getStatsData;
+            set(o.plot_BPM, 'XData', timeX, 'YData', BPM_statsToDisplay);
+            o.updateStatsXLim;
+        end
+        function updateStatsXLim(o)
+            startTime = datetime(o.BPM_averages_time(end) - o.statsTimeframe,'ConvertFrom','posixtime');
+            endTime   = datetime(o.BPM_averages_time(end),'ConvertFrom','posixtime');
+            set(o.plot_BPM.Parent, 'XLim', [startTime,endTime]);
         end
     end
     
