@@ -35,7 +35,7 @@ minHeartbeatLength = floor(INPUT_fs * 60 / INPUT_maxBPM);
 
 % Find the peaks within this interval
 %   -> Parameter 3: minDistance must be <= length(INPUT_data) - 2
-[RESULT_peaks, ~] = getPeaks(INPUT_filtered', 0, min([minHeartbeatLength, length(INPUT_filtered) - 2]));
+[RESULT_peaks, ~] = getPeaks(INPUT_filtered, 0, min([minHeartbeatLength, length(INPUT_filtered) - 2]));
 
 RESULT_AC = mean(RESULT_peaks);
 

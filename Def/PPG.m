@@ -16,26 +16,28 @@ classdef PPG < handle
         samplesSinceLastDraw_RD = uint16(0);
         samplesSinceLastDraw_IR = uint16(0);
         filtered_RD;
-        DC_RD;
+        DC_RD = 0;
         filtered_IR;
-        DC_IR;
+        DC_IR = 0;
         settings;
         baseline;
-        SPO2_minuteAverage = Average;
-        SPO2_averages = double.empty();
+
         plot_SPO2;
         plot_RD;
         plot_IR;
         cursor_plot_RD;
         cursor_plot_IR;
         button;
+
+        stats;
     end
     
     methods
         function o = PPG(windowsize, extrasamples, samplefreq, SPO2_windowsize, ...
                 range, lineWidth, cursorWidth, ...
                 baseline, ...
-                axes_home, axes_RD, axes_IR, button)
+                axes_home, axes_RD, axes_IR, button, ...
+                stats)
             o.windowsize      = windowsize;
             o.visiblesamples  = windowsize * samplefreq;
             o.extrasamples    = extrasamples;
@@ -68,9 +70,11 @@ classdef PPG < handle
                 'LineWidth',lineWidth);
             o.cursor_plot_IR  = plot(axes_IR,[0 0],[o.range(1)*0.95,o.range(2)], ...
                 'LineWidth',cursorWidth, 'Color', 'k');
-            set(axes_home,'XLim',[0 windowsize],'YLim',o.range,'TickDir','out');
+            set(axes_RD,'XLim',[0 windowsize],'YLim',o.range,'TickDir','out');
+            set(axes_IR,'XLim',[0 windowsize],'YLim',o.range,'TickDir','out');
             o.button = button;
             
+            o.stats = stats;            
         end
         
         function add_RD(o, value)
@@ -118,22 +122,16 @@ classdef PPG < handle
         
         function displaySPO2(o)
             SPO2 = PPG_getSPO2(o.filtered_RD, o.DC_RD, o.filtered_IR, o.DC_IR, 220, o.samplefreq);
-                      
+            if isnan(SPO2)
+                SPO2 = 0;
+            end
             SPO2_text = char(strcat(string(round(SPO2*1000)/10.0),'%'));
             o.button.Text = SPO2_text;
-            o.SPO2_minuteAverage.add(SPO2);
+            o.stats.add(SPO2*100);
         end
-        function saveSPO2(o, now)
-            SPO2 = o.SPO2_minuteAverage.getAverage;
-            disp(strcat({'Average SPO2: '}, string(SPO2)));
-            o.SPO2_averages = [o.SPO2_averages SPO2];
-            fileID = fopen('SPO2.csv','a');
-            fprintf(fileID,'%d\t%f\r\n', now, SPO2);
-            % fprintf(fileID,'%016X\t%f\r\n', now, SPO2);
-            fclose(fileID);
-        end
-        function resetSPO2(o)
-            o.SPO2_minuteAverage.reset;
+        
+        function updateStats(o, now)
+            o.stats.update(now);
         end
     end
 end
