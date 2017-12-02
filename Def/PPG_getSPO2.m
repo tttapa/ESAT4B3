@@ -9,6 +9,16 @@ noTransferIR = INPUT_filteredIR(startIR:end);
 AC_red = PPG_getAC(noTransferR, maxBPM, fs);
 AC_infrared = PPG_getAC(noTransferIR, maxBPM, fs);
 
+whos AC_red
+disp(AC_red);
+whos AC_infrared
+disp(AC_infrared);
+
+whos INPUT_dcR
+disp(INPUT_dcR);
+whos INPUT_dcIR
+disp(INPUT_dcIR);
+
 R = (AC_red/INPUT_dcR)/(AC_infrared/INPUT_dcIR);
 
 SPO2 = 110 - 25*R;
@@ -35,7 +45,7 @@ minHeartbeatLength = floor(INPUT_fs * 60 / INPUT_maxBPM);
 
 % Find the peaks within this interval
 %   -> Parameter 3: minDistance must be <= length(INPUT_data) - 2
-[RESULT_peaks, ~] = getPeaks(INPUT_filtered', 0, min([minHeartbeatLength, length(INPUT_filtered) - 2]));
+[RESULT_peaks, ~] = getPeaks(INPUT_filtered, 0, min([minHeartbeatLength, length(INPUT_filtered) - 2]));
 
 RESULT_AC = mean(RESULT_peaks);
 

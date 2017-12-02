@@ -16,9 +16,9 @@ classdef PPG < handle
         samplesSinceLastDraw_RD = uint16(0);
         samplesSinceLastDraw_IR = uint16(0);
         filtered_RD;
-        DC_RD;
+        DC_RD = 0;
         filtered_IR;
-        DC_IR;
+        DC_IR = 0;
         settings;
         baseline;
         SPO2_minuteAverage = Average;
@@ -118,7 +118,10 @@ classdef PPG < handle
         
         function displaySPO2(o)
             SPO2 = PPG_getSPO2(o.filtered_RD, o.DC_RD, o.filtered_IR, o.DC_IR, 220, o.samplefreq);
-                      
+            disp(SPO2);
+            if isnan(SPO2)
+                SPO2 = 0;
+            end
             SPO2_text = char(strcat(string(round(SPO2*1000)/10.0),'%'));
             o.button.Text = SPO2_text;
             o.SPO2_minuteAverage.add(SPO2);
