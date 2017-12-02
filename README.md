@@ -1,14 +1,15 @@
 # ESAT4B3
 Slimme thuiszorgmonitor  
 ## Todo  
-1. Vermijd betekenisloze BPM-waarden wanneer geen ECG signaal aanwezig is + geen signaal--> '-'.
+1. ~~Vermijd betekenisloze BPM-waarden wanneer geen ECG signaal aanwezig is~~ + geen signaal--> '-'.
 2. Lampjes hoog-middel-laag + gauge
-3. Inladen gegevens werkt niet als de CSV files leeg zijn.
-4. Bar graph stappen
+3. ~~Inladen gegevens werkt niet als de CSV files leeg zijn.~~
+4. ~~Bar graph stappen~~
 5. PPG filters testen
 6. SPO2-berekening testen
 7. Tekst ellipsis GUI
-8. BPM stats logic
+8. ~~BPM stats logic~~
 9. Daily goal en progress stappen
-10. Update alleen zichtbare GUI-onderdelen
-
+10. ~~Update alleen zichtbare GUI-onderdelen~~
+11. Scaling StepsPanel GUI
+12. Pressure bollen voet zijn traag
