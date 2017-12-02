@@ -116,6 +116,7 @@ classdef ECG < handle
             o.button.Text = BPM_text;
             o.stats.add(BPM);
         end
+        
         function updateStats(o, now)
             o.stats.update(now);
         end

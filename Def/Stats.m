@@ -70,10 +70,7 @@ classdef Stats < handle
         end
         
         function [time, values] = getPlotData(o)
-            startPosition = max([1, length(o.timestamps) - o.timeframe/o.interval]);
-            while o.timestamps(startPosition) < o.timestamps(end) - o.timeframe
-                startPosition = startPosition + 1;
-            end
+            startPosition = getStartIndexOfTimeStampInterval(o.timestamps, o.timeframe, o.interval);
             time = datetime(o.timestamps(startPosition:end),'ConvertFrom','posixtime');
             values = o.values(startPosition:end);
         end

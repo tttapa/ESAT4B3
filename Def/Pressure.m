@@ -10,15 +10,19 @@ classdef Pressure < handle
         PresL_stepCtr;
         PresR_stepCtr;
         stepsPerQuarter;
+        
         lamp_HL;
         lamp_TL;
         lamp_HR;
         lamp_TR;
+        
+        stats;
     end
     methods
         function o = Pressure(PresHighThreshold, PresLowThreshold, ...
                 feetAxes, colorBarAxes, ...
-                lamp_HL, lamp_TL, lamp_HR, lamp_TR)
+                lamp_HL, lamp_TL, lamp_HR, lamp_TR, ...
+                stats)
             o.PresHL = 0; % Heel Left
             o.PresTL = 0; % Toes Left
             o.PresHR = 0; % Heel Right
@@ -36,6 +40,8 @@ classdef Pressure < handle
             o.lamp_TL = lamp_TL;
             o.lamp_HR = lamp_HR;
             o.lamp_TR = lamp_TR;
+            
+            o.stats = stats;
         end
         
         function draw(o)
@@ -58,7 +64,9 @@ classdef Pressure < handle
         
         function add_HL(o, value)
             o.PresHL = value;
-            o.PresL_stepCtr.add(value);
+            if o.PresL_stepCtr.add(value)
+                o.stats.updateStepCounter(o.PresL_stepCtr.steps + o.PresR_stepCtr.steps);
+            end
             o.dirty_feet = true;
         end
         function add_TL(o, value)
@@ -67,7 +75,9 @@ classdef Pressure < handle
         end
         function add_HR(o, value)
             o.PresHR = value;
-            o.PresR_stepCtr.add(value);
+            if o.PresR_stepCtr.add(value)
+                o.stats.updateStepCounter(o.PresL_stepCtr.steps + o.PresR_stepCtr.steps);
+            end
             o.dirty_feet = true;
         end
         function add_TR(o, value)
@@ -75,16 +85,9 @@ classdef Pressure < handle
             o.dirty_feet = true;
         end
         
-        function saveSteps(o)
-            steps = o.PresL_stepCtr.steps + o.PresR_stepCtr.steps;
-            disp(strcat({'Steps last 15 min: '}, string(steps)));
-            o.stepsPerQuarter = [o.stepsPerQuarter steps];
-            fileID = fopen('Steps.csv','a');
-            fprintf(fileID,'%d\t%d\r\n', now, steps);
-            fclose(fileID);
-        end
-        
-        function resetSteps(o)
+        function updateStats(o, now)
+            steps = o.PresL_stepCtr.steps + o.PresR_stepCtr.steps; 
+            o.stats.update(now, steps);
             o.PresL_stepCtr.reset;
             o.PresR_stepCtr.reset;
         end

@@ -10,7 +10,8 @@ classdef StepCounter < handle
             obj.highThres = highThres;
             obj.lowThres = lowThres;
         end
-        function add(obj, value)
+        function step = add(obj, value)
+            step = false;
             if obj.stepping
                 if value < obj.lowThres
                     obj.stepping = false;
@@ -19,6 +20,7 @@ classdef StepCounter < handle
                 if value > obj.highThres
                     obj.stepping = true;
                     obj.steps = obj.steps + 1;
+                    step = true;
                 end
             end
         end
