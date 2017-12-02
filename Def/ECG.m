@@ -67,29 +67,38 @@ classdef ECG < handle
             o.samplesSinceLastDraw = o.samplesSinceLastDraw + 1;
         end
         
+        function filter(o)
+            o.filtered = ECG_filter(o.buffer, o.settings);  % filter the buffer
+            o.filtered = o.filtered(o.extrasamples+1:o.bufferlen);  % only the visible samples (TODO: remove)
+            o.filtered = o.filtered * o.scalingFactor;  % scale to mV
+        end
+        
         function draw(o)
-            if o.samplesSinceLastDraw > 0
-                o.filtered = ECG_filter(o.buffer, o.settings);  % filter the buffer
-                o.filtered = o.filtered(o.extrasamples+1:o.bufferlen);  % only the visible samples (TODO: remove)
-                o.filtered = o.filtered * o.scalingFactor;  % scale to mV
+            if o.samplesSinceLastDraw > 0 && strcmp(o.GraphPanel.Visible, 'on')
+                o.filter;
 
+                if o.samplesSinceLastDraw > o.visiblesamples
+                    o.samplesSinceLastDraw = o.visiblesamples;
+                end
                 while(o.samplesSinceLastDraw > 0)  % for every new sample
                     o.ringBuffer(o.ringBufferIndex) ...  % add it to the ringbuffer
                        = o.filtered(o.visiblesamples-o.samplesSinceLastDraw+1);
                     o.ringBufferIndex = mod(o.ringBufferIndex, o.visiblesamples) + 1;
                     o.samplesSinceLastDraw = o.samplesSinceLastDraw - 1;
                 end
-                if strcmp(o.GraphPanel.Visible, 'on')
-                    set(o.plot_home,'YData',o.ringBuffer);  % plot the ringbuffer
-                    cursorPos = double(o.ringBufferIndex) * o.windowsize / o.visiblesamples;
-                    if cursorPos > 0.01
-                        set(o.cursor_plot, 'XData',[cursorPos  cursorPos ]);  % draw the cursor
-                    end
+                set(o.plot_home,'YData',o.ringBuffer);  % plot the ringbuffer
+                cursorPos = double(o.ringBufferIndex) * o.windowsize / o.visiblesamples;
+                if cursorPos > 0.01
+                    set(o.cursor_plot, 'XData',[cursorPos  cursorPos ]);  % draw the cursor
                 end
             end
         end
         
         function displayBPM(o)
+            if strcmp(o.GraphPanel.Visible, 'off')  % if the panel is off, the filtered buffer is not updated, so do it now
+                o.filter;
+            end
+
             BPM = ECG_getBPM(o.filtered, o.samplefreq);
         
             if BPM < o.BPM_minimumAllowedValue

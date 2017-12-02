@@ -15,7 +15,7 @@ function main
     baudrate = 115200;             % Serial port baud rate
 
     bytesPerMessage = 2;
-    messagesPerSerialParse = 16;
+    messagesPerSerialParse = 64;
     
 %% Settings
 
