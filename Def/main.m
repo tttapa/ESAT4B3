@@ -42,6 +42,8 @@ function main
     ECG_lineWidth = 2;
     ECG_cursorWidth = 10;
     
+    BPM_statsInterval = 5;  % seconds
+    
     BPM_minimumAllowedValue = 40;
     
 % PPG    
@@ -87,13 +89,16 @@ function main
     gui.ECGButton30m.UserData = 30*60;
     gui.ECGButton2h.UserData  = 2*60*60;
     gui.ECGButton6h.UserData  = 6*60*60;
+    ecgStats = Stats('BPM.csv', BPM_statsInterval, ...
+        gui.ECGAxesDetail, gui.ECGStatisticsButtonGroup, ...
+        gui.ECGMinEditField, gui.ECGMaxEditField, gui.ECGAvgEditField);
     ecg = ECG(windowsize, ECG_extrasamples, ...
-        ECG_samplefreq, secondsPerMinute, ...
+        ECG_samplefreq, ...
         ECG_range, ECG_lineWidth, ECG_cursorWidth, ...
         ECG_baseline, ECG_mVref, ECG_gain, ...
-        gui.GraphPanel, gui.ECGAxesHome, gui.ECGAxesDetail, gui.ECGButton, ...
-        gui.ECGStatisticsButtonGroup, ...
-        BPM_minimumAllowedValue);
+        gui.GraphPanel, gui.ECGAxesHome, gui.ECGButton, ...
+        BPM_minimumAllowedValue, ...
+        ecgStats);
 
 % PPG    
     ppg = PPG(windowsize, PPG_extrasamples, PPG_samplefreq, SPO2_Bufferlen, ...
@@ -112,7 +117,6 @@ function main
     frametime = tic;
     running = true;
     SecondTimer_prevTime= uint64(posixtime(datetime('now')));
-    firstMinute = true;
     
     while running % && exist(string(s.Port),'file') % TODO: this doesn't work ... How to check if the serial device is still available?
         if toc(frametime) >= frameduration
@@ -122,9 +126,12 @@ function main
         end
         now = uint64(posixtime(datetime('now')));
         if now - SecondTimer_prevTime >= 1
-            everySecond;
-            if mod (now, secondsPerMinute) == 0
-                everyMinute;
+        % Every second
+            ecg.displayBPM;
+            ppg.displaySPO2;
+        %
+            if mod (now, BPM_statsInterval) == 0
+                ecg.updateStats(now);
             end
             if mod (now, secondsPerQuarterH) == 0
                 everyQuarterH;
@@ -178,23 +185,6 @@ function main
     end
 
 %% Exectute functions every X seconds
-
-    function everySecond
-        ecg.displayBPM;
-        ppg.displaySPO2;
-    end
-
-    function everyMinute
-        if firstMinute % ignore the first (incomplete) minute
-            firstMinute = false;
-        else
-    % Save BPM minute average
-            ecg.saveBPM(now);
-            ppg.saveSPO2(now);
-        end
-        ecg.resetBPM;
-        ppg.resetSPO2;
-    end
 
     function everyQuarterH
         pres.saveSteps;
