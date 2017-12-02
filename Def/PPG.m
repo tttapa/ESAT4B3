@@ -22,6 +22,7 @@ classdef PPG < handle
         settings;
         baseline;
 
+        GraphPanel;
         plot_SPO2;
         plot_RD;
         plot_IR;
@@ -36,7 +37,7 @@ classdef PPG < handle
         function o = PPG(windowsize, extrasamples, samplefreq, SPO2_windowsize, ...
                 range, lineWidth, cursorWidth, ...
                 baseline, ...
-                axes_home, axes_RD, axes_IR, button, ...
+                GraphPanel, axes_home, axes_RD, axes_IR, button, ...
                 stats)
             o.windowsize      = windowsize;
             o.visiblesamples  = windowsize * samplefreq;
@@ -56,6 +57,8 @@ classdef PPG < handle
             o.baseline        = baseline;
             SPO2_time         = linspace(0, SPO2_windowsize, o.SPO2_Bufferlen);
             time              = linspace(0, windowsize, o.visiblesamples);
+            
+            o.GraphPanel      = GraphPanel;
             o.plot_SPO2       = plot(axes_home, SPO2_time, ...
                 o.SPO2_Buffer);
             hold(axes_RD, 'on');
@@ -88,16 +91,24 @@ classdef PPG < handle
             o.samplesSinceLastDraw_IR = o.samplesSinceLastDraw_IR + 1;
         end
         
-        function draw(o)
-            if o.samplesSinceLastDraw_IR > 0 && o.samplesSinceLastDraw_RD > 0
-                o.DC_RD = mean(o.buffer_RD);
-                o.filtered_RD = PPG_filter(o.buffer_RD, o.settings);
-                o.filtered_RD = o.filtered_RD(o.extrasamples+1:o.bufferlen);
-                
-                o.DC_IR = mean(o.buffer_IR);
-                o.filtered_IR = PPG_filter(o.buffer_IR, o.settings);
-                o.filtered_IR = o.filtered_IR(o.extrasamples+1:o.bufferlen);
+        function filter(o)
+            o.filtered_RD = PPG_filter(o.buffer_RD, o.settings);
+            o.filtered_RD = o.filtered_RD(o.extrasamples+1:o.bufferlen);
 
+            o.filtered_IR = PPG_filter(o.buffer_IR, o.settings);
+            o.filtered_IR = o.filtered_IR(o.extrasamples+1:o.bufferlen);
+        end
+        function draw(o)
+            if (o.samplesSinceLastDraw_IR > 0 && o.samplesSinceLastDraw_RD > 0) ...
+                    && strcmp(o.GraphPanel.Visible, 'on')
+                o.filter;
+                newCompleteSamples = min([o.samplesSinceLastDraw_IR, o.samplesSinceLastDraw_RD]);
+                if newCompleteSamples > o.visiblesamples  % there are more new samples than the visible buffer
+                    sampleSurplus = newCompleteSamples - o.visiblesamples;
+                    o.samplesSinceLastDraw_IR = o.samplesSinceLastDraw_IR - sampleSurplus;  % ignore the oldest samples
+                    o.samplesSinceLastDraw_RD = o.samplesSinceLastDraw_RD - sampleSurplus;
+                end
+                
                 while(o.samplesSinceLastDraw_IR > 0 && o.samplesSinceLastDraw_RD > 0)
                     o.ringBuffer_RD(o.ringBufferIndex) ...
                        = o.filtered_RD(o.visiblesamples-o.samplesSinceLastDraw_RD+1);
@@ -121,6 +132,11 @@ classdef PPG < handle
         end
         
         function displaySPO2(o)
+            if strcmp(o.GraphPanel.Visible, 'off')  % if the panel is off, the filtered buffer is not updated, so do it now
+                o.filter;
+            end
+            o.DC_RD = mean(o.buffer_RD);
+            o.DC_IR = mean(o.buffer_IR);
             SPO2 = PPG_getSPO2(o.filtered_RD, o.DC_RD, o.filtered_IR, o.DC_IR, 220, o.samplefreq);
             if isnan(SPO2)
                 SPO2 = 0;

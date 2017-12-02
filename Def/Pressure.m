@@ -11,6 +11,7 @@ classdef Pressure < handle
         PresR_stepCtr;
         stepsPerQuarter;
         
+        GraphPanel;
         lamp_HL;
         lamp_TL;
         lamp_HR;
@@ -20,7 +21,7 @@ classdef Pressure < handle
     end
     methods
         function o = Pressure(PresHighThreshold, PresLowThreshold, ...
-                feetAxes, colorBarAxes, ...
+                GraphPanel, feetAxes, colorBarAxes, ...
                 lamp_HL, lamp_TL, lamp_HR, lamp_TR, ...
                 stats)
             o.PresHL = 0; % Heel Left
@@ -33,6 +34,8 @@ classdef Pressure < handle
 
             o.stepsPerQuarter = double.empty();
 
+            o.GraphPanel = GraphPanel;
+            
             imshow('GUI_footImage.png','Parent',feetAxes);
             imshow('GUI_colorBarImage.jpg', 'Parent', colorBarAxes);
             
@@ -45,7 +48,7 @@ classdef Pressure < handle
         end
         
         function draw(o)
-            if o.dirty_feet
+            if o.dirty_feet && strcmp(o.GraphPanel.Visible, 'on')
                 % Heel Left
                 [r, g, b] = pressureToColor(double(o.PresHL));
                 o.lamp_HL.Color = [r, g, b];
