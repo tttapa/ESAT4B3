@@ -1,4 +1,4 @@
-classdef message_type < uint8
+classdef MessageType < uint8
    enumeration
       ECG         (0)
       PPG_RED     (1)

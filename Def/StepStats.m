@@ -51,7 +51,7 @@ classdef StepStats < handle
         end
         
         function update(o, now, steps)
-            o.values = [o.values; steps]; % TODO: doesn't work if o.values is empty
+            o.values = [o.values; steps];
             o.timestamps = [o.timestamps; now];
             
             fileID = fopen(o.filename,'a');

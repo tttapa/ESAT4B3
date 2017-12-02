@@ -6,7 +6,7 @@ classdef Stats < handle
         minfield;
         maxfield;
         avgfield;
-        average = Average;
+        average;
         values;
         timestamps;
         timeframe;
@@ -22,6 +22,8 @@ classdef Stats < handle
             o.maxfield = maxfield;
             o.avgfield = avgfield;
             
+            o.average = Average;
+            
             try
                 file_contents = double(dlmread(filename));
                 o.values = file_contents(:,2);
@@ -34,28 +36,34 @@ classdef Stats < handle
                 o.timestamps = file_contents(:,1);
                 clear('file_contents');
             catch
-                o.timestamps = double.empty();
+                o.timestamps = int64.empty();
             end
             o.timeframe  = buttongroup.SelectedObject.UserData;
             buttongroup.SelectionChangedFcn = @o.SelectionChange;
-            [X_time, Y_values] = o.getPlotData;
-            o.plot = plot(axes, X_time, Y_values, '-o');
-            o.updateXLim;
-            o.updateMinMaxAvg(Y_values);
+            try
+                [X_time, Y_values] = o.getPlotData;
+                o.plot = plot(axes, X_time, Y_values, '-o');
+                o.updateXLim;
+                o.updateMinMaxAvg(Y_values);
+            catch
+                o.plot = plot(axes, datetime('now'), 0, '-o');
+            end
         end
         
         function add(o, new) % every second
             o.average.add(new);
+            % disp(strcat({'New stats value: '}, string(new)));
         end
         
         function update(o, now)
             value = o.average.getAverage;
+            % disp(strcat({'Average: '}, string(value)));
             o.average.reset;
             if value == 0
                 return
             end
             
-            o.values = [o.values; value]; % TODO: doesn't work if o.values is empty
+            o.values = [o.values; value];
             o.timestamps = [o.timestamps; now];
             
             fileID = fopen(o.filename,'a');
@@ -83,7 +91,7 @@ classdef Stats < handle
         end
         function updateXLim(o)
             startTime = datetime(o.timestamps(end) - o.timeframe,'ConvertFrom','posixtime');
-            endTime   = datetime(o.timestamps(end),'ConvertFrom','posixtime');
+            endTime   = datetime(o.timestamps(end)+1,'ConvertFrom','posixtime');
             set(o.plot.Parent, 'XLim', [startTime,endTime]);
         end
         function updateMinMaxAvg(o, Y_values)

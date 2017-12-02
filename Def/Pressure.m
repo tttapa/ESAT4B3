@@ -47,16 +47,16 @@ classdef Pressure < handle
         function draw(o)
             if o.dirty_feet
                 % Heel Left
-                [r, g, b] = step_color_category(double(o.PresHL));
+                [r, g, b] = pressureToColor(double(o.PresHL));
                 o.lamp_HL.Color = [r, g, b];
                 % Toes Left
-                [r, g, b] = step_color_category(double(o.PresTL));
+                [r, g, b] = pressureToColor(double(o.PresTL));
                 o.lamp_TL.Color = [r, g, b];
                 % Heel Right
-                [r, g, b] = step_color_category(double(o.PresHR));
+                [r, g, b] = pressureToColor(double(o.PresHR));
                 o.lamp_HR.Color = [r, g, b];
                 % Toes Right
-                [r, g, b] = step_color_category(double(o.PresTR));
+                [r, g, b] = pressureToColor(double(o.PresTR));
                 o.lamp_TR.Color = [r, g, b];
                 o.dirty_feet = false;
             end

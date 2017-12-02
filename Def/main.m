@@ -39,12 +39,12 @@ function main
     ECG_lineWidth = 2;
     ECG_cursorWidth = 10;
     
-    BPM_statsInterval = 5;  % seconds
+    BPM_statsInterval = 1*60;  % seconds
     
     BPM_minimumAllowedValue = 40;
     
 % PPG    
-    PPG_samplefreq = 50 ;
+    PPG_samplefreq = 300;
     PPG_extrasamples = PPG_samplefreq * 0;
     PPG_range = [-512 512];
     SPO2_Bufferlen = 15;
@@ -53,14 +53,14 @@ function main
     PPG_cursorWidth = 10;
     PPG_baseline = 0;
     
-    SPO2_statsInterval = 5;  % seconds
+    SPO2_statsInterval = 1*60;  % seconds
     
 % Pressure    
     PresHighThreshold = 600;
     PresLowThreshold = 400;
     
-    Steps_Interval = 15; % 15*60;  % seconds (15 min)
-    Steps_Timeframe = 24*60*60 / (15*60) * Steps_Interval;  % seconds (24h)
+    Steps_Interval = 15*60;  % seconds (15 min)
+    Steps_Timeframe = 24*60*60 / (15*60) * Steps_Interval;  % seconds (24h), the time frame of the bar graph
     
 %% Serial port stuff
 
@@ -75,7 +75,8 @@ function main
         serialPort = '';
     end
 
-    s = startSerial(serialPort, baudrate, bytesPerMessage * messagesPerSerialParse, @handleIncomingMessage, @serialerror);
+    s = startSerial(serialPort, baudrate, bytesPerMessage * messagesPerSerialParse, ...
+        @handleIncomingMessage, @serialerror);
     if s == false
         return;
     end
@@ -91,7 +92,7 @@ function main
     gui.ECGButton30m.UserData = 30*60;
     gui.ECGButton2h.UserData  = 2*60*60;
     gui.ECGButton6h.UserData  = 6*60*60;
-    ecgStats = Stats('BPM.csv', BPM_statsInterval, ...
+    ecgStats = Stats('Data/BPM.csv', BPM_statsInterval, ...
         gui.ECGAxesDetail, gui.ECGStatisticsButtonGroup, ...
         gui.ECGMinEditField, gui.ECGMaxEditField, gui.ECGAvgEditField);
     ecg = ECG(windowsize, ECG_extrasamples, ...
@@ -106,7 +107,7 @@ function main
     gui.PPGButton30m.UserData = 30*60;
     gui.PPGButton2h.UserData  = 2*60*60;
     gui.PPGButton6h.UserData  = 6*60*60;
-    ppgStats = Stats('SPO2.csv', SPO2_statsInterval, ...
+    ppgStats = Stats('Data/SPO2.csv', SPO2_statsInterval, ...
         gui.PPGAxesDetail3, gui.PPGStatisticsButtonGroup, ...
         gui.PPGMinEditField, gui.PPGMaxEditField, gui.PPGAvgEditField);
     ppg = PPG(windowsize, PPG_extrasamples, PPG_samplefreq, SPO2_Bufferlen, ...
@@ -116,7 +117,7 @@ function main
         ppgStats);
     
 % Pressure
-    presStats = StepStats('Steps.csv', Steps_Interval, ...
+    presStats = StepStats('Data/Steps.csv', Steps_Interval, ...
         gui.StepsAxesBar, Steps_Timeframe, ...
         gui.StepsButton);
     pres = Pressure(PresHighThreshold, PresLowThreshold, ...
@@ -132,13 +133,18 @@ function main
     SecondTimer_prevTime = int64(posixtime(datetime('now')));
     
     while running % && exist(string(s.Port),'file') % TODO: this doesn't work ... How to check if the serial device is still available?
+    % Update all GUI plots
         if toc(frametime) >= frameduration
             frametime = tic;
-            drawAll;
+            ecg.draw;
+            ppg.draw;
+            pres.draw;
             % drawnow;
         end
+
+    % Every second
         now =   int64(posixtime(datetime('now')));
-        if now - SecondTimer_prevTime >= 1         % Every second
+        if now - SecondTimer_prevTime >= 1
         % BPM
             ecg.displayBPM;
             if mod (now, BPM_statsInterval) == 0
@@ -154,9 +160,9 @@ function main
                 pres.updateStats(now);
             end
             
-            SecondTimer_prevTime = SecondTimer_prevTime + 1;
+            SecondTimer_prevTime = SecondTimer_prevTime + 1;  % Add only one to make sure never to skip a second
         end
-        pause(frameduration/3);
+        pause(frameduration/10);  % Pause to give some CPU time to other processes
     end
 
 %% Close serial port when finished
@@ -191,17 +197,8 @@ function main
             case 'PRESSURE_D'
                 pres.add_TR(value);
             case 'COMMAND'
-                disp('Received command:');
-                disp(string(Command(value)));
+                disp(strcat({'Received command: '}, string(Command(value))));
         end
-    end
-
-%% Draw everything to the app
-
-    function drawAll
-        ecg.draw;
-        ppg.draw;
-        pres.draw;
     end
 
 end % end of main function

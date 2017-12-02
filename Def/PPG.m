@@ -70,7 +70,8 @@ classdef PPG < handle
                 'LineWidth',lineWidth);
             o.cursor_plot_IR  = plot(axes_IR,[0 0],[o.range(1)*0.95,o.range(2)], ...
                 'LineWidth',cursorWidth, 'Color', 'k');
-            set(axes_home,'XLim',[0 windowsize],'YLim',o.range,'TickDir','out');
+            set(axes_RD,'XLim',[0 windowsize],'YLim',o.range,'TickDir','out');
+            set(axes_IR,'XLim',[0 windowsize],'YLim',o.range,'TickDir','out');
             o.button = button;
             
             o.stats = stats;            
@@ -121,7 +122,6 @@ classdef PPG < handle
         
         function displaySPO2(o)
             SPO2 = PPG_getSPO2(o.filtered_RD, o.DC_RD, o.filtered_IR, o.DC_IR, 220, o.samplefreq);
-            disp(SPO2);
             if isnan(SPO2)
                 SPO2 = 0;
             end
