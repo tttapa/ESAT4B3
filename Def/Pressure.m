@@ -40,8 +40,9 @@ classdef Pressure < handle
             o.feetAxes = feetAxes;
             hold(feetAxes, 'on');
             % set(feetAxes, 'XLim', [0 1], 'YLim', [0 1]);
-            imshow('GUI_footImage.png','Parent',feetAxes);
-            imshow('GUI_colorBarImage.jpg', 'Parent', colorBarAxes);
+            % *** Image is set in GUI_createGUI() ***
+            %imshow('GUI_footImage.png','Parent',feetAxes);
+            %imshow('GUI_colorBarImage.jpg', 'Parent', colorBarAxes);
             radius = 1;
             pos = [0 0];
             o.circle = rectangle(feetAxes,'Position',[pos pos+radius],'Curvature',[1 1]);

@@ -85,7 +85,7 @@ function main
 
 % GUI
     frameduration = 1.0 / framerate;
-    gui = HealthVision;
+    gui = GUI_createGUI();
     gui.HealthVisionUIFigure.DeleteFcn = @closeapp;
     
 % ECG
