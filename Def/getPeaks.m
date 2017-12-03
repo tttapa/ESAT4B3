@@ -1,25 +1,39 @@
-function [ RESULT_peaks, RESULT_locations ] = getPeaks( INPUT_data, INPUT_minPeakHeight, INPUT_minPeakDistance )
+function [ RESULT_peaks, RESULT_locations ] = getPeaks( INPUT_data, INPUT_checkEdges, INPUT_checkHeight, INPUT_minPeakHeight, INPUT_checkDistance, INPUT_minPeakDistance )
 % FIND_PEAKS returns a list of peaks and their respective locations from a signal
 % TODO: cleanup
 % @param INPUT_data - column vector of data
+% @param INPUT_checkEdges - whether a peak at the edge of the data will
+%                           be included
+% @param INPUT_checkHeight - whether the algorithm will consider the
+%                            minimum peak height
 % @param INPUT_minPeakHeight - minimum height of a peak
+% @param INPUT_checkDistance - whether the algorithm will consider th
+%                              minimum distance between peaks
 % @param INPUT_minPeakDistance - minimum distance between peaks
+
 
 %%
 % SETUP
 %
 
-% Whether we will compare the peak distance/height to the input values.
-checkHeight = true;
-checkDistance = true;
-
 % Based on the number of inputs we get, decide whether we will check the
 % peak heights/distances to the inputs.
-if nargin == 0
+if nargin == 1
+    checkEdges = true;
     checkHeight = false;
     checkDistance = false;
-elseif nargin == 1
+elseif nargin == 2
+    checkEdges = INPUT_checkEdges;
+    checkHeight = false;
     checkDistance = false;
+elseif nargin <= 4
+    checkEdges = INPUT_checkEdges;
+    checkHeight = INPUT_checkHeight;
+    checkDistance = false;
+else
+    checkEdges = INPUT_checkEdges;
+    checkHeight = INPUT_checkHeight;
+    checkDistance = INPUT_checkDistance;
 end
 
 % Keep track of which sample we are currently on. This will go from samplej
@@ -41,16 +55,21 @@ tempLocations = [];
 % EXECUTION
 %
 
-% SPECIAL CASE - sample 1 > sample 2. This should be considered a possible
-% peak.
-if mem_cur > mem_next
+if checkEdges
     
-    % Verify that the height is greater than minPeakHeight
-    if ~checkHeight || (checkHeight && mem_cur > INPUT_minPeakHeight)
-        tempPeaks(length(tempPeaks) + 1, 1) = mem_cur;
-        tempLocations(length(tempLocations) + 1, 1) = 1;
+    % SPECIAL CASE - sample 1 > sample 2. This should be considered a possible
+    % peak.
+    if mem_cur > mem_next
+
+        % Verify that the height is greater than minPeakHeight
+        if ~checkHeight || (checkHeight && mem_cur >= INPUT_minPeakHeight)
+            tempPeaks(length(tempPeaks) + 1, 1) = mem_cur;
+            tempLocations(length(tempLocations) + 1, 1) = 1;
+        end
     end
+    
 end
+
 
 
 % Go through the input data and save all the possible peaks
@@ -64,7 +83,9 @@ while counter <= totalCount
 
     % If the current element is greater than or equal to its neighbors,
     % it could be our new highest value
-    if (mem_cur >= mem_prev && mem_cur >= mem_next)
+    % > , >= so that we only get the first location if two adjacent peaks 
+    % have the same height 
+    if (mem_cur > mem_prev && mem_cur >= mem_next)
         
         % Verify that the height greater than the minPeakHeight
         if ~checkHeight || (checkHeight && mem_cur >= INPUT_minPeakHeight)
@@ -79,16 +100,22 @@ while counter <= totalCount
 end
 
 
-% SPECIAL CASE - last sample > second-to-last sample. This should be
-% considered a possible peak.
-if mem_next > mem_cur
-   
-    % Verify that the height is greater than minPeakHeight
-    if ~checkHeight || (checkHeight && mem_next > INPUT_minPeakHeight)
-        tempPeaks(length(tempPeaks)+1, 1) = mem_next;
-        tempLocations(length(tempLocations)+1, 1) = totalCount + 1;
+if checkEdges
+    
+    % SPECIAL CASE - last sample > second-to-last sample. This should be
+    % considered a possible peak.
+    if mem_next > mem_cur
+
+        % Verify that the height is greater than minPeakHeight
+        if ~checkHeight || (checkHeight && mem_next >= INPUT_minPeakHeight)
+            tempPeaks(length(tempPeaks)+1, 1) = mem_next;
+            tempLocations(length(tempLocations)+1, 1) = totalCount + 1;
+        end
     end
+    
 end
+
+
 
 % Initialize the result variables, so we don't have to resize them
 % every time we find another peak.
@@ -148,7 +175,17 @@ if checkDistance && length(tempPeaks) > 0
     RESULT_peaks = RESULT_peaks(1:resultIndex, 1);
     RESULT_locations = RESULT_locations(1:resultIndex, 1);
     
+else
+    
+    RESULT_peaks = tempPeaks;
+    RESULT_locations = tempLocations;
+    
 end
+
+
+
+
+
 
 
 end

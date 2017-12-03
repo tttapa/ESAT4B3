@@ -44,7 +44,7 @@ function [ BPM ] = ECG_getBPM(signal, samplefreq)
 
         % Find the peaks within this interval
         %   -> Parameter 3: minDistance must be <= length(INPUT_data) - 2
-        [Rpeaks, Rlocations] = getPeaks(signal', cutOffValue, min([minHeartbeatLength, length(signal) - 2]));
+        [Rpeaks, Rlocations] = getPeaks(signal', false, true, cutOffValue, true, min([minHeartbeatLength, length(signal) - 2]));
 
     end
 
