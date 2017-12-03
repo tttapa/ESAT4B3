@@ -30,9 +30,9 @@ classdef StepStats < handle
             
             now = int64(posixtime(datetime('now')));
             secondsIn24h = 24*60*60;
-            today_0am = now - int64(mod(now, secondsIn24h));
+            today_12am = now - int64(mod(now, secondsIn24h));
             try
-                firstIndexOfToday = getStartIndexOfTimeStampInterval(o.timestamps, today_0am, o.interval);
+                firstIndexOfToday = getStartIndexOfTimeStamp(o.timestamps, today_12am, o.interval);
                 o.stepstoday = sum(o.values(firstIndexOfToday:end));
             catch
                 o.stepstoday = 0;

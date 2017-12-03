@@ -21,7 +21,7 @@ function main
 
     windowsize = 5;  % show 5 seconds of ECG and PPG data
 
-    framerate = 15;  % frames per second
+    framerate = 30;  % frames per second
     
 % ECG
     ECG_gain = 140;
@@ -139,8 +139,7 @@ function main
             ecg.draw;
             ppg.draw;
             pres.draw;
-            disp('draw');
-            drawnow;
+            % drawnow;
         end
 
     % Every second
