@@ -12,10 +12,12 @@ classdef Pressure < handle
         stepsPerQuarter;
         
         GraphPanel;
+        feetAxes;
         lamp_HL;
         lamp_TL;
         lamp_HR;
         lamp_TR;
+        circle;
         
         stats;
     end
@@ -35,9 +37,14 @@ classdef Pressure < handle
             o.stepsPerQuarter = double.empty();
 
             o.GraphPanel = GraphPanel;
-            
+            o.feetAxes = feetAxes;
+            hold(feetAxes, 'on');
+            % set(feetAxes, 'XLim', [0 1], 'YLim', [0 1]);
             imshow('GUI_footImage.png','Parent',feetAxes);
             imshow('GUI_colorBarImage.jpg', 'Parent', colorBarAxes);
+            radius = 1;
+            pos = [0 0];
+            o.circle = rectangle(feetAxes,'Position',[pos pos+radius],'Curvature',[1 1]);
             
             o.lamp_HL = lamp_HL;
             o.lamp_TL = lamp_TL;
@@ -52,15 +59,20 @@ classdef Pressure < handle
                 % Heel Left
                 [r, g, b] = pressureToColor(double(o.PresHL));
                 o.lamp_HL.Color = [r, g, b];
+                colorsum = [r, g, b];
                 % Toes Left
                 [r, g, b] = pressureToColor(double(o.PresTL));
                 o.lamp_TL.Color = [r, g, b];
+                colorsum = colorsum + [r, g, b];
                 % Heel Right
                 [r, g, b] = pressureToColor(double(o.PresHR));
                 o.lamp_HR.Color = [r, g, b];
+                colorsum = colorsum + [r, g, b];
                 % Toes Right
                 [r, g, b] = pressureToColor(double(o.PresTR));
                 o.lamp_TR.Color = [r, g, b];
+                colorsum = colorsum + [r, g, b];
+                set(o.circle, 'FaceColor', colorsum/4); % dirty hack to update lamps
                 o.dirty_feet = false;
             end
         end
