@@ -1,4 +1,4 @@
-function [ rSignal, irSignal ] = TEST_createPPGTestData( seconds )
+function [ rSignal, irSignal ] = TEST_createPPGTestData( start_second, end_seconds )
 %PPG_CREATETESTDATA Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -12,18 +12,24 @@ function [ rSignal, irSignal ] = TEST_createPPGTestData( seconds )
 fs = 500;
 
 if nargin == 0
-   seconds = 100; 
+   start_second = 100;
+   end_seconds = 1000;
 end
 
-if seconds > 1000
-    seconds = 1000;
+if start_second > 1000
+    start_second = 999;
+    end_seconds = 1000;
 end
 
-if seconds < 10
-    seconds = 10;
+if start_second < 10
+    start_second = 10;
 end
 
-seconds = uint16(seconds);
+if end_seconds > 1000
+    end_seconds = 1000;
+end
+
+% seconds = uint16(seconds);
 
 
 % Load variable
@@ -31,7 +37,7 @@ S = load('TEST_PPGSignal.mat');
 TEST_PPGSignal = S.TEST_PPGSignal;
 
 % Original signal
-originalSignal = TEST_PPGSignal(seconds*fs+1:2*seconds*fs);
+originalSignal = TEST_PPGSignal(start_second*fs:end_seconds*fs);
 
 % Mean/STD
 originalMean = mean(originalSignal);
@@ -49,10 +55,10 @@ normSignal = (originalSignal - originalMean) / originalSTD;
 rSignal = (normSignal * rSTD) + rMean;
 irSignal = (normSignal * irSTD) + irMean;
 
-figure, plot(rSignal);
-axis([-inf inf 1800 2000]);
-figure, plot(irSignal);
-axis([-inf inf 6000 6300]);
+% figure, plot(rSignal);
+% axis([-inf inf 1800 2000]);
+% figure, plot(irSignal);
+% axis([-inf inf 6000 6300]);
 
 end
 
