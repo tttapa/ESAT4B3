@@ -13,3 +13,6 @@ Slimme thuiszorgmonitor
 10. ~~Update alleen zichtbare GUI-onderdelen~~
 11. Scaling StepsPanel GUI
 12. Pressure bollen voet zijn traag
+13. Hoe weten we het verschil tussen een dode patient en een losgekoppelde sensor?
+14. Bij het openen van de app wordt de Arduino automatisch gereset, is dat een probleem voor encryptie? (Stel dat de app vastloopt, dan zullen we moeten herstarten)
+15. Voorstel: maak de knoppen links rood i.p.v. de lampen.
