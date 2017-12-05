@@ -1,23 +1,26 @@
 function fcns = UserDataFcns
 % WHY MATLAB, WHY?
     fcns.userPrompt = @userPrompt;
-    fcns.deleteUserData = @deleteUserData;
+    fcns.deleteUser = @deleteUser;
     fcns.loadUserData = @loadUserData;
     fcns.saveUserData = @saveUserData;
+    fcns.renameUserFolder = @renameUserFolder;
     fcns.nameRegExp = @nameRegExp;
     fcns.updateGuiUser = @updateGuiUser;
     
-    function userdata = userPrompt(gui)
+    datafolder = 'Data';
+    
+    function userPrompt(gui)
         items = loadUserItems;
         set(gui.SelectUserListBox, 'Items', items);
-
+        gui.userdata = UserData;
         gui.SelectUserListBox.ValueChangedFcn = @selectUser;
         drawnow;
-        while ~exist('userdata','var')
+        while isempty(gui.userdata.name)
             pause(0.1);
         end
 
-        gui.userdata = userdata;
+        gui.userdata = gui.userdata;
 
         gui.HeaderPanel.Visible = 'on';
         gui.MainPanel.Visible = 'on';
@@ -28,7 +31,7 @@ function fcns = UserDataFcns
         function selectUser(~, ev)
             value = ev.Value;
 
-            if(strcmp(value, 'Create New User ...'))
+            if(strcmp(value, 'Add New User ...'))
             % Add new user
                 prompt = {'Name:','Age:','Height (m):','Weight (kg):'};
                 dlg_title = 'New user';
@@ -42,41 +45,43 @@ function fcns = UserDataFcns
                 end
 
                 name = nameRegExp(answer{1});
-                userdata.name = name;
-                userdata.age = round(str2double(answer{2}));
-                userdata.height = str2double(answer{3});
-                userdata.weight = str2double(answer{4}); 
+                gui.userdata.name = name;
+                gui.userdata.age = round(str2double(answer{2}));
+                gui.userdata.height = str2double(answer{3});
+                gui.userdata.weight = str2double(answer{4}); 
 
-                saveUserData(userdata),
+                saveUserData(gui.userdata);
+                folder = fullfile(datafolder,gui.userdata.name);
+                mkdir(folder);
             else
             % Load existing user
-                userdata = loadUserData(value{1});
+                gui.userdata = loadUserData(value{1});
             end
         end
     end
 
-    function deleteUserData(userdata)
-        delete(strcat('Data/', userdata.name, '.usr'));
+    function deleteUser(name)
+        delete(fullfile(datafolder,strcat(name, '.usr')));
     end
 
     function saveUserData(userdata)
-        fileID = fopen(strcat('Data/', userdata.name, '.usr'),'w');
+        fileID = fopen(fullfile(datafolder,strcat(userdata.name, '.usr')),'w');
         fileContent = jsonencode(userdata);
         fwrite(fileID, fileContent);
         fclose(fileID);
     end
 
     function userdata = loadUserData(name)
-        fileID = fopen(strcat('Data/', name, '.usr'),'r');
+        fileID = fopen(fullfile(datafolder,strcat(name, '.usr')),'r');
         fileContent = fread(fileID,'*char');
-        userdata = jsondecode(fileContent);
+        userdata = UserData(jsondecode(fileContent));
         fclose(fileID);
     end
 
     function items = loadUserItems
         cd('Data/');
         files = dir('*.usr');
-        items{1} = 'Create New User ...';
+        items{1} = 'Add New User ...';
         if ~isempty(files)
             for i = 1:length(files)
                 fileID = fopen(files(i).name,'r');
@@ -91,6 +96,7 @@ function fcns = UserDataFcns
 
     function renameUserFolder(oldname, newname)
         cd('Data/');
+        % TODO: check if newname exists
         movefile(oldname, newname);
         cd('../');
     end

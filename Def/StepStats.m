@@ -1,5 +1,7 @@
 classdef StepStats < handle
     properties (SetAccess = private)
+        userdata;
+        datafolder = 'Data';
         filename;
         interval;
         plot;
@@ -14,16 +16,20 @@ classdef StepStats < handle
     end
     
     methods
-        function o = StepStats(foldername, filename, interval, ...
+        function o = StepStats(userdata, filename, interval, ...
                 axes, timeframe, ...
                 progressGauge, ...
                 button)
-            mkdir(foldername);
-            o.filename = strcat(foldername,'/',filename);
+            o.userdata = userdata;
+            folder = fullfile(o.datafolder,o.userdata.name);
+            % mkdir(folder); % TODO: remove
+            o.filename = filename;
             o.interval = interval;
             
+            file = fullfile(folder,o.filename);
+
             try
-                file_contents = int64(dlmread(o.filename));
+                file_contents = int64(dlmread(file));
                 o.timestamps = file_contents(:,1);
                 o.values = uint16(file_contents(:,2));
                 clear('file_contents');
@@ -60,8 +66,11 @@ classdef StepStats < handle
             o.values = [o.values; steps];
             o.timestamps = [o.timestamps; now];
             
-            fileID = fopen(o.filename,'a');
-            fprintf(fileID,'%d\t%d\r\n', now, steps);
+            folder = fullfile(o.datafolder,o.userdata.name);
+            file = fullfile(folder,o.filename);
+
+            fileID = fopen(file,'a');
+            fprintf(fileID,'%d,%d\r\n', now, steps);
             fclose(fileID);
             o.updateGUI;
             

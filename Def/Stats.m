@@ -1,5 +1,7 @@
 classdef Stats < handle
     properties (SetAccess = private)
+        userdata;
+        datafolder = 'Data';
         filename;
         interval;
         plot;
@@ -13,11 +15,13 @@ classdef Stats < handle
     end
     
     methods
-        function o = Stats(foldername, filename, interval, ...
+        function o = Stats(userdata, filename, interval, ...
                 axes, buttongroup, ...
                 minfield, maxfield, avgfield)
-            mkdir(foldername);
-            o.filename = strcat(foldername,'/',filename);
+            o.userdata = userdata;
+            folder = fullfile(o.datafolder,o.userdata.name);
+            % mkdir(folder); % TODO: remove
+            o.filename = filename;
             o.interval = interval;
             o.minfield = minfield;
             o.maxfield = maxfield;
@@ -25,15 +29,17 @@ classdef Stats < handle
             
             o.average = Average;
             
+            file = fullfile(folder,o.filename);
+            
             try
-                file_contents = double(dlmread(o.filename));
+                file_contents = double(dlmread(file));
                 o.values = file_contents(:,2);
                 clear('file_contents');
             catch
                 o.values = double.empty();
             end
             try
-                file_contents = int64(dlmread(o.filename));
+                file_contents = int64(dlmread(file));
                 o.timestamps = file_contents(:,1);
                 clear('file_contents');
             catch
@@ -67,8 +73,11 @@ classdef Stats < handle
             o.values = [o.values; value];
             o.timestamps = [o.timestamps; now];
             
-            fileID = fopen(o.filename,'a');
-            fprintf(fileID,'%d\t%f\r\n', now, value);
+            folder = fullfile(o.datafolder,o.userdata.name);
+            file = fullfile(folder,o.filename);
+            
+            fileID = fopen(file,'a');
+            fprintf(fileID,'%d,%f\r\n', now, value);
             fclose(fileID);
             o.updateGUI;
         end
