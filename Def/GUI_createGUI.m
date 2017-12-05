@@ -40,18 +40,18 @@ gui.HeaderPanel.BackgroundColor = headerBackgroundColor;
 
 gui.HeaderTitleAxes.BackgroundColor = headerBackgroundColor;
 
-gui.HeaderAgeEditField.Limits = [0 110];
-gui.HeaderAgeEditField.FontColor = whiteColor;
-gui.HeaderAgeEditField.BackgroundColor = secondaryBackgroundColor;
+%gui.HeaderAgeEditField.Limits = [0 110];
+%gui.HeaderAgeEditField.FontColor = whiteColor;
+%gui.HeaderAgeEditField.BackgroundColor = secondaryBackgroundColor;
 
-gui.HeaderUserEditField.FontColor = whiteColor;
-gui.HeaderUserEditField.BackgroundColor = secondaryBackgroundColor;
+%gui.HeaderUserEditField.FontColor = whiteColor;
+%gui.HeaderUserEditField.BackgroundColor = secondaryBackgroundColor;
 
-gui.HeaderHeightEditField.FontColor = whiteColor;
-gui.HeaderHeightEditField.BackgroundColor = secondaryBackgroundColor;   
+%gui.HeaderHeightEditField.FontColor = whiteColor;
+%gui.HeaderHeightEditField.BackgroundColor = secondaryBackgroundColor;   
 
-gui.HeaderWeightEditField.FontColor = whiteColor;
-gui.HeaderWeightEditField.BackgroundColor = secondaryBackgroundColor;   
+%gui.HeaderWeightEditField.FontColor = whiteColor;
+%gui.HeaderWeightEditField.BackgroundColor = secondaryBackgroundColor;   
 
 %   Mainpanel
 gui.MainPanel.BackgroundColor = mainBackgroundColor;
@@ -170,8 +170,10 @@ gui.ECGMaxEditField.BackgroundColor = secondaryBackgroundColor;
 
 gui.ECGGauge.BackgroundColor = secondaryBackgroundColor;
 gui.ECGGauge.FontColor = ecgColor;
-gui.ECGGauge.ScaleColorLimits = [0 60; 60 220-gui.HeaderAgeEditField.Value; 220-gui.HeaderAgeEditField.Value 240 ];
-gui.ECGGauge.ScaleColors = [0 0 1; 0 1 0; 1 0 0];
+
+% Wordt gedaan binnen HealthVision.mlapp
+%gui.ECGGauge.ScaleColorLimits = [0 60; 60 220-gui.HeaderAgeEditField.Value; 220-gui.HeaderAgeEditField.Value 240 ];
+%gui.ECGGauge.ScaleColors = [0 0 1; 0 1 0; 1 0 0];
 
 gui.ECGAxesDetail.XColor = ecgColor;
 gui.ECGAxesDetail.YColor = ecgColor;
@@ -228,19 +230,19 @@ colorBarDat = imshow(colorBarImage, 'Parent', gui.StepsAxesDetail2);
 
 set(logoDat, 'AlphaData', logoAlpha);
 set(footDat, 'AlphaData', footAlpha);
-set(colorBarDat, 'AlphaData', colorBarAlpha);
+%set(colorBarDat, 'AlphaData', colorBarAlpha);
 
 
 % Questions
-prompt = {'Enter your name:','Enter your age:','Enter your lenght(m):','Enter your weight(kg):'};
-dlg_title = ' Age ';
-num_lines = 1;
-defaultans = {'Jan Vermeulen','65','1.75','75'};
-answer = inputdlg(prompt,dlg_title,num_lines,defaultans);
-gui.HeaderUserEditField.Value = answer{1};
-gui.HeaderAgeEditField.Value = str2double(answer{2});
-gui.HeaderHeightEditField.Value = str2double(answer{3});
-gui.HeaderWeightEditField.Value = str2double(answer{4});
+%prompt = {'Enter your name:','Enter your age:','Enter your height(m):','Enter your weight(kg):'};
+%dlg_title = ' Age ';
+%num_lines = 1;
+%defaultans = {'Jan Vermeulen','65','1.75','75'};
+%answer = inputdlg(prompt,dlg_title,num_lines,defaultans);
+%gui.HeaderUserEditField.Value = answer{1};
+%gui.HeaderAgeEditField.Value = str2double(answer{2});
+%gui.HeaderHeightEditField.Value = str2double(answer{3});
+%gui.HeaderWeightEditField.Value = str2double(answer{4});
 
 
 
