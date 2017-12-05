@@ -22,7 +22,7 @@ classdef PPG < handle
         settings;
         baseline;
 
-        GraphPanel;
+        GraphPanelDetail;
         plot_SPO2;
         plot_RD;
         plot_IR;
@@ -37,7 +37,7 @@ classdef PPG < handle
         function o = PPG(windowsize, extrasamples, samplefreq, SPO2_windowsize, ...
                 range, lineWidth, cursorWidth, ...
                 baseline, ...
-                GraphPanel, axes_home, axes_RD, axes_IR, button, ...
+                GraphPanelDetail, axes_home, axes_RD, axes_IR, button, ...
                 stats)
             o.windowsize      = windowsize;
             o.visiblesamples  = windowsize * samplefreq;
@@ -45,7 +45,7 @@ classdef PPG < handle
             o.samplefreq      = samplefreq;
             o.range           = range;
             o.bufferlen       = o.visiblesamples + extrasamples;
-            o.SPO2_Bufferlen  = SPO2_windowsize * samplefreq;
+            o.SPO2_Bufferlen  = SPO2_windowsize * 1;
             o.SPO2_Buffer     = double(zeros(o.SPO2_Bufferlen,1));
             o.buffer_RD       = int16(zeros(o.bufferlen,1));
             o.buffer_IR       = int16(zeros(o.bufferlen,1));
@@ -55,12 +55,14 @@ classdef PPG < handle
             o.filtered_IR     = double(zeros(o.bufferlen,1));
             o.settings        = PPG_setup(samplefreq);
             o.baseline        = baseline;
-            SPO2_time         = linspace(0, SPO2_windowsize, o.SPO2_Bufferlen);
+            SPO2_time         = linspace(-SPO2_windowsize, 0, o.SPO2_Bufferlen);
             time              = linspace(0, windowsize, o.visiblesamples);
             
-            o.GraphPanel      = GraphPanel;
+            o.GraphPanelDetail      = GraphPanelDetail;
             o.plot_SPO2       = plot(axes_home, SPO2_time, ...
                 o.SPO2_Buffer);
+            set(axes_home,'XLim',[-SPO2_windowsize 0],'YLim',[-inf inf],'TickDir','out');
+            
             hold(axes_RD, 'on');
             o.plot_RD         = plot(axes_RD, time, ...
                 o.ringBuffer_RD, ...
@@ -100,7 +102,7 @@ classdef PPG < handle
         end
         function draw(o)
             if (o.samplesSinceLastDraw_IR > 0 && o.samplesSinceLastDraw_RD > 0) ...
-                    && strcmp(o.GraphPanel.Visible, 'on')
+                    && strcmp(o.GraphPanelDetail.Visible, 'on')
                 o.filter;
                 newCompleteSamples = min([o.samplesSinceLastDraw_IR, o.samplesSinceLastDraw_RD]);
                 if newCompleteSamples > o.visiblesamples  % there are more new samples than the visible buffer
@@ -111,11 +113,11 @@ classdef PPG < handle
                 
                 while(o.samplesSinceLastDraw_IR > 0 && o.samplesSinceLastDraw_RD > 0)
                     o.ringBuffer_RD(o.ringBufferIndex) ...
-                       = o.filtered_RD(o.visiblesamples-o.samplesSinceLastDraw_RD+1);
+                       = o.filtered_RD(end-o.samplesSinceLastDraw_RD + 1);
                     o.samplesSinceLastDraw_RD = o.samplesSinceLastDraw_RD - 1;
 
                     o.ringBuffer_IR(o.ringBufferIndex) ...
-                       = o.filtered_IR(o.visiblesamples-o.samplesSinceLastDraw_IR+1);
+                       = o.filtered_IR(end-o.samplesSinceLastDraw_IR + 1);
                     o.samplesSinceLastDraw_IR = o.samplesSinceLastDraw_IR - 1;
                     
                     o.ringBufferIndex = mod(o.ringBufferIndex, o.visiblesamples) + 1;
@@ -132,7 +134,7 @@ classdef PPG < handle
         end
         
         function displaySPO2(o)
-            if strcmp(o.GraphPanel.Visible, 'off')  % if the panel is off, the filtered buffer is not updated, so do it now
+            if strcmp(o.GraphPanelDetail.Visible, 'off')  % if the panel is off, the filtered buffer is not updated, so do it now
                 o.filter;
             end
             o.DC_RD = mean(o.buffer_RD);
@@ -144,6 +146,10 @@ classdef PPG < handle
             SPO2_text = char(strcat(string(round(SPO2*1000)/10.0),'%'));
             o.button.Text = SPO2_text;
             o.stats.add(SPO2*100);
+            
+            o.SPO2_Buffer(1:end-1) = o.SPO2_Buffer(2:end); % shift the buffer one place to the left
+            o.SPO2_Buffer(end) = SPO2*100; % add the new value to the end of the buffer
+            set(o.plot_SPO2,'YData', o.SPO2_Buffer);
         end
         
         function updateStats(o, now)

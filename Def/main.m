@@ -15,7 +15,7 @@ function main
     baudrate = 115200;             % Serial port baud rate
 
     bytesPerMessage = 2;
-    messagesPerSerialParse = 64;
+    messagesPerSerialParse = 32;
     
 %% Settings
 
@@ -26,6 +26,7 @@ function main
 % ECG
     ECG_gain = 140;
     ECG_mVref = 5000;
+    ECG_baseline = int16(1023*5/2);
 
     ECG_samplefreq = 360;
     
@@ -34,7 +35,6 @@ function main
     ECG_extrasamples = ECG_samplefreq * 2; % samples containing transients are cut off the plot
     
     ECG_range = [-6e0 6e0]; % [-inf inf]; for automatic ranges
-    ECG_baseline = int16(511);
     
     ECG_lineWidth = 2;
     ECG_cursorWidth = 10;
@@ -100,7 +100,7 @@ function main
         ECG_range, ECG_lineWidth, ECG_cursorWidth, ...
         ECG_baseline, ECG_mVref, ECG_gain, ...
         gui.GraphPanel, gui.ECGAxesHome, gui.ECGButton, ...
-        BPM_minimumAllowedValue, ...
+        gui.ECGGauge, BPM_minimumAllowedValue, ...
         ecgStats);
 
 % PPG  
@@ -119,6 +119,7 @@ function main
 % Pressure
     presStats = StepStats('Data/Steps.csv', Steps_Interval, ...
         gui.StepsAxesHome, Steps_Timeframe, ...
+        gui.StepsGauge, ...
         gui.StepsButton);
     pres = Pressure(PresHighThreshold, PresLowThreshold, ...
         gui.StepsPanel, gui.StepsAxesDetail1, gui.StepsAxesDetail2, ...
@@ -136,31 +137,39 @@ function main
     % Update all GUI plots
         if toc(frametime) >= frameduration
             frametime = tic;
-            ecg.draw;
-            ppg.draw;
-            pres.draw;
-            % drawnow;
+            try
+                ecg.draw;
+                ppg.draw;
+                pres.draw;
+                % drawnow;
+            catch
+                running = false;
+            end
         end
 
     % Every second
         now =   int64(posixtime(datetime('now')));
         if now - SecondTimer_prevTime >= 1
-        % BPM
-            ecg.displayBPM;
-            if mod (now, BPM_statsInterval) == 0
-                ecg.updateStats(now);
+            try
+            % BPM
+                ecg.displayBPM;
+                if mod (now, BPM_statsInterval) == 0
+                    ecg.updateStats(now);
+                end
+            % SPO2
+                ppg.displaySPO2;
+                if mod (now, SPO2_statsInterval) == 0
+                    ppg.updateStats(now);
+                end
+            % Steps
+                if mod (now, Steps_Interval) == 0
+                    pres.updateStats(now);
+                end
+
+                SecondTimer_prevTime = SecondTimer_prevTime + 1;  % Add only one to make sure never to skip a second
+            catch
+                running = false;
             end
-        % SPO2
-            ppg.displaySPO2;
-            if mod (now, SPO2_statsInterval) == 0
-                ppg.updateStats(now);
-            end
-        % Steps
-            if mod (now, Steps_Interval) == 0
-                pres.updateStats(now);
-            end
-            
-            SecondTimer_prevTime = SecondTimer_prevTime + 1;  % Add only one to make sure never to skip a second
         end
         pause(frameduration/10);  % Pause to give some CPU time to other processes
     end

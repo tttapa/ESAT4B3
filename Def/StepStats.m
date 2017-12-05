@@ -7,13 +7,16 @@ classdef StepStats < handle
         values;
         timestamps;
         timeframe;
+        progressGauge;
         
+        goal;
         stepstoday;
     end
     
     methods
         function o = StepStats(filename, interval, ...
                 axes, timeframe, ...
+                progressGauge, ...
                 button)
             o.filename = filename;
             o.interval = interval;
@@ -37,16 +40,18 @@ classdef StepStats < handle
             catch
                 o.stepstoday = 0;
             end
+            o.goal = 10000;
             
             o.timeframe  = timeframe;
             try
                 [X_time, Y_values] = o.getPlotData;
-                o.plot = bar(axes, X_time, Y_values);
+                o.plot = bar(axes, X_time, Y_values, 1);
                 o.updateXLim;
             catch
-                o.plot = bar(axes, datetime('now'), 0);
+                o.plot = bar(axes, datetime('now'), 0, 1, 'FaceColor',[1 1 0]);
             end
             
+            o.progressGauge = progressGauge;
             o.button = button;
         end
         
@@ -79,14 +84,15 @@ classdef StepStats < handle
             o.updateXLim;
         end
         function updateXLim(o)
-            startTime = datetime(o.timestamps(end) - o.timeframe,'ConvertFrom','posixtime');
-            endTime   = datetime(o.timestamps(end),'ConvertFrom','posixtime');
+            startTime = datetime(o.timestamps(end) - o.timeframe - 7.5*60,'ConvertFrom','posixtime');
+            endTime   = datetime(o.timestamps(end) + 7.5*60,'ConvertFrom','posixtime');
             set(o.plot.Parent, 'XLim', [startTime,endTime]);
         end
         
         function updateStepCounter(o, steps)
             stepsTxt = char(string(o.stepstoday + steps));
             o.button.Text = stepsTxt;
+            o.progressGauge.Value = 100 * o.stepstoday / o.goal;
         end
     end
 end

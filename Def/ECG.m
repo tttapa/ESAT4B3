@@ -21,6 +21,7 @@ classdef ECG < handle
         plot_home;
         cursor_plot;
         button;
+        BPM_gauge;
         
         stats;
     end
@@ -31,7 +32,7 @@ classdef ECG < handle
                 range, lineWidth, cursorWidth, ...
                 baseline, mVref, gain, ...
                 GraphPanel, axes_home, button, ...
-                BPM_minimumAllowedValue, ...
+                BPM_gauge, BPM_minimumAllowedValue, ...
                 stats)
             o.scalingFactor   = mVref / 1023.0 / gain;
             o.windowsize      = windowsize;
@@ -57,6 +58,7 @@ classdef ECG < handle
                 'LineWidth',cursorWidth, 'Color', [0.05 0.1 0.2]);
             set(axes_home,'XLim',[0 windowsize],'YLim',o.range,'TickDir','out');
             o.button          = button;
+            o.BPM_gauge = BPM_gauge;
             
             o.stats = stats;
         end
@@ -82,7 +84,7 @@ classdef ECG < handle
                 end
                 while(o.samplesSinceLastDraw > 0)  % for every new sample
                     o.ringBuffer(o.ringBufferIndex) ...  % add it to the ringbuffer
-                       = o.filtered(o.visiblesamples-o.samplesSinceLastDraw+1);
+                       = o.filtered(end-o.samplesSinceLastDraw+1);
                     o.ringBufferIndex = mod(o.ringBufferIndex, o.visiblesamples) + 1;
                     o.samplesSinceLastDraw = o.samplesSinceLastDraw - 1;
                 end
@@ -124,6 +126,7 @@ classdef ECG < handle
             BPM_text = char(strcat(string(uint8(round(BPM))), {' BPM'}));
             o.button.Text = BPM_text;
             o.stats.add(BPM);
+            o.BPM_gauge.Value = BPM;
         end
         
         function updateStats(o, now)
