@@ -47,7 +47,7 @@ function main
     PPG_samplefreq = 300;
     PPG_extrasamples = PPG_samplefreq * 0;
     PPG_range = [-512 512];
-    SPO2_Bufferlen = 15;
+    SPO2_Bufferlen = 60;
     
     PPG_lineWidth = 2;
     PPG_cursorWidth = 10;
@@ -87,12 +87,15 @@ function main
     frameduration = 1.0 / framerate;
     gui = GUI_createGUI();
     gui.HealthVisionUIFigure.DeleteFcn = @closeapp;
+    userdatafcns = UserDataFcns; % WHY MATLAB, WHY?
+    userdata = userdatafcns.userPrompt(gui);
+    username = userdata.name;
     
 % ECG
     gui.ECGButton30m.UserData = 30*60;
     gui.ECGButton2h.UserData  = 2*60*60;
     gui.ECGButton6h.UserData  = 6*60*60;
-    ecgStats = Stats('Data/BPM.csv', BPM_statsInterval, ...
+    ecgStats = Stats(strcat('Data/',username),'BPM.csv', BPM_statsInterval, ...
         gui.ECGAxesDetail, gui.ECGStatisticsButtonGroup, ...
         gui.ECGMinEditField, gui.ECGMaxEditField, gui.ECGAvgEditField);
     ecg = ECG(windowsize, ECG_extrasamples, ...
@@ -107,7 +110,7 @@ function main
     gui.PPGButton30m.UserData = 30*60;
     gui.PPGButton2h.UserData  = 2*60*60;
     gui.PPGButton6h.UserData  = 6*60*60;
-    ppgStats = Stats('Data/SPO2.csv', SPO2_statsInterval, ...
+    ppgStats = Stats(strcat('Data/',username),'SPO2.csv', SPO2_statsInterval, ...
         gui.PPGAxesDetail3, gui.PPGStatisticsButtonGroup, ...
         gui.PPGMinEditField, gui.PPGMaxEditField, gui.PPGAvgEditField);
     ppg = PPG(windowsize, PPG_extrasamples, PPG_samplefreq, SPO2_Bufferlen, ...
@@ -117,7 +120,7 @@ function main
         ppgStats);
     
 % Pressure
-    presStats = StepStats('Data/Steps.csv', Steps_Interval, ...
+    presStats = StepStats(strcat('Data/',username),'Steps.csv', Steps_Interval, ...
         gui.StepsAxesHome, Steps_Timeframe, ...
         gui.StepsGauge, ...
         gui.StepsButton);
@@ -137,54 +140,53 @@ function main
     % Update all GUI plots
         if toc(frametime) >= frameduration
             frametime = tic;
-            try
-                ecg.draw;
-                ppg.draw;
-                pres.draw;
-                % drawnow;
-            catch
-                running = false;
-            end
+            ecg.draw;
+            ppg.draw;
+            pres.draw;
         end
 
     % Every second
         now =   int64(posixtime(datetime('now')));
         if now - SecondTimer_prevTime >= 1
-            try
-            % BPM
-                ecg.displayBPM;
-                if mod (now, BPM_statsInterval) == 0
-                    ecg.updateStats(now);
-                end
-            % SPO2
-                ppg.displaySPO2;
-                if mod (now, SPO2_statsInterval) == 0
-                    ppg.updateStats(now);
-                end
-            % Steps
-                if mod (now, Steps_Interval) == 0
-                    pres.updateStats(now);
-                end
-
-                SecondTimer_prevTime = SecondTimer_prevTime + 1;  % Add only one to make sure never to skip a second
-            catch
-                running = false;
+        % BPM
+            ecg.displayBPM;
+            if mod (now, BPM_statsInterval) == 0
+                ecg.updateStats(now);
             end
+        % SPO2
+            ppg.displaySPO2;
+            if mod (now, SPO2_statsInterval) == 0
+                ppg.updateStats(now);
+            end
+        % Steps
+            if mod (now, Steps_Interval) == 0
+                pres.updateStats(now);
+            end
+
+            SecondTimer_prevTime = SecondTimer_prevTime + 1;  % Add only one to make sure never to skip a second
         end
         pause(frameduration/10);  % Pause to give some CPU time to other processes
     end
 
 %% Close serial port when finished
-    fclose(s);
-    delete(s);
     disp('Done.');
 
     function closeapp(~, ~)
+        stop;
         running = false;
     end
 
     function serialerror(~, ~, ~) % TODO: necessary?
+        stop;
         running = false;
+    end
+
+    function stop
+        fclose(s);
+        delete(s);
+        delete(ecg);
+        delete(ppg);
+        delete(pres);
     end
 
 %% Handling of incoming messages

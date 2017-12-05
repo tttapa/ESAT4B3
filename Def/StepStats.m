@@ -14,15 +14,16 @@ classdef StepStats < handle
     end
     
     methods
-        function o = StepStats(filename, interval, ...
+        function o = StepStats(foldername, filename, interval, ...
                 axes, timeframe, ...
                 progressGauge, ...
                 button)
-            o.filename = filename;
+            mkdir(foldername);
+            o.filename = strcat(foldername,'/',filename);
             o.interval = interval;
             
             try
-                file_contents = int64(dlmread(filename));
+                file_contents = int64(dlmread(o.filename));
                 o.timestamps = file_contents(:,1);
                 o.values = uint16(file_contents(:,2));
                 clear('file_contents');

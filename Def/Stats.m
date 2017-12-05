@@ -13,10 +13,11 @@ classdef Stats < handle
     end
     
     methods
-        function o = Stats(filename, interval, ...
+        function o = Stats(foldername, filename, interval, ...
                 axes, buttongroup, ...
                 minfield, maxfield, avgfield)
-            o.filename = filename;
+            mkdir(foldername);
+            o.filename = strcat(foldername,'/',filename);
             o.interval = interval;
             o.minfield = minfield;
             o.maxfield = maxfield;
@@ -25,14 +26,14 @@ classdef Stats < handle
             o.average = Average;
             
             try
-                file_contents = double(dlmread(filename));
+                file_contents = double(dlmread(o.filename));
                 o.values = file_contents(:,2);
                 clear('file_contents');
             catch
                 o.values = double.empty();
             end
             try
-                file_contents = int64(dlmread(filename));
+                file_contents = int64(dlmread(o.filename));
                 o.timestamps = file_contents(:,1);
                 clear('file_contents');
             catch

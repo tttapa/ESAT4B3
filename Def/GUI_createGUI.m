@@ -171,9 +171,9 @@ gui.ECGMaxEditField.BackgroundColor = secondaryBackgroundColor;
 gui.ECGGauge.BackgroundColor = secondaryBackgroundColor;
 gui.ECGGauge.FontColor = ecgColor;
 
-% Wordt gedaan binnen HealthVision.mlapp
+% Wordt gedaan in UserDataFcns.m
 %gui.ECGGauge.ScaleColorLimits = [0 60; 60 220-gui.HeaderAgeEditField.Value; 220-gui.HeaderAgeEditField.Value 240 ];
-%gui.ECGGauge.ScaleColors = [0 0 1; 0 1 0; 1 0 0];
+gui.ECGGauge.ScaleColors = [0 0 1; 0 1 0; 1 0 0];
 
 gui.ECGAxesDetail.XColor = ecgColor;
 gui.ECGAxesDetail.YColor = ecgColor;
