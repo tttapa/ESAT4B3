@@ -78,12 +78,12 @@ classdef ECG < handle
         function draw(o)
             if o.samplesSinceLastDraw > 0 && strcmp(o.GraphPanel.Visible, 'on')
                 o.filter;
-                if o.samplesSinceLastDraw > o.visiblesamples
-                    disp('samplesSinceLastDraw');
-                    disp(o.samplesSinceLastDraw);
-                    o.samplesSinceLastDraw = o.visiblesamples;
-                end
                 while(o.samplesSinceLastDraw > 0)  % for every new sample
+                    if o.samplesSinceLastDraw > o.visiblesamples
+                        disp('samplesSinceLastDraw');
+                        disp(o.samplesSinceLastDraw);
+                        o.samplesSinceLastDraw = o.visiblesamples;
+                    end
                     o.ringBuffer(o.ringBufferIndex) ...  % add it to the ringbuffer
                        = o.filtered(end-o.samplesSinceLastDraw+1);
                     o.ringBufferIndex = mod(o.ringBufferIndex, o.visiblesamples) + 1;

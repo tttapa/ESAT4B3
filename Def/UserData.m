@@ -4,6 +4,7 @@ classdef UserData < handle
         age;
         weight;
         height;
+        stepGoal;
     end
     methods
         function o = UserData(struct)
@@ -12,6 +13,7 @@ classdef UserData < handle
                 o.age = struct.age;
                 o.weight = struct.weight;
                 o.height = struct.height;
+                o.stepGoal = struct.stepGoal;
             end
         end
     end

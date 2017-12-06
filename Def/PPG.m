@@ -104,14 +104,14 @@ classdef PPG < handle
             if (o.samplesSinceLastDraw_IR > 0 && o.samplesSinceLastDraw_RD > 0) ...
                     && strcmp(o.GraphPanelDetail.Visible, 'on')
                 o.filter;
-                newCompleteSamples = min([o.samplesSinceLastDraw_IR, o.samplesSinceLastDraw_RD]);
-                if newCompleteSamples > o.visiblesamples  % there are more new samples than the visible buffer
-                    sampleSurplus = newCompleteSamples - o.visiblesamples;
-                    o.samplesSinceLastDraw_IR = o.samplesSinceLastDraw_IR - sampleSurplus;  % ignore the oldest samples
-                    o.samplesSinceLastDraw_RD = o.samplesSinceLastDraw_RD - sampleSurplus;
-                end
                 
                 while(o.samplesSinceLastDraw_IR > 0 && o.samplesSinceLastDraw_RD > 0)
+                    newCompleteSamples = min([o.samplesSinceLastDraw_IR, o.samplesSinceLastDraw_RD]);
+                    if newCompleteSamples > o.visiblesamples  % there are more new samples than the visible buffer
+                        sampleSurplus = newCompleteSamples - o.visiblesamples;
+                        o.samplesSinceLastDraw_IR = o.samplesSinceLastDraw_IR - sampleSurplus;  % ignore the oldest samples
+                        o.samplesSinceLastDraw_RD = o.samplesSinceLastDraw_RD - sampleSurplus;
+                    end
                     o.ringBuffer_RD(o.ringBufferIndex) ...
                        = o.filtered_RD(end-o.samplesSinceLastDraw_RD + 1);
                     o.samplesSinceLastDraw_RD = o.samplesSinceLastDraw_RD - 1;
