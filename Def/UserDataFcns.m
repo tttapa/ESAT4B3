@@ -41,6 +41,7 @@ function fcns = UserDataFcns
                 end
 
                 name = answer{1};
+                gui.userdata.foldername = nameRegExp(name);
                 gui.userdata.name = name;
                 gui.userdata.age = round(str2double(answer{2}));
                 gui.userdata.height = str2double(answer{3});
@@ -48,8 +49,7 @@ function fcns = UserDataFcns
                 gui.userdata.stepGoal = 10000;
 
                 saveUserData(gui.userdata);
-                foldername = nameRegExp(name);
-                folder = fullfile(datafolder,foldername);
+                folder = fullfile(datafolder,gui.userdata.foldername);
                 mkdir(folder);
             else
             % Load existing user
@@ -63,7 +63,7 @@ function fcns = UserDataFcns
     end
 
     function saveUserData(userdata)
-        fileID = fopen(fullfile(datafolder,strcat(nameRegExp(userdata.name), '.usr')),'w');
+        fileID = fopen(fullfile(datafolder,strcat(userdata.foldername, '.usr')),'w');
         fileContent = jsonencode(userdata);
         fwrite(fileID, fileContent);
         fclose(fileID);
@@ -82,10 +82,22 @@ function fcns = UserDataFcns
         itemsdata{1} = [];
         if ~isempty(files)
             for i = 1:length(files)
-                data = loadUserData(fullfile(files(i).folder,files(i).name));
+                USRfilename = files(i).name;
+                USRfile = fullfile(datafolder,USRfilename);
+                data = loadUserData(USRfile);
                 items{i+1} = data.name;
                 itemsdata{i+1} = data;
-                folder = fullfile(datafolder,nameRegExp(data.name));
+                targetfoldername = nameRegExp(data.name);
+                targetfilename = strcat(targetfoldername,'.usr');
+                if ~strcmp(USRfilename,targetfilename)
+                    targetfile = fullfile(datafolder,targetfilename);
+                    movefile(USRfile,targetfile);
+                end
+                if ~strcmp(targetfoldername, data.foldername)
+                    data.foldername = targetfoldername;
+                    saveUserData(data);
+                end
+                folder = fullfile(datafolder,targetfoldername);
                 if ~exist(folder,'file')
                     mkdir(folder);
                 end
@@ -108,8 +120,9 @@ function fcns = UserDataFcns
     end
 
     function updated = updateUserData(gui, newUserData)
-        oldname = nameRegExp(gui.userdata.name);
-        newname = nameRegExp(newUserData.name);
+        newUserData.foldername = nameRegExp(newUserData.name);
+        oldname = gui.userdata.foldername;
+        newname = newUserData.foldername;
         if isempty(newname)
             updated = false;    
             return;

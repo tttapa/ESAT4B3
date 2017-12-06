@@ -64,7 +64,7 @@ classdef StepStats < handle
             o.values = [o.values; steps];
             o.timestamps = [o.timestamps; now];
             
-            folder = fullfile(o.datafolder,o.userdata.name);
+            folder = fullfile(o.datafolder,o.userdata.foldername);
             file = fullfile(folder,o.filename);
 
             fileID = fopen(file,'a');

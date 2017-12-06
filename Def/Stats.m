@@ -73,7 +73,7 @@ classdef Stats < handle
             o.values = [o.values; value];
             o.timestamps = [o.timestamps; now];
             
-            folder = fullfile(o.datafolder,o.userdata.name);
+            folder = fullfile(o.datafolder,o.userdata.foldername);
             file = fullfile(folder,o.filename);            
             fileID = fopen(file,'a');
             fprintf(fileID,'%d,%f\r\n', now, value);

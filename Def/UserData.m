@@ -1,5 +1,6 @@
 classdef UserData < handle
     properties
+        foldername;
         name;
         age;
         weight;
@@ -9,6 +10,7 @@ classdef UserData < handle
     methods
         function o = UserData(struct)
             if nargin == 1
+                o.foldername = struct.foldername;
                 o.name = struct.name;
                 o.age = struct.age;
                 o.weight = struct.weight;
