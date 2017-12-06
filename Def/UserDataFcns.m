@@ -3,6 +3,7 @@ function fcns = UserDataFcns
     fcns.userPrompt = @userPrompt;
     fcns.updateUserData = @updateUserData;
     fcns.saveUserData = @saveUserData;
+    fcns.updateGuiUser = @updateGuiUser;
     
     datafolder = 'Data';
     
@@ -98,6 +99,7 @@ function fcns = UserDataFcns
     end
 
     function updateGuiUser(gui)
+        gui.StepsDailyGoalEditField.Value = gui.userdata.stepGoal;
         gui.HeaderUserEditField.Value = gui.userdata.name;
 
         % Set ECG Gauge

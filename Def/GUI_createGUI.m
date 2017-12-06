@@ -209,7 +209,7 @@ gui.StepsGauge.FontColor = stepsColor;
 
 gui.StepsProgressLabel.FontColor = stepsColor;
 
-gui.StepsDailyGoalLabel.FontColor = stepsColor;
+% gui.StepsDailyGoalLabel.FontColor = stepsColor;
 
 gui.StepsAxesDetail1.BackgroundColor = secondaryBackgroundColor;
 gui.StepsAxesDetail1.Color = secondaryBackgroundColor;

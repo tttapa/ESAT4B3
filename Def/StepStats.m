@@ -11,7 +11,6 @@ classdef StepStats < handle
         timeframe;
         progressGauge;
         
-        goal;
         stepstoday;
     end
     
@@ -47,7 +46,6 @@ classdef StepStats < handle
             catch
                 o.stepstoday = 0;
             end
-            o.goal = 10000;
             
             o.timeframe  = timeframe;
             try
@@ -102,7 +100,11 @@ classdef StepStats < handle
         function updateStepCounter(o, steps)
             stepsTxt = char(string(o.stepstoday + steps));
             o.button.Text = stepsTxt;
-            o.progressGauge.Value = 100 * o.stepstoday / o.goal;
+            o.updateStepGauge;
+        end
+        
+        function updateStepGauge(o)
+            o.progressGauge.Value = 100 * o.stepstoday / o.userdata.stepGoal;
         end
     end
 end

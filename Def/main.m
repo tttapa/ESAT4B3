@@ -159,6 +159,7 @@ function main
                 ppg.updateStats(now);
             end
         % Steps
+            pres.stats.updateStepGauge; % TODO: kan properder
             if mod (now, Steps_Interval) == 0
                 pres.updateStats(now);
             end
