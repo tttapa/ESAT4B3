@@ -40,7 +40,7 @@ function fcns = UserDataFcns
                     return;
                 end
 
-                name = nameRegExp(answer{1});
+                name = answer{1};
                 gui.userdata.name = name;
                 gui.userdata.age = round(str2double(answer{2}));
                 gui.userdata.height = str2double(answer{3});
@@ -48,7 +48,8 @@ function fcns = UserDataFcns
                 gui.userdata.stepGoal = 10000;
 
                 saveUserData(gui.userdata);
-                folder = fullfile(datafolder,gui.userdata.name);
+                foldername = nameRegExp(name);
+                folder = fullfile(datafolder,foldername);
                 mkdir(folder);
             else
             % Load existing user
@@ -62,7 +63,7 @@ function fcns = UserDataFcns
     end
 
     function saveUserData(userdata)
-        fileID = fopen(fullfile(datafolder,strcat(userdata.name, '.usr')),'w');
+        fileID = fopen(fullfile(datafolder,strcat(nameRegExp(userdata.name), '.usr')),'w');
         fileContent = jsonencode(userdata);
         fwrite(fileID, fileContent);
         fclose(fileID);
@@ -84,7 +85,7 @@ function fcns = UserDataFcns
                 data = loadUserData(fullfile(files(i).folder,files(i).name));
                 items{i+1} = data.name;
                 itemsdata{i+1} = data;
-                folder = fullfile(datafolder,data.name);
+                folder = fullfile(datafolder,nameRegExp(data.name));
                 if ~exist(folder,'file')
                     mkdir(folder);
                 end
@@ -93,9 +94,9 @@ function fcns = UserDataFcns
     end
 
     function newname = nameRegExp(name)
-        newname = regexprep(name,'[^a-zA-Z ]+','_'); % Replace all strange characters with underscores
-        newname = regexprep(newname,'(^_)|(_$)',''); % Strip leading and trailing underscores
-        newname = regexprep(newname,'(^ )|( $)',''); % Strip leading and trailing spaces
+        newname = regexprep(name,'[^a-zA-Z\d]+','_'); % Replace all strange characters with underscores
+        newname = regexprep(newname, '(^_)|(_$)',''); % Strip leading and trailing underscores
+        newname = regexprep(newname, '(^ )|( $)',''); % Strip leading and trailing spaces
     end
 
     function updateGuiUser(gui)
@@ -107,11 +108,10 @@ function fcns = UserDataFcns
     end
 
     function updated = updateUserData(gui, newUserData)
-        newUserData.name = nameRegExp(newUserData.name);
-        oldname = gui.userdata.name;
-        newname = newUserData.name;
+        oldname = nameRegExp(gui.userdata.name);
+        newname = nameRegExp(newUserData.name);
         if isempty(newname)
-            updated = false;
+            updated = false;    
             return;
         end
         
