@@ -6,7 +6,7 @@ function [settings] = ECG_setup(fs)
     syms z
 
     % Cut off frequency
-    fc_notch = 60;
+    fc_notch = 50;
     theta_notch = fc_notch/f_nyquist*pi;
 
     % Determine b-coefficient
