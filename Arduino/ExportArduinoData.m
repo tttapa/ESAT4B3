@@ -1,9 +1,8 @@
 close all;
-addpath('../Data');
 
 %% ECG
 
-load('100m.mat');
+load('../Data/100m.mat');
 samplefreq = 360;
 timeduration = 10.4; 
 samples = samplefreq*timeduration;
