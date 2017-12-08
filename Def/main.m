@@ -89,7 +89,6 @@ function main
     gui.HealthVisionUIFigure.DeleteFcn = @closeapp;
     userdatafcns = UserDataFcns; % WHY MATLAB, WHY?
     userdatafcns.userPrompt(gui);
-    username = gui.userdata.name;
     
 % ECG
     gui.ECGButton30m.UserData = 30*60;
@@ -209,7 +208,10 @@ function main
             case 'PRESSURE_D'
                 pres.add_TR(value);
             case 'COMMAND'
-                disp(strcat({'Received command: '}, string(Command(value))));
+                try
+                    disp(strcat({'Received command: '}, string(Command(value))));
+                catch
+                end
         end
     end
 

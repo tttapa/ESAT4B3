@@ -22,5 +22,10 @@ hold on;
 plot(filtered);
 plot(signal);
 
-var = sum((arduino_result - filtered).^2)/length(filtered);
+quadrErr = (arduino_result - filtered).^2;
+var = sum(quadrErr)/length(filtered);
+disp('Var');
 disp(var);
+maximum = max(quadrErr);
+disp('Max quadratic error:');
+disp(maximum);
