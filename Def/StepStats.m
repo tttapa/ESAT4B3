@@ -12,6 +12,7 @@ classdef StepStats < handle
         progressGauge;
         
         stepstoday;
+        totalstepstoday;
     end
     
     methods
@@ -46,6 +47,7 @@ classdef StepStats < handle
             catch
                 o.stepstoday = 0;
             end
+            o.totalstepstoday = o.stepstoday;
             
             o.timeframe  = timeframe;
             try
@@ -78,6 +80,7 @@ classdef StepStats < handle
             else
                 o.stepstoday = o.stepstoday + steps;
             end
+            o.totalstepstoday = o.stepstoday;
         end
         
         function [time, values] = getPlotData(o)
@@ -116,11 +119,13 @@ classdef StepStats < handle
         function updateStepCounter(o, steps)
             stepsTxt = char(string(o.stepstoday + steps));
             o.button.Text = stepsTxt;
+            o.totalstepstoday = o.stepstoday + steps;
             o.updateStepGauge;
         end
         
         function updateStepGauge(o)
-            o.progressGauge.Value = 100 * o.stepstoday / o.userdata.stepGoal;
+            goalperc = 100 * o.totalstepstoday / o.userdata.stepGoal;
+            o.progressGauge.Value = goalperc;
         end
     end
 end

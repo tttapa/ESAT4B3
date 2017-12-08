@@ -15,7 +15,7 @@ function main
     baudrate = 115200;             % Serial port baud rate
 
     bytesPerMessage = 2;
-    messagesPerSerialParse = 16;
+    messagesPerSerialParse = 1;
     
 %% Settings
 
@@ -192,6 +192,7 @@ function main
 %% Handling of incoming messages
 
     function handleIncomingMessage (value, msgtype)
+        % disp(strcat(string(msgtype), {'  '}, string(value)));
         switch msgtype 
             case 'ECG'
                 ecg.add(value);
