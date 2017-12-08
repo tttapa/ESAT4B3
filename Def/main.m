@@ -15,13 +15,13 @@ function main
     baudrate = 115200;             % Serial port baud rate
 
     bytesPerMessage = 2;
-    messagesPerSerialParse = 16;
+    messagesPerSerialParse = 32;
     
 %% Settings
 
-    windowsize = 5;  % show 5 seconds of ECG and PPG data
+    windowsize = 0.5;  % show 5 seconds of ECG and PPG data
 
-    framerate = 30;  % frames per second
+    framerate = 10;  % frames per second
     
 % ECG
     ECG_gain = 300;
@@ -165,7 +165,7 @@ function main
             disp(datetime(now,'ConvertFrom','posixtime'));
             SecondTimer_prevTime = SecondTimer_prevTime + 1;  % Add only one to make sure never to skip a second
         end
-        pause(frameduration/10);  % Pause to give some CPU time to other processes
+        pause(frameduration/3);  % Pause to give some CPU time to other processes
     end
 
 %% Close serial port when finished
