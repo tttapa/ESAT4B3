@@ -25,9 +25,9 @@ void setup() {
 
   unsigned long start = micros();
   for (size_t i = 0; i < ECG_len; i++) {
-    float value = pgm_read_word_near(ECG_data + i);
+    float value = pgm_read_word_near(ECG_data + i) - 511.0;
     float filtered = notch.filter(lp.filter(hp.filter(value)));
-    //Serial.println(filtered);
+    Serial.println(filtered);
   }
   unsigned long duration = micros() - start;
   unsigned long maxDuration = ECG_len * 1000000UL / 360;
@@ -46,10 +46,7 @@ void setup() {
   Serial.println('%');
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
-
-}
+void loop() { }
 
 void printArray(float *arr, uint8_t len, const char *name) {
   Serial.println(name);
