@@ -152,10 +152,13 @@ function fcns = UserDataFcns
             deleteUser(oldname);
         end
         saveUserData(newUserData);
+        gui.userdata.foldername = newUserData.foldername;
         gui.userdata.name = newUserData.name;
         gui.userdata.age = newUserData.age;
         gui.userdata.height= newUserData.height;
         gui.userdata.weight = newUserData.weight;
+        gui.userdata.stepGoal = newUserData.stepGoal;
+        
         updateGuiUser(gui);
         updated = true;
     end

@@ -27,7 +27,8 @@ void setup() {
   for (size_t i = 0; i < ECG_len; i++) {
     float value = pgm_read_word_near(ECG_data + i) - 511.0;
     float filtered = notch.filter(lp.filter(hp.filter(value)));
-    Serial.println(filtered);
+    PORTC = filtered;
+    // Serial.println(filtered);
   }
   unsigned long duration = micros() - start;
   unsigned long maxDuration = ECG_len * 1000000UL / 360;
