@@ -152,15 +152,11 @@ gui.PPGMaxEditField.BackgroundColor = secondaryBackgroundColor;
 gui.PPGAvgEditField.FontColor = ppgColor;
 gui.PPGAvgEditField.BackgroundColor = secondaryBackgroundColor;
 
-gui.PPGLastTimeLabel.FontColor = ppgColor;
-
 % ECGPanel
 gui.ECGPanel.BackgroundColor = mainBackgroundColor;
 
 gui.ECGAvgEditField.FontColor = ecgColor;
 gui.ECGAvgEditField.BackgroundColor = secondaryBackgroundColor;
-
-gui.ECGLastTimeLabel.FontColor = ecgColor;
 
 gui.ECGMinEditField.FontColor = ecgColor;
 gui.ECGMinEditField.BackgroundColor = secondaryBackgroundColor;
