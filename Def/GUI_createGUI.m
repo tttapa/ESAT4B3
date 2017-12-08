@@ -248,7 +248,5 @@ set(footDat, 'AlphaData', footAlpha);
 %gui.HeaderHeightEditField.Value = str2double(answer{3});
 %gui.HeaderWeightEditField.Value = str2double(answer{4});
 
-
-
 end
 
