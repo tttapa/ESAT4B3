@@ -15,7 +15,7 @@ function main
     baudrate = 115200;             % Serial port baud rate
 
     bytesPerMessage = 2;
-    messagesPerSerialParse = 32;
+    messagesPerSerialParse = 16;
     
 %% Settings
 
@@ -24,7 +24,7 @@ function main
     framerate = 30;  % frames per second
     
 % ECG
-    ECG_gain = 140;
+    ECG_gain = 300;
     ECG_mVref = 5000;
     ECG_baseline = int16(1023*5/2);
 
@@ -133,7 +133,7 @@ function main
     fopen(s);
     frametime = tic;
     running = true;
-    SecondTimer_prevTime = int64(posixtime(datetime('now')));
+    SecondTimer_prevTime = getUnixTime;
     
     while running % && exist(string(s.Port),'file') % TODO: this doesn't work ... How to check if the serial device is still available?
     % Update all GUI plots
@@ -145,7 +145,7 @@ function main
         end
 
     % Every second
-        now =   int64(posixtime(datetime('now')));
+        now =   getUnixTime;
         if now - SecondTimer_prevTime >= 1
         % BPM
             ecg.displayBPM;
@@ -162,7 +162,7 @@ function main
             if mod (now, Steps_Interval) == 0
                 pres.updateStats(now);
             end
-
+            disp(datetime(now,'ConvertFrom','posixtime'));
             SecondTimer_prevTime = SecondTimer_prevTime + 1;  % Add only one to make sure never to skip a second
         end
         pause(frameduration/10);  % Pause to give some CPU time to other processes
@@ -211,6 +211,7 @@ function main
                 try
                     disp(strcat({'Received command: '}, string(Command(value))));
                 catch
+                    disp('Unknown command');
                 end
         end
     end
