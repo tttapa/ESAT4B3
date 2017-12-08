@@ -69,15 +69,8 @@ classdef ECG < handle
             o.samplesSinceLastDraw = o.samplesSinceLastDraw + 1;
         end
         
-        function filter(o)
-            o.filtered = ECG_filter(o.buffer, o.settings);  % filter the buffer
-            o.filtered = o.filtered(o.extrasamples+1:o.bufferlen);  % only the visible samples (TODO: remove)
-            o.filtered = o.filtered * o.scalingFactor;  % scale to mV
-        end
-        
         function draw(o)
             if o.samplesSinceLastDraw > 0 && strcmp(o.GraphPanel.Visible, 'on')
-                o.filter;
                 while(o.samplesSinceLastDraw > 0)  % for every new sample
                     if o.samplesSinceLastDraw > o.visiblesamples
                         disp('samplesSinceLastDraw');
@@ -85,7 +78,7 @@ classdef ECG < handle
                         o.samplesSinceLastDraw = o.visiblesamples;
                     end
                     o.ringBuffer(o.ringBufferIndex) ...  % add it to the ringbuffer
-                       = o.filtered(end-o.samplesSinceLastDraw+1);
+                       = double(o.buffer(end-o.samplesSinceLastDraw+1))*o.scalingFactor;
                     o.ringBufferIndex = mod(o.ringBufferIndex, o.visiblesamples) + 1;
                     o.samplesSinceLastDraw = o.samplesSinceLastDraw - 1;
                 end
@@ -98,11 +91,7 @@ classdef ECG < handle
         end
         
         function displayBPM(o)
-            if strcmp(o.GraphPanel.Visible, 'off')  % if the panel is off, the filtered buffer is not updated, so do it now
-                o.filter;
-            end
-
-            BPM = ECG_getBPM(o.filtered, o.samplefreq);
+            BPM = ECG_getBPM(double(o.buffer), o.samplefreq);
         
             if BPM < o.BPM_minimumAllowedValue
                 BPM = 0;

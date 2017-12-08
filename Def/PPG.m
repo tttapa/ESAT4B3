@@ -15,9 +15,7 @@ classdef PPG < handle
         ringBufferIndex = uint16(1);
         samplesSinceLastDraw_RD = uint16(0);
         samplesSinceLastDraw_IR = uint16(0);
-        filtered_RD;
         DC_RD = 0;
-        filtered_IR;
         DC_IR = 0;
         settings;
         baseline;
@@ -51,8 +49,6 @@ classdef PPG < handle
             o.buffer_IR       = int16(zeros(o.bufferlen,1));
             o.ringBuffer_RD   = double(zeros(o.visiblesamples,1));
             o.ringBuffer_IR   = double(zeros(o.visiblesamples,1));
-            o.filtered_RD     = double(zeros(o.bufferlen,1));
-            o.filtered_IR     = double(zeros(o.bufferlen,1));
             o.settings        = PPG_setup(samplefreq);
             o.baseline        = baseline;
             SPO2_time         = linspace(-SPO2_windowsize, 0, o.SPO2_Bufferlen);
@@ -93,17 +89,9 @@ classdef PPG < handle
             o.samplesSinceLastDraw_IR = o.samplesSinceLastDraw_IR + 1;
         end
         
-        function filter(o)
-            o.filtered_RD = PPG_filter(o.buffer_RD, o.settings);
-            o.filtered_RD = o.filtered_RD(o.extrasamples+1:o.bufferlen);
-
-            o.filtered_IR = PPG_filter(o.buffer_IR, o.settings);
-            o.filtered_IR = o.filtered_IR(o.extrasamples+1:o.bufferlen);
-        end
         function draw(o)
             if (o.samplesSinceLastDraw_IR > 0 && o.samplesSinceLastDraw_RD > 0) ...
                     && strcmp(o.GraphPanelDetail.Visible, 'on')
-                o.filter;
                 
                 while(o.samplesSinceLastDraw_IR > 0 && o.samplesSinceLastDraw_RD > 0)
                     newCompleteSamples = min([o.samplesSinceLastDraw_IR, o.samplesSinceLastDraw_RD]);
@@ -113,11 +101,11 @@ classdef PPG < handle
                         o.samplesSinceLastDraw_RD = o.samplesSinceLastDraw_RD - sampleSurplus;
                     end
                     o.ringBuffer_RD(o.ringBufferIndex) ...
-                       = o.filtered_RD(end-o.samplesSinceLastDraw_RD + 1);
+                       = o.buffer_RD(end-o.samplesSinceLastDraw_RD + 1);
                     o.samplesSinceLastDraw_RD = o.samplesSinceLastDraw_RD - 1;
 
                     o.ringBuffer_IR(o.ringBufferIndex) ...
-                       = o.filtered_IR(end-o.samplesSinceLastDraw_IR + 1);
+                       = o.buffer_IR(end-o.samplesSinceLastDraw_IR + 1);
                     o.samplesSinceLastDraw_IR = o.samplesSinceLastDraw_IR - 1;
                     
                     o.ringBufferIndex = mod(o.ringBufferIndex, o.visiblesamples) + 1;
@@ -134,12 +122,9 @@ classdef PPG < handle
         end
         
         function displaySPO2(o)
-            if strcmp(o.GraphPanelDetail.Visible, 'off')  % if the panel is off, the filtered buffer is not updated, so do it now
-                o.filter;
-            end
             o.DC_RD = mean(o.buffer_RD);
             o.DC_IR = mean(o.buffer_IR);
-            SPO2 = PPG_getSPO2(o.filtered_RD, o.DC_RD, o.filtered_IR, o.DC_IR, 220, o.samplefreq);
+            SPO2 = PPG_getSPO2(o.buffer_RD, o.DC_RD, o.buffer_IR, o.DC_IR, 220, o.samplefreq);
             if isnan(SPO2)
                 SPO2 = 0;
             end
