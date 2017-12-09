@@ -1,3 +1,4 @@
+// #define USE_MODULO
 class IIRFilter {
   public:
     template <size_t B, size_t A>
@@ -27,8 +28,16 @@ class IIRFilter {
       }
       float filtered = (b_terms - a_terms) / a0;
       y[i_a] = filtered;
-      i_b = (i_b + 1) % lenB;
-      i_a = (i_a + 1) % lenA;
+      // 17.35% CPU (division is slow)
+      /*i_b = (i_b + 1) % lenB;
+      i_a = (i_a + 1) % lenA;*/
+      // 15.41% CPU
+      i_b++;
+      if(i_b == lenB)
+        i_b = 0;
+      i_a++;
+      if(i_a == lenA)
+        i_a = 0;
       return filtered;
     }
   private:

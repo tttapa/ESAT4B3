@@ -1,0 +1,107 @@
+<!doctype html><html>
+<body></body>
+<script>
+
+  /*var ws = new WebSocket("ws://localhost:9002");
+  ws.onopen = function(ev) { ws.send('Test'); };
+  ws.onmessage = function (e) {
+    console.log(e.data);
+  };*/
+
+  let framerate = 30;
+  let fs = 360;
+  let width = fs*5;
+  let len = fs;
+  let step = width/len;
+
+  let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("height",200);
+  svg.setAttribute("width",width);
+  document.body.appendChild(svg)
+
+  let circles = Array();
+
+  let filledC = 0;
+  let indexC = 0;
+  function addValueC(value) {
+    if (filledC < len) {
+      let circle = createCircle(step*filledC,value);
+      svg.appendChild(circle);
+      circles.push(circle);
+      filledC++;
+    } else {
+      circles[indexC++].setAttribute("cy",value);
+      indexC %= len;
+    }
+  }
+
+  let startTime = Date.now();
+
+  let lines = Array();
+
+  let filledL = 0;
+  let indexL = 0;
+  let previousValue = 0;
+  let previousIndex = len - 2;
+  function addValueL(value) {
+    if (filledL < len) {
+      if (filledL != 0) {
+        let line = createLine(step*(filledL-1),previousValue,step*filledL, value);
+        svg.appendChild(line);
+        lines.push(line);
+      }
+      previousValue = value;
+      filledL++;
+    } else {
+      if (indexL != len - 1) {
+        lines[indexL].setAttribute("y1",value);
+        lines[indexL].setAttribute("stroke","none");
+      }
+      if (indexL != 0) {
+        lines[previousIndex].setAttribute("y2",value);
+        lines[previousIndex].setAttribute("stroke","black");
+      } else {
+        let now = Date.now();
+        console.log(now - startTime);
+        startTime = now;
+      }
+      previousIndex = indexL;
+      indexL++;
+      indexL %= len;
+    }
+  }
+
+  let samplecounter = 0;
+  let interval = setInterval(function(){
+    for (i = 0; i < fs/framerate; i++) {
+      let value = 100+50*Math.sin(5/3*2*Math.PI*samplecounter/len);
+      // addValueC(value);
+      addValueL(value);
+      samplecounter++;
+    }
+    if (samplecounter >= 15 * len) {
+      clearInterval(interval);
+    }
+  }, 1000.0/framerate);
+    
+  function createCircle(x,y) {
+    let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("cx",x);
+    circle.setAttribute("cy",y);
+    circle.setAttribute("r",2);
+    return circle;
+  }
+
+  function createLine(x1,y1,x2,y2) {
+    let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1",x1);
+    line.setAttribute("y1",y1);
+    line.setAttribute("x2",x2);
+    line.setAttribute("y2",y2);
+    line.setAttribute("stroke","black");
+    return line;
+  }
+
+
+</script>
+</html>
