@@ -2,6 +2,7 @@
 #include <RunningAverage.h>
 #include <FIRFilter.h>
 #include <IIRFilter.h>
+#include <BPMCounter.h>
 
 // #define USE_PROTOCOL
 #define LOG_CPU_USAGE
