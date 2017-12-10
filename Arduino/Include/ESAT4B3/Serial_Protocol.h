@@ -1,6 +1,6 @@
 // #define DEBUG // Print the message as binary ASCII instead of sending raw bytes
 
-enum message_type {
+enum message_type : uint8_t {
   ECG         = 0b000,
   PPG_RED     = 0b001,
   PPG_IR      = 0b010,
@@ -24,6 +24,8 @@ void encode(uint8_t (&buffer)[2], uint16_t value, message_type type = COMMAND); 
 void decode(uint8_t (&buffer)[2], uint16_t &value, message_type &type);
 void send(uint16_t value, message_type type = COMMAND);
 bool receive(uint16_t &value, message_type &type);
+template <size_t N> void printBin(Stream &s, uint8_t (&data)[N], char sep = '\t');
+template <size_t N> void printBinln(Stream &s, uint8_t (&data)[N], char sep = '\t');
 void printBin(Stream &s, uint8_t data);
 
 void encode(uint8_t (&buffer)[2], uint16_t value, message_type type = COMMAND) {
@@ -35,18 +37,18 @@ void encode(uint8_t (&buffer)[2], uint16_t value, message_type type = COMMAND) {
 
 void decode(uint8_t (&buffer)[2], uint16_t &value, message_type &type) {
   value = buffer[1] | ((buffer[0] & 0b01110000) << 3);
-  type = buffer[0] & 0b0111;
+  type = static_cast<message_type>(buffer[0] & 0b0111);
 }
 
 void send(uint16_t value, message_type type = COMMAND) {
   uint8_t messageToSend[2];
   encode(messageToSend, value, type);
 #ifdef DEBUG
-  for (uint8_t i = 0; i < sizeof(messageToSend); i++)
-    printBin(Serial, messageToSend[i]);
-  Serial.println();
+  printBinln(Serial, messageToSend);
 #else
-  Serial.write(messageToSend, sizeof(messageToSend));
+  // Serial.write(messageToSend, 2); // Slower
+  Serial.print((char)messageToSend[0]);
+  Serial.print((char)messageToSend[1]);
 #endif
 }
 
@@ -68,8 +70,18 @@ bool receive(uint16_t &value, message_type &type) {
   }
 }
 
+template <size_t N> void printBin(Stream &s, uint8_t (&data)[N], char sep = '\t') {
+  for (size_t i = 0; i < N; i++) {
+    printBin(s, data[i]);
+    s.print(sep);
+  }
+}
+template <size_t N> void printBinln(Stream &s, uint8_t (&data)[N], char sep = '\t') {
+  printBin(s, data, sep);
+  s.println();
+}
+
 void printBin(Stream &s, uint8_t data) {
   for (int8_t i = 7; i >= 0; i--)
     s.print(data & (1 << i) ? '1' : '0');
-  s.print(' ');
 }

@@ -15,7 +15,12 @@ class FIRFilter {
       for (uint8_t i = 0; i < lenB; i++) {
         b_terms += x[i] * b_shift[i];
       }
-      i_b = (i_b + 1) % lenB;
+      // 17.35% CPU (division is slow)
+      /*i_b = (i_b + 1) % lenB;*/
+      // 14.79% CPU
+      i_b++;
+      if(i_b == lenB)
+        i_b = 0;
       return b_terms;
     }
   private:

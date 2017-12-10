@@ -1,7 +1,6 @@
-template <size_t N> class RunningAverage {
-    static_assert(N <= 64, "Error: average length can't be greater than 64.");
+template <typename T, size_t N> class RunningAverage {
   public:
-    uint16_t add(uint16_t value) {
+    float add(T value) {
       sum -= previousValues[index];
       previousValues[index] = value;
       sum += value;
@@ -12,8 +11,9 @@ template <size_t N> class RunningAverage {
       return sum / filled;
     }
   private:
-    uint16_t previousValues[N];
+    T previousValues[N];
     uint8_t index = 0;
-    uint16_t sum = 0;
+    T sum = 0;
     uint8_t filled = 0;
 };
+

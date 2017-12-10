@@ -1,5 +1,5 @@
-#include "Serial_Protocol.h"
-#include "RunningAverage.h"
+#include <Serial_Protocol.h>
+#include <RunningAverage.h>
 
 #define USE_PROTOCOL
 

@@ -31,7 +31,7 @@ class IIRFilter {
       // 17.35% CPU (division is slow)
       /*i_b = (i_b + 1) % lenB;
       i_a = (i_a + 1) % lenA;*/
-      // 15.41% CPU
+      // 14.79% CPU
       i_b++;
       if(i_b == lenB)
         i_b = 0;
