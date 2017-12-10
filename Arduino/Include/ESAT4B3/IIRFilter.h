@@ -1,4 +1,3 @@
-// #define USE_MODULO
 class IIRFilter {
   public:
     template <size_t B, size_t A>

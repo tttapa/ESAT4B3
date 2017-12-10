@@ -1,4 +1,4 @@
-// #define FILTER
+// #define FILTER // uncomment this line to filter the ECG signal on the Arduino instead of in MATLAB
 
 #include <Serial_Protocol.h>
 #include <RunningAverage.h>
