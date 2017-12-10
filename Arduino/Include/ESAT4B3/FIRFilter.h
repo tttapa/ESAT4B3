@@ -1,3 +1,6 @@
+#ifndef FIRFILTER_H
+#define FIRFILTER_H
+
 class FIRFilter {
   public:
     template <size_t B>
@@ -30,3 +33,5 @@ class FIRFilter {
     float *x;
     float *M_b;
 };
+
+#endif

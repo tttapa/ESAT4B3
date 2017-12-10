@@ -1,10 +1,10 @@
-#include "Serial_Protocol.h"
-#include "RunningAverage.h"
-#include "FIRFilter.h"
-#include "IIRFilter.h"
+#include <Serial_Protocol.h>
+#include <RunningAverage.h>
+#include <FIRFilter.h>
+#include <IIRFilter.h>
 
-#define USE_PROTOCOL
-// #define LOG_CPU_USAGE
+// #define USE_PROTOCOL
+#define LOG_CPU_USAGE
 // #define ECG_SENSOR
 #define ECG_DATA
 
@@ -61,7 +61,7 @@ void loop() {
     send(filtered, ECG);
 #else
 #ifdef LOG_CPU_USAGE
-    encode(messageToSend, filtered, ECG);
+    // encode(messageToSend, filtered, ECG);
     float CPU_usage = CPU_usage_average.add(float(micros() - startTime) * 100.0 / ECG_interval);
     Serial.print(CPU_usage);
     Serial.print('\t');

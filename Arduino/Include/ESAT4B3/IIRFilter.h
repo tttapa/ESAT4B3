@@ -1,3 +1,6 @@
+#ifndef IIRFILTER_H
+#define IIRFILTER_H
+
 class IIRFilter {
   public:
     template <size_t B, size_t A>
@@ -50,3 +53,5 @@ class IIRFilter {
     float *M_b;
     float *M_a;
 };
+
+#endif

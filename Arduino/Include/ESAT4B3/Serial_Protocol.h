@@ -1,3 +1,6 @@
+#ifndef SERIAL_PROTOCOL_H
+#define SERIAL_PROTOCOL_H
+
 // #define DEBUG // Print the message as binary ASCII instead of sending raw bytes
 
 enum message_type : uint8_t {
@@ -85,3 +88,5 @@ void printBin(Stream &s, uint8_t data) {
   for (int8_t i = 7; i >= 0; i--)
     s.print(data & (1 << i) ? '1' : '0');
 }
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef RUNNINGAVERAGE_H
+#define RUNNINGAVERAGE_H
+
 template <typename T, size_t N> class RunningAverage {
   public:
     float add(T value) {
@@ -17,3 +20,4 @@ template <typename T, size_t N> class RunningAverage {
     uint8_t filled = 0;
 };
 
+#endif
