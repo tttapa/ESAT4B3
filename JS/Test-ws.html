@@ -2,11 +2,14 @@
 <body></body>
 <script>
 
-  /*var ws = new WebSocket("ws://localhost:9002");
-  ws.onopen = function(ev) { ws.send('Test'); };
+  var ws = new WebSocket("ws://localhost:8080");
+  ws.onopen = function(ev) { 
+    console.log("Connected");
+    ws.send('Test'); 
+  };
   ws.onmessage = function (e) {
     console.log(e.data);
-  };*/
+  };
 
   let framerate = 30;
   let fs = 360;
