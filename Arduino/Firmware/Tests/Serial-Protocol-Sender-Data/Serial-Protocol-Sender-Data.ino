@@ -23,7 +23,7 @@ const uint8_t ECG_pin = A4;
 const uint8_t PPG_IR_pin = A4;
 const uint8_t PPG_RD_pin = A5;
 
-RunningAverage<8> pressureAverages[4];
+RunningAverage<uint16_t, 16> pressureAverages[4];
 uint16_t previousPressVals[4] = { -1, -1, -1, -1};
 const uint8_t pressurePins[4] = {A0, A1, A2, A3};
 

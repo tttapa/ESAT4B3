@@ -33,7 +33,7 @@ IIRFilter hp(b_hp, a_hp);
 
 uint8_t messageToSend[2];
 
-RunningAverage<128> CPU_usage_average;
+RunningAverage<float, 128> CPU_usage_average;
 
 void setup() {
   Serial.begin(115200);
