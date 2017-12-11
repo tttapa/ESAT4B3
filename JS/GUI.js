@@ -28,6 +28,20 @@ function selectPanel() {
     }
 }
 
+const message_type = {
+    ECG         : 0,
+    PPG_RED     : 1,
+    PPG_IR      : 2,
+    PRESSURE_A  : 3,
+    PRESSURE_B  : 4,
+    PRESSURE_C  : 5,
+    PRESSURE_D  : 6,
+    COMMAND     : 7,
+    BPM         : 8,
+    SPO2        : 9,
+    STEPS       : 10,
+};
+
 // PLOTS
 /* ---------------------------------------------------------------------- */
 
@@ -39,13 +53,20 @@ let ECGPlotContainer = document.getElementById("ECGplot");
 let ECGPlot = new ScanningPlot(ECGPlotContainer, 5*samplefreq/downsampleamount, "turquoise", false);
 
 var ws = new WebSocket("ws://localhost:8080");
+ws.binaryType = 'arraybuffer';
 ws.onopen = function(ev) { 
   console.log("Connected");
 };
 ws.onmessage = function (e) {
   // console.log(e.data);
-  let floatVal = parseFloat(e.data)/1023;
-  ECGPlot.add(floatVal);
+  let dataArray = new Uint16Array(e.data);
+  switch (dataArray[0]) {
+      case message_type.ECG:
+        for (i = 1; i < dataArray.length; i++) {
+            ECGPlot.add(dataArray[i]/1023);
+        }
+        break;
+  } 
 };
 
 // PPG

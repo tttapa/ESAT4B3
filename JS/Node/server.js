@@ -72,12 +72,16 @@ const framerate = 30;
 const ECGdownsampleamount = 2;
 
 const ECG_samplefreq = 360;
-const ECG_samplesPerFrame = ECG_samplefreq/ECGdownsampleamount/framerate;
+const ECG_samplesPerFrame = Math.floor(ECG_samplefreq/ECGdownsampleamount/framerate);
 
-console.log("Downsample over " + ECGdownsampleamount + " samples.");
+console.log("Downsample by " + ECGdownsampleamount + " samples.");
+console.log(ECG_samplesPerFrame + " samples per frame.");
 
 const Receiver = require('./Receiver.js');
 const receiver = new Receiver.Receiver();
+
+const Sender = require('./Sender.js');
+const ECGsender = new Sender.BufferedSender(wss, Sender.message_type.ECG,  ECG_samplesPerFrame);
 
 let ECGctr = 0;
 let ECGsum = 0;
@@ -85,7 +89,6 @@ let ECGsum = 0;
 let ECGoutBuffer = new Uint16Array();
 
 port.on('data', function (dataBuf) {
-  // console.log('Data:', dataBuf);
   for (i = 0; i < dataBuf.length; i++) {
     let message = receiver.receive(dataBuf[i]);
     if (message != null) {
@@ -94,7 +97,7 @@ port.on('data', function (dataBuf) {
           ECGsum += message.value;
           ECGctr++;
           if (ECGctr >= ECGdownsampleamount) {
-            wss.broadcast(ECGsum/ECGdownsampleamount);
+            ECGsender.send(ECGsum/ECGdownsampleamount);
             ECGsum = 0;
             ECGctr = 0;
           }
