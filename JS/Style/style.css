@@ -1,0 +1,106 @@
+html {
+    height: 100%;
+}
+body {
+    padding: 0px;
+    margin: 0px;
+    font-family: 'Roboto', sans-serif;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+body > div {
+    height: 100%;
+    flex-grow: 1;
+    display: flex;
+}
+
+header {
+    width: 100%;
+    background-color: #222;
+    box-shadow: 2px 2px 5px #555;
+    font-size: 2.4em;
+    padding: 1.2em;
+    text-align: center;
+    box-sizing: border-box;
+    color: #EEE;
+    z-index: 3;
+}
+
+nav {
+    display: flex;
+    float: left;
+    height: 100%;
+    flex-direction: column;
+    justify-content: space-evenly;
+    flex-shrink: 1;
+}
+nav > div {
+    /* flex-grow: 1; */
+}
+article {
+    flex-shrink: 4;
+    flex-grow: 1;
+    float: left;
+    height: 100%;
+    box-shadow: 2px 2px 5px #555;
+    z-index: 2; 
+    padding: 0 1em; 
+    background-color: #777;    
+}
+article > div {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;    
+}
+nav > div.active {
+    background-color: #777;
+    z-index: 2;
+}
+
+div.mainbutton {
+    padding: 1em;
+    background-color: #222;
+    margin: 16px;
+    margin-right: 0px;
+    border-bottom-left-radius: 8px;
+    border-top-left-radius: 8px;
+    box-shadow: 2px 2px 5px #555;     
+    text-align: center;
+    font-size: 1.6em;
+    z-index: 1;
+}
+
+.ECG {
+    color: turquoise;
+    border-color: turquoise;
+}
+.PPG {
+    color: #FF11EE;
+    border-color: #DD22AA;
+}
+.Steps {
+    color: yellow;
+    border-color: yellow;
+}
+
+div#main {
+
+}
+
+div#main > div {
+    height: 25%;
+    border: 1px solid;
+    margin: 16px;
+}
+
+.invisible {
+    display: none;
+}
+
+.scanningplot > svg {
+    width: 100%;
+    height: 100%;
+}

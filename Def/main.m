@@ -75,10 +75,12 @@ function main
         serialPort = '';
     end
 
-    s = startSerial(serialPort, baudrate, bytesPerMessage * messagesPerSerialParse, ...
-        @handleIncomingMessage, @serialerror);
-    if s == false
-        return;
+    try
+        s = startSerial(serialPort, baudrate, bytesPerMessage * messagesPerSerialParse, ...
+            @handleIncomingMessage, @serialerror);
+    catch ME
+        disp('Error');
+        disp(ME.message);
     end
 
 %% Initializations
@@ -130,7 +132,9 @@ function main
 
 %% Main loop
 
-    fopen(s);
+    if exist('s', 'var')
+        fopen(s);
+    end
     frametime = tic;
     running = true;
     SecondTimer_prevTime = getUnixTime;
@@ -182,8 +186,10 @@ function main
     end
 
     function stop
-        fclose(s);
-        delete(s);
+        if exist('s', 'var')
+            fclose(s);
+            delete(s);
+        end
         delete(ecg);
         delete(ppg);
         delete(pres);

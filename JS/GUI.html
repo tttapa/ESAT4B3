@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="Style/style.css">
+    <link href="Style/roboto.css" rel='stylesheet' type='text/css'>
+    <link href="Style/icon.css" rel='stylesheet' type='text/css'>
+</head>
+
+<body>
+    <header>
+        HealthVision
+    </header>
+    <div>
+        <nav>
+            <div id="ECGButton" class="mainbutton ECG" data-panel="ECGDetail">
+                <div>ECG</div>
+                <div>76 BPM</div>
+            </div>
+            <div id="PPGButton" class="mainbutton PPG" data-panel="PPGDetail">
+                <div>SPO<sub>2</sub></div>
+                <div>98 %</div>
+            </div>
+            <div id="StepsButton" class="mainbutton Steps" data-panel="StepsDetail">
+                <div>Steps</div>
+                <div>12345</div>
+            </div>
+        </nav>
+        <article>
+            <div id="main">
+                <div id="ECGplot" class="scanningplot ECG"></div>
+                <div id="SPO2plot" class="scanningplot PPG">PPG plot</div>
+                <div id="StepsBar" class="Steps">Steps bar</div>
+            </div>
+            <div id="ECGDetail" class="invisible ECG">
+                ECG detail
+                <div id="ECGStats"></div>
+                <div id="BPMHistory"></div>
+            </div>
+            <div id="PPGDetail" class="invisible PPG">
+                PPG detail
+                <div id="PPGStats"></div>
+                <div id="SPO2History"></div>
+            </div>
+            <div id="StepsDetail" class="invisible Steps">
+                Steps detail
+                <div id="StepGoal"></div>
+                <div id="Pressure"></div>
+            </div>
+        </article>
+    </div>
+    <script src="Plot.js"></script>        
+    <script src="GUI.js"></script>    
+</body>
+
+</html>
