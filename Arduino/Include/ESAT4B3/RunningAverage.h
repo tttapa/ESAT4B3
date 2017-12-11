@@ -8,7 +8,8 @@ template <typename T, size_t N> class RunningAverage {
       previousValues[index] = value;
       sum += value;
       index++;
-      index = index % N;
+      if (index == N)
+        index = 0;
       if (filled < N)
         filled++;
       return sum / filled;
