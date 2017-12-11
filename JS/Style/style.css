@@ -12,7 +12,7 @@ body {
 
 body > div {
     height: 100%;
-    flex-grow: 1;
+    /* flex-grow: 1; */
     display: flex;
 }
 
@@ -30,30 +30,30 @@ header {
 
 nav {
     display: flex;
-    float: left;
     height: 100%;
     flex-direction: column;
     justify-content: space-evenly;
-    flex-shrink: 1;
 }
 nav > div {
     /* flex-grow: 1; */
 }
 article {
-    flex-shrink: 4;
+    flex-shrink: 1;
     flex-grow: 1;
-    float: left;
     height: 100%;
     box-shadow: 2px 2px 5px #555;
     z-index: 2; 
-    padding: 0 1em; 
-    background-color: #777;    
+    padding: 0 1em;
+    background-color: #777;  
+    overflow: hidden;  
 }
 article > div {
     height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: space-evenly;    
+    justify-content: space-evenly;
+    width: 100%;
+    max-width: 100%;
 }
 nav > div.active {
     background-color: #777;

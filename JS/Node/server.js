@@ -6,7 +6,7 @@ const wss = new WebSocket.Server({ port: 8080 });
 wss.broadcast = function broadcast(data) {
   wss.clients.forEach(function each(client) {
     if (client.readyState === WebSocket.OPEN) {
-      client.send(data);
+      client.send(data, sendError);
     }
   });
 };
@@ -26,7 +26,7 @@ wss.on('connection', function connection(ws, req) {
     if (counter == 360)
       counter = 0;
     ws.send(value);
-  }, 1000/60);
+  }, 1000/30);
   ws.on('close', function () {
     clearInterval(interval);
     console.log("Closed " + ip);
@@ -45,3 +45,9 @@ const interval = setInterval(function ping() {
     ws.ping('', false, true);
   });
 }, 10000);
+
+function sendError(er) {
+  if (typeof er !== 'undefined') {
+    console.log(er);
+  }
+}
