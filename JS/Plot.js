@@ -24,6 +24,7 @@ class ScanningPlot {
     }
 
     add(value) {
+        value = 1 - value;
         value *= this.height;
         this.addValueL(value);
         if (this.dots === true) {

@@ -32,9 +32,11 @@ function selectPanel() {
 /* ---------------------------------------------------------------------- */
 
 // ECG
+const downsampleamount = 2;
+const samplefreq = 360;
 
 let ECGPlotContainer = document.getElementById("ECGplot");
-let ECGPlot = new ScanningPlot(ECGPlotContainer, 200, "turquoise", true);
+let ECGPlot = new ScanningPlot(ECGPlotContainer, 5*samplefreq/downsampleamount, "turquoise", false);
 
 var ws = new WebSocket("ws://localhost:8080");
 ws.onopen = function(ev) { 
@@ -42,7 +44,7 @@ ws.onopen = function(ev) {
 };
 ws.onmessage = function (e) {
   // console.log(e.data);
-  let floatVal = parseFloat(e.data)/200;
+  let floatVal = parseFloat(e.data)/1023;
   ECGPlot.add(floatVal);
 };
 
