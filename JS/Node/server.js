@@ -72,7 +72,9 @@ const framerate = 30;
 const ECGdownsampleamount = 2;
 
 const ECG_samplefreq = 360;
-const ECG_samplesPerFrame = Math.floor(ECG_samplefreq/ECGdownsampleamount/framerate);
+const ECG_samplesPerFrame = Math.floor(ECG_samplefreq / ECGdownsampleamount / framerate);
+
+const PPG_samplesPerFrame = 2;
 
 console.log("Downsample by " + ECGdownsampleamount + " samples.");
 console.log(ECG_samplesPerFrame + " samples per frame.");
@@ -81,12 +83,15 @@ const Receiver = require('./Receiver.js');
 const receiver = new Receiver.Receiver();
 
 const Sender = require('./Sender.js');
-const ECGsender = new Sender.BufferedSender(wss, Sender.message_type.ECG,  ECG_samplesPerFrame);
+const ECGsender = new Sender.BufferedSender(wss, Sender.message_type.ECG, ECG_samplesPerFrame);
+const PPGSenderIR = new Sender.BufferedSender(wss, Sender.message_type.PPG_IR, PPG_samplesPerFrame);
+const PPGSenderRD = new Sender.BufferedSender(wss, Sender.message_type.PPG_RED, PPG_samplesPerFrame);
 
 let ECGctr = 0;
 let ECGsum = 0;
 
-let ECGoutBuffer = new Uint16Array();
+const BPMCounter = require('./BPMCounter.js');
+const bpmctr = new BPMCounter.BPMCounter(ECG_samplefreq, 511, 30, 220);
 
 port.on('data', function (dataBuf) {
   for (i = 0; i < dataBuf.length; i++) {
@@ -97,15 +102,61 @@ port.on('data', function (dataBuf) {
           ECGsum += message.value;
           ECGctr++;
           if (ECGctr >= ECGdownsampleamount) {
-            ECGsender.send(ECGsum/ECGdownsampleamount);
+            ECGsender.send(ECGsum / ECGdownsampleamount);
             ECGsum = 0;
             ECGctr = 0;
           }
+          if (bpmctr.run(message.value)) {
+            let BPMbuf = new Uint16Array(2);
+            BPMbuf[0] = Sender.message_type.BPM;
+            BPMbuf[1] = Math.round(bpmctr.getBPM() * 100);
+            wss.broadcast(BPMbuf);
+          }
+          break;
+        case Receiver.message_type.PPG_IR:
+          PPGSenderIR.send(message.value);
+          break;
+        case Receiver.message_type.PPG_RED:
+          PPGSenderRD.send(message.value);
           break;
         case Receiver.message_type.PRESSURE_A:
-          ;
+          let pressbufA = new Uint16Array(2);
+          pressbufA[0] = Sender.message_type.PRESSURE_A;
+          pressbufA[1] = message.value;
+          wss.broadcast(pressbufA);
+          break;
+        case Receiver.message_type.PRESSURE_B:
+          let pressbufB = new Uint16Array(2);
+          pressbufB[0] = Sender.message_type.PRESSURE_B;
+          pressbufB[1] = message.value;
+          wss.broadcast(pressbufB);
+          break;
+        case Receiver.message_type.PRESSURE_C:
+          let pressbufC = new Uint16Array(2);
+          pressbufC[0] = Sender.message_type.PRESSURE_C;
+          pressbufC[1] = message.value;
+          wss.broadcast(pressbufC);
+          break;
+        case Receiver.message_type.PRESSURE_D:
+          let pressbufD = new Uint16Array(2);
+          pressbufD[0] = Sender.message_type.PRESSURE_D;
+          pressbufD[1] = message.value;
+          wss.broadcast(pressbufD);
           break;
       }
     }
   }
 });
+
+/* -----------------------------------SPO2-Calculation----------------------------------- */
+
+let SPO2Interval = setInterval(function () {
+  let SPO2buf = new Uint16Array(2);
+  SPO2buf[0] = Sender.message_type.SPO2;
+  SPO2buf[1] = Math.round(getSPO2() * 100);
+  wss.broadcast(SPO2buf);
+}, 1000);
+
+function getSPO2() {
+  return 96 + 2 * Math.random();
+}

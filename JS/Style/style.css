@@ -47,7 +47,7 @@ article {
     background-color: #777;  
     overflow: hidden;  
 }
-article > div {
+article > div, article > div > div {
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -55,13 +55,19 @@ article > div {
     width: 100%;
     max-width: 100%;
 }
+nav > div.alarm {
+    background-color: #FF1111 !important;
+    z-index: 2;
+    color: white;
+}
+
 nav > div.active {
     background-color: #777;
     z-index: 2;
 }
 
 div.mainbutton {
-    padding: 1em;
+    padding: 1em 0.7em;
     background-color: #222;
     margin: 16px;
     margin-right: 0px;
@@ -71,6 +77,8 @@ div.mainbutton {
     text-align: center;
     font-size: 1.6em;
     z-index: 1;
+    min-width: 4.5em;
+    transition: background-color 0.25s;
 }
 
 .ECG {
@@ -92,6 +100,12 @@ div#main {
 
 div#main > div {
     height: 25%;
+    border: 1px solid;
+    margin: 16px;
+}
+
+div#PPGplotIR, div#PPGplotRD {
+    height: 40%;
     border: 1px solid;
     margin: 16px;
 }
