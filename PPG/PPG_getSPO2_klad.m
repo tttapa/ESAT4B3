@@ -1,4 +1,4 @@
-function [SPO2] = PPG_getSPO2(INPUT_filteredR, INPUT_dcR, INPUT_filteredIR, INPUT_dcIR, maxBPM, fs)
+function [SPO2, AC_red, AC_infrared] = PPG_getSPO2_klad(INPUT_filteredR, INPUT_dcR, INPUT_filteredIR, INPUT_dcIR, maxBPM, fs)
 
 startR = uint16(length(INPUT_filteredR)/6);
 startIR = uint16(length(INPUT_filteredIR)/6);
@@ -35,7 +35,7 @@ minHeartbeatLength = floor(INPUT_fs * 60 / INPUT_maxBPM);
 
 % Find the peaks within this interval
 %   -> Parameter 3: minDistance must be <= length(INPUT_data) - 2
-[RESULT_peaks, ~] = getPeaks(INPUT_filtered, false, false, 0, true, min([minHeartbeatLength, length(INPUT_filtered) - 2]));
+[RESULT_peaks, ~] = getPeaks(INPUT_filtered, false, true, 0, true, min([minHeartbeatLength, length(INPUT_filtered) - 2]));
 
 RESULT_AC = mean(RESULT_peaks);
 
