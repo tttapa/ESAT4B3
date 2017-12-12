@@ -221,7 +221,6 @@ function pressureToCenterColor(pressure) {
 
 function setFootPressure(foot, pressure) {
     let footgrad = document.getElementById("feetgrad" + foot);
-    console.log(footgrad.childNodes);
     footgrad.childNodes[3].setAttribute("stop-color", pressureToColor(pressure));
     footgrad.childNodes[1].setAttribute("stop-color", pressureToCenterColor(pressure));
 }

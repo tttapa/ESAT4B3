@@ -160,3 +160,12 @@ let SPO2Interval = setInterval(function () {
 function getSPO2() {
   return 96 + 2 * Math.random();
 }
+
+/* -----------------------------------HTTP-SERVER----------------------------------- */
+
+var http = require('http');
+http.createServer(function (req, res) {
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    res.write(req.url);
+    res.end();
+}).listen(8080);

@@ -52,7 +52,6 @@ article > div, article > div > div {
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
-    width: 100%;
     max-width: 100%;
 }
 nav > div.alarm {
