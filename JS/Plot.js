@@ -72,7 +72,7 @@ class ScanningPlot {
         let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         circle.setAttribute("cx", x);
         circle.setAttribute("cy", y);
-        circle.setAttribute("r", 2);
+        circle.setAttribute("r", 4);
         circle.setAttribute("fill", this.color);
         return circle;
     }
@@ -83,6 +83,7 @@ class ScanningPlot {
         line.setAttribute("x2", x2);
         line.setAttribute("y2", y2);
         line.setAttribute("stroke", this.color);
+        line.setAttribute("stroke-width", 2);
         return line;
     }
 };
@@ -153,7 +154,7 @@ class MovingPlot {
         let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         circle.setAttribute("cx", x);
         circle.setAttribute("cy", y);
-        circle.setAttribute("r", 2);
+        circle.setAttribute("r", 4);
         circle.setAttribute("fill", this.color);
         return circle;
     }
@@ -164,6 +165,7 @@ class MovingPlot {
         line.setAttribute("x2", x2);
         line.setAttribute("y2", y2);
         line.setAttribute("stroke", this.color);
+        line.setAttribute("stroke-width", 2);        
         return line;
     }
 };

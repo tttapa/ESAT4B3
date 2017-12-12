@@ -69,6 +69,9 @@ let PPGPlotContainerRD = document.getElementById("PPGplotRD");
 let PPGPlotRD = new ScanningPlot(PPGPlotContainerRD, 5 * PPG_samplefreq, "#FF11EE", false);
 PPGDetailPanel.classList.add("invisible");
 
+let SPO2PlotContainer = document.getElementById("SPO2plot");
+let SPO2Plot = new MovingPlot(SPO2PlotContainer, 60, "#FF11EE", true);
+
 let BPMtxt = document.getElementById("BPM");
 let SPO2txt = document.getElementById("SPO2");
 
@@ -110,6 +113,7 @@ ws.onmessage = function (e) {
                 SPO2 = SPO2perc.toFixed(1);
             }
             SPO2txt.textContent = SPO2;
+            SPO2Plot.add(SPO2perc/100);
             break;
         case message_type.PRESSURE_A:
             setFootPressure(1, dataArray[1]/1023);
