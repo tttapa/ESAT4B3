@@ -28,7 +28,7 @@ function selectPanel() {
     }
 }
 
-var ws = new WebSocket("ws://localhost:8080");
+var ws = new WebSocket("ws://localhost:1425");
 ws.binaryType = 'arraybuffer';
 ws.onopen = function (ev) {
     console.log("Connected");
@@ -113,82 +113,136 @@ ws.onmessage = function (e) {
                 SPO2 = SPO2perc.toFixed(1);
             }
             SPO2txt.textContent = SPO2;
-            SPO2Plot.add(SPO2perc/100);
+            SPO2Plot.add(SPO2perc / 100);
             break;
         case message_type.PRESSURE_A:
-            setFootPressure(1, dataArray[1]/1023);
+            setFootPressure(1, dataArray[1] / 1023);
             break;
         case message_type.PRESSURE_B:
-            setFootPressure(2, dataArray[1]/1023);
+            setFootPressure(2, dataArray[1] / 1023);
             break;
         case message_type.PRESSURE_C:
-            setFootPressure(3, dataArray[1]/1023);
+            setFootPressure(3, dataArray[1] / 1023);
             break;
         case message_type.PRESSURE_D:
-            setFootPressure(4, dataArray[1]/1023);
+            setFootPressure(4, dataArray[1] / 1023);
             break;
     }
 };
 
 // Steps
 
-google.charts.load("current", { packages: ["corechart", "bar"] });
-google.charts.setOnLoadCallback(drawChart);
-function drawChart() {
-    let data = google.visualization.arrayToDataTable([
-        ['Time', 'Steps'],
-        [new Date((1512990000) * 1000), 12],
-        [new Date((1512990000 + 15 * 60) * 1000), 36],
-        [new Date((1512990000 + 2 * 15 * 60) * 1000), 24],
-        [new Date((1512990000 + 3 * 15 * 60) * 1000), 3],
+google.charts.load("current", { packages: ["corechart", "bar", "gauge"] });
+google.charts.setOnLoadCallback(drawCharts);
+
+function drawCharts() {
+    if (google.visualization == undefined) {
+        return;
+    }
+    let nowDate = new Date();
+    let now = Math.floor(nowDate.getTime() / 1000);
+
+
+    let xmlhttp = new XMLHttpRequest();
+    xmlhttp.onreadystatechange = function() {
+        if (this.readyState == 4 && this.status == 200) {
+            let dataArray = parseCSV(this.responseText);
+            updateStepsChart(dataArray);
+        }
+    };
+    xmlhttp.open("GET", `http://localhost:8080/Steps.csv?start=${now - 24*60*60}&end=${now}`, true);
+    xmlhttp.send();
+}
+
+function parseCSV(string) {
+    var array = [];
+    var lines = string.split("\n");
+    for (var i = 0; i < lines.length; i++) {
+        var data = lines[i].split(",", 2);
+        data[0] = new Date(parseInt(data[0]) * 1000);
+        data[1] = parseFloat(data[1]);
+        array.push(data);
+    }
+    return array;
+}
+
+let barChartOptions = {
+    // title: 'Number of steps per 15 minutes',
+    legend: { position: 'none' },
+    bar: { groupWidth: '84%' },
+    backgroundColor: 'none',
+    colors: ['yellow'],
+    hAxis: {
+        // title: 'Time',
+        color: '#FFFFFF',
+        textStyle: {
+            color: '#FFFFFF'
+        },
+        gridlines: {
+            color: 'none',
+            // count: 24
+        },
+        minValue: new Date((1512990000) * 1000),
+        maxValue: new Date((1512990000 + 24 * 60 * 60) * 1000),
+        // format: 'H:00',
+
+    },
+    vAxis: {
+        // title: 'Time',
+        textStyle: {
+            color: '#FFFFFF'
+        },
+        gridlines: {
+            // color: '#333', 
+            // count: 4
+        }
+    }
+
+};
+
+let barChart;
+let stepData;
+
+function updateStepsChart(array) {
+    stepData = new google.visualization.DataTable();
+    stepData.addColumn('datetime', 'Time');
+    stepData.addColumn('number', 'Steps');
+
+    stepData.addRows(array);
+
+    if (!barChart)
+        barChart = new google.visualization.ColumnChart(document.getElementById('StepsBar'));
+    barChart.draw(stepData, barChartOptions);
+}
+
+let stepGaugeOptions = {
+    // width: 400, height: 120,
+    greenFrom: 90, greenTo: 100,
+    yellowFrom: 75, yellowTo: 90,
+    minorTicks: 5,
+};
+
+let stepGauge;
+
+function updateStepsGauge(value) {
+    let stepGaugeData = google.visualization.arrayToDataTable([
+        ['Label', 'Value'],
+        ['Steps (%)', value],
     ]);
 
-    let options = {
-        // title: 'Number of steps per 15 minutes',
-        legend: { position: 'none' },
-        bar: { groupWidth: '84%' },
-        backgroundColor: 'none',
-        colors: ['yellow'],
-        hAxis: {
-            // title: 'Time',
-            color: '#FFFFFF',
-            textStyle: {
-                color: '#FFFFFF'
-            },
-            gridlines: {
-                color: 'none',
-                // count: 24
-            },
-            minValue: new Date((1512990000) * 1000),
-            maxValue: new Date((1512990000 + 24 * 60 * 60) * 1000),
-            // format: 'H:00',
-
-        },
-        vAxis: {
-            // title: 'Time',
-            textStyle: {
-                color: '#FFFFFF'
-            },
-            gridlines: {
-                // color: '#333', 
-                // count: 4
-            }
-        }
-
-    };
-
-    let chart = new google.visualization.ColumnChart(document.getElementById('StepsBar'));
-    chart.draw(data, options);
-
-    window.onresize = function (ev) {
-        clearTimeout(window.resizeTimeout);
-        window.resizeTimeout = setTimeout(function () {
-            chart.clearChart();
-            chart.draw(data, options);
-            console.log('resize');
-        }, 200);
-    };
+    if (!stepGauge)
+        stepGauge = new google.visualization.Gauge(document.getElementById('StepsGauge'));
+    stepGauge.draw(stepGaugeData, stepGaugeOptions);
 }
+
+window.onresize = function (ev) {
+    clearTimeout(window.resizeTimeout);
+    window.resizeTimeout = setTimeout(function () {
+        barChart.clearChart();
+        barChart.draw(stepData, barChartOptions);
+        console.log('resize');
+    }, 200);
+};
 
 // Pressure 
 function HSVtoRGB(h, s, v) { // https://stackoverflow.com/questions/17242144/javascript-convert-hsb-hsv-color-to-rgb-accurately

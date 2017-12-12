@@ -1,7 +1,7 @@
 /* -----------------------------------WEBSOCKET----------------------------------- */
 
 const WebSocket = require('ws');
-const wss = new WebSocket.Server({ port: 8080 });
+const wss = new WebSocket.Server({ port: 1425 });
 
 // Broadcast to all.
 wss.broadcast = function broadcast(data) {
@@ -163,9 +163,127 @@ function getSPO2() {
 
 /* -----------------------------------HTTP-SERVER----------------------------------- */
 
+// TODO change hosting folder 
+
+//#region http
 var http = require('http');
 http.createServer(function (req, res) {
-    res.writeHead(200, {'Content-Type': 'text/html'});
-    res.write(req.url);
-    res.end();
+  let URIparts = req.url.split('?', 2);
+  let URIfile = URIparts[0];
+  // URIfile = URIfile.replace(/^.*\//, '');
+  URIfile = URIfile.replace(/^\//, '');
+  let URIoptions = URIparts[1];
+  if (URIfile === 'Steps.csv' ||
+    URIfile === 'SPO2.csv' ||
+    URIfile === 'BPM.csv') {
+    let start = null;
+    let end = null;
+    if (URIoptions) {
+      start = URIoptions.match(/start=\d+/);
+      if (start != null) {
+        start = parseInt(start[0].split('=')[1]);
+      }
+      end = URIoptions.match(/end=\d+/);
+      if (end != null) {
+        end = parseInt(end[0].split('=')[1]);
+        if (start != null && end < start) {
+          res.write('400');
+          res.end();
+          return;
+        }
+      }
+    }
+    sendCSV(res, URIfile, start, end);
+  /*} else if (URIfile === 'GUI.html' ||
+             URIfile === 'GUI.js' ||
+             URIfile === 'Plot.js' ||
+             URIfile === 'GUI.html') {
+    sendFile(res, URIfile)*/
+  } else {
+    sendFile(res, URIfile);    
+    //res.write('404');
+    //res.end();
+  }
 }).listen(8080);
+
+
+const fs = require('fs');
+const path = require('path');
+
+function sendFile(res, file) {
+  file = file.replace(/\.\.\//,'');
+  fs.readFile(path.join(__dirname, '..', file), function (err, data) {
+    if (err) {
+      res.writeHead(500);
+      res.end();
+      return console.log(err);
+    }
+    let extname = path.extname(file);
+    let contentType = 'application/octet-stream';
+    switch (extname) {
+        case '.js':
+            contentType = 'text/javascript';
+            break;
+        case '.css':
+            contentType = 'text/css';
+            break;
+        case '.html':
+            contentType = 'text/html';
+            break;
+    }
+    res.writeHead(200, { 'Content-Type': contentType });
+    res.write(data)
+    res.end();
+  });
+}
+
+
+const datafolder = 'Data';
+
+function sendCSV(res, file, start, end) {
+  fs.readFile(path.join(__dirname, datafolder, file), 'utf8', function (err, data) {
+    if (err) {
+      res.writeHead(500);
+      res.end();
+      return console.log(err);
+    }
+    let lines = data.split(/\n|\r\n|\r/);
+    let startIndex = null;
+    let endIndex = null;
+    for (i = 0; i < lines.length; i++) {
+      if (lines[i] == '') {
+        continue; // ignore empty lines
+      }
+      let timestamp = parseInt(lines[i].split(',', 2)[0]);
+      if (start != null && startIndex == null && timestamp >= start) {
+        startIndex = i;
+      }
+      if (end != null && end != 0 && endIndex == null && timestamp > end) {
+        endIndex = i - 1;
+      }
+      if (end != null && end != 0 && endIndex == null && timestamp === end) {
+        endIndex = i;
+      }
+      console.log(timestamp + ' startIndex = ' + startIndex + ' endIndex = ' + endIndex +
+        ' start = ' + start + ' end = ' + end);
+    }
+    if (start == null || startIndex == null) {
+      startIndex = 0;
+    }
+    if (end == null || endIndex == null) {
+      endIndex = lines.length;
+    }
+    if (end != null && end < parseInt(lines[0].split(',', 2)[0])) {
+      console.log('end < first enty');
+      endIndex = -1;
+    }
+    res.writeHead(200, { 'Content-Type': 'text/csv' });
+    for (i = startIndex; i <= endIndex; i++) {
+      res.write(lines[i] + '\r\n');
+    }
+    res.end();
+    console.log(lines);
+    console.log(startIndex + ' - ' + endIndex);
+  });
+}
+//#endregion

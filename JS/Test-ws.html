@@ -97,7 +97,7 @@
     return line;
   }
 
-  var ws = new WebSocket("ws://localhost:8080");
+  var ws = new WebSocket("ws://localhost:1425");
   ws.onopen = function(ev) { 
     console.log("Connected");
     ws.send('Test'); 

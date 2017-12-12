@@ -53,6 +53,7 @@ article > div, article > div > div {
     flex-direction: column;
     justify-content: space-evenly;
     max-width: 100%;
+    min-height: 0;
 }
 nav > div.alarm {
     background-color: #FF1111 !important;
