@@ -141,7 +141,7 @@ int main()
         return 1;
     }
 
-    set_interface_attribs(fd, B1000000, 0); // set speed to 1,000,000 baud, 8n1 (no parity)
+    set_interface_attribs(fd, B115200, 0); // set speed to 115,200 baud, 8n1 (no parity)
     set_blocking(fd, 0);                    // set no blocking
 
     uint16_t value;

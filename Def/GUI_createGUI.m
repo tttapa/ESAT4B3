@@ -152,15 +152,11 @@ gui.PPGMaxEditField.BackgroundColor = secondaryBackgroundColor;
 gui.PPGAvgEditField.FontColor = ppgColor;
 gui.PPGAvgEditField.BackgroundColor = secondaryBackgroundColor;
 
-gui.PPGLastTimeLabel.FontColor = ppgColor;
-
 % ECGPanel
 gui.ECGPanel.BackgroundColor = mainBackgroundColor;
 
 gui.ECGAvgEditField.FontColor = ecgColor;
 gui.ECGAvgEditField.BackgroundColor = secondaryBackgroundColor;
-
-gui.ECGLastTimeLabel.FontColor = ecgColor;
 
 gui.ECGMinEditField.FontColor = ecgColor;
 gui.ECGMinEditField.BackgroundColor = secondaryBackgroundColor;
@@ -209,6 +205,8 @@ gui.StepsGauge.FontColor = stepsColor;
 
 gui.StepsProgressLabel.FontColor = stepsColor;
 
+gui.DailygoalEditFieldLabel.FontColor = stepsColor;
+
 gui.StepsDailyGoalEditField.FontColor = stepsColor;
 gui.StepsDailyGoalEditField.BackgroundColor = secondaryBackgroundColor;
 
@@ -245,8 +243,6 @@ set(footDat, 'AlphaData', footAlpha);
 %gui.HeaderAgeEditField.Value = str2double(answer{2});
 %gui.HeaderHeightEditField.Value = str2double(answer{3});
 %gui.HeaderWeightEditField.Value = str2double(answer{4});
-
-
 
 end
 

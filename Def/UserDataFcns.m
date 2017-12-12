@@ -72,6 +72,8 @@ function fcns = UserDataFcns
     function userdata = loadUserData(filename)
         fileID = fopen(filename,'r');
         fileContent = fread(fileID,'*char');
+        disp(filename);
+        disp(jsondecode(fileContent));
         userdata = UserData(jsondecode(fileContent));
         fclose(fileID);
     end

@@ -12,6 +12,7 @@ classdef StepStats < handle
         progressGauge;
         
         stepstoday;
+        totalstepstoday;
     end
     
     methods
@@ -37,7 +38,7 @@ classdef StepStats < handle
                 o.values = uint16.empty();
             end
             
-            now = int64(posixtime(datetime('now')));
+            now = getUnixTime;
             secondsIn24h = 24*60*60;
             today_12am = now - int64(mod(now, secondsIn24h));
             try
@@ -46,6 +47,7 @@ classdef StepStats < handle
             catch
                 o.stepstoday = 0;
             end
+            o.totalstepstoday = o.stepstoday;
             
             o.timeframe  = timeframe;
             try
@@ -78,18 +80,35 @@ classdef StepStats < handle
             else
                 o.stepstoday = o.stepstoday + steps;
             end
+            o.totalstepstoday = o.stepstoday;
         end
         
         function [time, values] = getPlotData(o)
+            if length(o.timestamps) < 2
+                msgID = 'GETPLOTDATA:NoTimeData';
+                msg = 'No time data is returned there are less than two entries';
+                ME = MException(msgID,msg);
+                throw(ME);
+            end
+            differences = o.timestamps(2:end) - o.timestamps(1:end-1);
+            if min(differences) > o.interval
+                msgID = 'GETPLOTDATA:NoTimeData';
+                msg = 'No time data is returned because the minimal distance is greater than 15 minutes';
+                ME = MException(msgID,msg);
+                throw(ME);
+            end
             startPosition = getStartIndexOfTimeStampInterval(o.timestamps, o.timeframe, o.interval);
             time = datetime(o.timestamps(startPosition:end),'ConvertFrom','posixtime');
             values = o.values(startPosition:end);
         end
         
         function updateGUI(o)
-            [X_time, Y_values] = o.getPlotData;
-            set(o.plot, 'XData', X_time, 'YData', Y_values);
-            o.updateXLim;
+            try
+                [X_time, Y_values] = o.getPlotData;
+                set(o.plot, 'XData', X_time, 'YData', Y_values);
+                o.updateXLim;
+            catch
+            end
         end
         function updateXLim(o)
             startTime = datetime(o.timestamps(end) - o.timeframe - 7.5*60,'ConvertFrom','posixtime');
@@ -100,11 +119,13 @@ classdef StepStats < handle
         function updateStepCounter(o, steps)
             stepsTxt = char(string(o.stepstoday + steps));
             o.button.Text = stepsTxt;
+            o.totalstepstoday = o.stepstoday + steps;
             o.updateStepGauge;
         end
         
         function updateStepGauge(o)
-            o.progressGauge.Value = 100 * o.stepstoday / o.userdata.stepGoal;
+            goalperc = 100 * o.totalstepstoday / o.userdata.stepGoal;
+            o.progressGauge.Value = goalperc;
         end
     end
 end
