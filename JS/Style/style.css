@@ -111,7 +111,7 @@ div#main > div {
 div#PPGplotIR, div#PPGplotRD {
     height: 40%;
     border: 1px solid;
-    margin: 16px;
+    margin: 0.7em;
 }
 
 .invisible {
@@ -165,15 +165,16 @@ input[type="radio"] {
     display: flex;
     flex-direction: row;
     min-height: 0;
-    justify-content: space-evenly;
+    justify-content: flex-start;
 }
 
 .gauge {
     height: 100%;
     margin: auto;
     padding: 2em;
-    min-width: 30%;
+    min-width: 25%;
     box-sizing: border-box;
+    display: inline;
 }
 
 h3 {

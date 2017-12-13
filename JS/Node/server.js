@@ -9,8 +9,8 @@ const SerialPort = require('serialport');
 
 const datafolder = 'Data';
 
-if (!fs.existsSync(path.join(__dirname,datafolder))){
-  fs.mkdirSync(path.join(__dirname,datafolder));
+if (!fs.existsSync(path.join(__dirname, datafolder))) {
+  fs.mkdirSync(path.join(__dirname, datafolder));
 }
 
 /* -----------------------------------WEBSOCKET----------------------------------- */
@@ -105,9 +105,12 @@ const PPGSenderRD = new Sender.BufferedSender(wss, Sender.message_type.PPG_RED, 
 let ECGctr = 0;
 let ECGsum = 0;
 
-const BPMCounter = require('./BPMCounter.js');
-const bpmctr = new BPMCounter.BPMCounter(ECG_samplefreq, 511, 30, 220);
+const RpeakThres = 256; // of square !
 
+const BPMCounter = require('./BPMCounter.js');
+const bpmctr = new BPMCounter.BPMCounter(ECG_samplefreq, RpeakThres, 30, 220);
+
+const PPG_DC_offset = 511;
 
 const Average = require('./Average.js');
 const BPMaverage = new Average.Average();
@@ -140,14 +143,14 @@ port.on('data', function (dataBuf) {
     if (message != null) {
       switch (message.type) {
         case Receiver.message_type.ECG:
-          ECGsum += message.value;
+          ECGsum += message.value; // * message.value / 1023; // TODO
           ECGctr++;
           if (ECGctr >= ECGdownsampleamount) {
             ECGsender.send(ECGsum / ECGdownsampleamount);
             ECGsum = 0;
             ECGctr = 0;
           }
-          if (bpmctr.run(message.value)) {
+          if (bpmctr.run(message.value * message.value / 1023)) { // Square to make peaks higher
             let BPMbuf = new Uint16Array(2);
             BPMbuf[0] = Sender.message_type.BPM;
             let BPM = bpmctr.getBPM();
@@ -158,11 +161,13 @@ port.on('data', function (dataBuf) {
           break;
         case Receiver.message_type.PPG_IR:
           PPGSenderIR.send(message.value);
-          SPO2_IR_MA.add(message.value * message.value); // Calculate Mean Square
+          let PPGvoltageIR = (message.value - PPG_DC_offset) * 5 / 1023.0;
+          SPO2_IR_MA.add(PPGvoltageIR * PPGvoltageIR); // Calculate Mean Square
           break;
         case Receiver.message_type.PPG_RED:
           PPGSenderRD.send(message.value);
-          SPO2_RD_MA.add(message.value * message.value); // Calculate Mean Square          
+          let PPGvoltageRD = (message.value - PPG_DC_offset) * 5 / 1023.0;
+          SPO2_RD_MA.add(PPGvoltageRD * PPGvoltageRD); // Calculate Mean Square          
           break;
         case Receiver.message_type.PRESSURE_A:
           let pressbufA = new Uint16Array(2);
@@ -208,7 +213,7 @@ function sendSteps() {
 }
 
 function getSumRecords(file, start, end) {
-  let sum = 0;  
+  let sum = 0;
   try {
     let data = fs.readFileSync(path.join(__dirname, datafolder, file), 'utf8');
     let lines = data.split(/\n|\r\n|\r/);
@@ -277,6 +282,9 @@ function appendRecord(file, now, value) {
 
 /* -----------------------------------SPO2-Calculation----------------------------------- */
 
+let V_DC_IR = 1;
+let V_DC_RD = 1.27;
+
 let SPO2Interval = setInterval(function () {
   let SPO2buf = new Uint16Array(2);
   SPO2buf[0] = Sender.message_type.SPO2;
@@ -287,7 +295,12 @@ let SPO2Interval = setInterval(function () {
 }, 1000);
 
 function getSPO2() {
-  return 60 + 2 * Math.random();
+  let V_AC_RMS_RD = Math.sqrt(SPO2_RD_MA.getAverage());
+  let V_AC_RMS_IR = Math.sqrt(SPO2_IR_MA.getAverage());
+  // console.log(`PPG Red V_RMS = ${V_AC_RMS_RD}`);
+  // console.log(`PPG IR  V_RMS = ${V_AC_RMS_IR}\r\n`);
+  // return 96 + 2 * Math.random(); // ;)
+  return 100 * (V_AC_RMS_RD / V_DC_RD) / (V_AC_RMS_IR / V_DC_IR);
 }
 
 /* -----------------------------------HTTP-SERVER----------------------------------- */

@@ -1,7 +1,7 @@
 class MovingAverage {
     constructor(length) {
         this.length = parseInt(length);
-        this.previousValues = new Array(this.length);
+        this.previousValues = Array.apply(null, Array(this.length)).map(Number.prototype.valueOf,0);;
         this.sum = 0;
         this.filled = 0;
         this.index = 0;

@@ -65,8 +65,19 @@ const SPO2limit = 88;
 
 const SPO2minY = 60;
 
+const DC_offset = 240;
+
+const ECG_lines = 4;
+
+const ECG_YLim_max = 720;
+const ECG_YLim_min = (DC_offset * (ECG_lines + 1) - ECG_YLim_max) / ECG_lines;
+
+const ECG_gain = (ECG_YLim_max - DC_offset) * 5000 / 1023 / ECG_lines;
+const minECG = (ECG_YLim_min - DC_offset) * 5000 / ECG_gain / 1023;
+const maxECG = (ECG_YLim_max - DC_offset) * 5000 / ECG_gain / 1023;
+
 let ECGPlotContainer = document.getElementById("ECGplot");
-let ECGPlot = new ScanningPlot(ECGPlotContainer, 5 * ECG_samplefreq / downsampleamount, "turquoise", false);
+let ECGPlot = new ScanningPlot(ECGPlotContainer, 5 * ECG_samplefreq / downsampleamount, "turquoise", false, ECG_lines, '#EEE', minECG, maxECG, ' mV');
 
 let PPGDetailPanel = document.getElementById("PPGDetail");
 PPGDetailPanel.classList.remove("invisible");
@@ -78,7 +89,7 @@ let PPGPlotRD = new ScanningPlot(PPGPlotContainerRD, 5 * PPG_samplefreq, "#FF11E
 PPGDetailPanel.classList.add("invisible");
 
 let SPO2PlotContainer = document.getElementById("SPO2plot");
-let SPO2Plot = new MovingPlot(SPO2PlotContainer, 60, "#FF11EE", true, 3, 'white', 60, 100, ' %');
+let SPO2Plot = new MovingPlot(SPO2PlotContainer, 60, "#FF11EE", true, 3, '#EEE', 60, 100, ' %');
 
 let BPMtxt = document.getElementById("BPM");
 let SPO2txt = document.getElementById("SPO2");
@@ -94,7 +105,7 @@ ws.onmessage = function (e) {
     switch (dataArray[0]) {
         case message_type.ECG:
             for (i = 1; i < dataArray.length; i++) {
-                ECGPlot.add(dataArray[i] / 1023);
+                ECGPlot.add(map(dataArray[i], ECG_YLim_min, ECG_YLim_max, 0, 1));
                 // ECGPlot.add((dataArray[i] / 1023)**2);
             }
             break;
@@ -136,8 +147,8 @@ ws.onmessage = function (e) {
                 SPO2 = SPO2perc.toFixed(1);
             }
             SPO2txt.textContent = SPO2;
-            let SPO2plotval = map(SPO2perc, SPO2minY, 100, 0, 100);
-            SPO2Plot.add(SPO2plotval / 100);
+            let SPO2plotval = map(SPO2perc, SPO2minY, 100, 0, 1);
+            SPO2Plot.add(SPO2plotval);
             break;
         case message_type.PRESSURE_A:
             setFootPressure(1, dataArray[1] / 1023);

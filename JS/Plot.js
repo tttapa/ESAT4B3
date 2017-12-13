@@ -1,5 +1,5 @@
 class ScanningPlot {
-    constructor(parent, len, color, dots = false) {
+    constructor(parent, len, color, dots = false, lines = 0, linecolor = 'white', min = 0, max = 100, unit = '') {
         this.len = len;
         this.color = color;
         this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -8,6 +8,7 @@ class ScanningPlot {
         this.svg.setAttribute("preserveAspectRatio", "none");
         this.step = parent.clientWidth / this.len;
         this.height = parent.clientHeight;
+        this.width = parent.clientWidth;
         parent.appendChild(this.svg);
 
         this.circles = Array();
@@ -20,7 +21,28 @@ class ScanningPlot {
         this.indexL = 0;
         this.previousValue = 0;
         this.previousIndex = len - 2;
-        console.log(this);
+        
+        for (let i = 0; i < lines; i++) {
+            let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", 0);
+            line.setAttribute("y1", this.height * (i + 1) / (lines + 1));
+            line.setAttribute("x2", this.width);
+            line.setAttribute("y2", this.height * (i + 1) / (lines + 1));
+            line.setAttribute("stroke", linecolor);
+            line.setAttribute("stroke-width", 1);
+            this.svg.appendChild(line);
+
+            let value = Math.round((min + (i + 1) / (lines + 1) * (max - min))*100)/100;
+            // value = value.toFixed(2);
+            let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute("font-family", "'Roboto',sans-serif");
+            text.setAttribute("font-size", 12);
+            text.setAttribute("x", 5);
+            text.setAttribute("y", this.height * (1 - ((i + 1) / (lines + 1))) - 2);
+            text.setAttribute("fill", linecolor);
+            text.textContent = value + unit;
+            this.svg.appendChild(text);
+        }
     }
 
     add(value) {
