@@ -9,6 +9,10 @@ const SerialPort = require('serialport');
 
 const datafolder = 'Data';
 
+if (!fs.existsSync(path.join(__dirname,datafolder))){
+  fs.mkdirSync(path.join(__dirname,datafolder));
+}
+
 /* -----------------------------------WEBSOCKET----------------------------------- */
 
 const wss = new WebSocket.Server({ port: 1425 });
