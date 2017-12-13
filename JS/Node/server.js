@@ -1,6 +1,16 @@
-/* -----------------------------------WEBSOCKET----------------------------------- */
+const fs = require('fs');
+const path = require('path');
 
 const WebSocket = require('ws');
+
+const SerialPort = require('serialport');
+
+
+
+const datafolder = 'Data';
+
+/* -----------------------------------WEBSOCKET----------------------------------- */
+
 const wss = new WebSocket.Server({ port: 1425 });
 
 // Broadcast to all.
@@ -25,6 +35,7 @@ wss.broadcast = function broadcast(data) {
 wss.on('connection', function connection(ws, req) {
   ws.ip = req.connection.remoteAddress;
   console.log("Connected " + ws.ip);
+  sendSteps();  
   ws.on('message', function incoming(data) {
     console.log(this.ip + ": " + data);
   });
@@ -58,7 +69,6 @@ const interval = setInterval(function ping() {
 
 /* -----------------------------------SERIAL-PORT----------------------------------- */
 
-const SerialPort = require('serialport');
 const port = new SerialPort('/dev/ttyACM0', {
   baudRate: 115200,
 }, function (err) {
@@ -107,7 +117,18 @@ const StepCounter = require('./StepCounter.js');
 const LeftStepCounter = new StepCounter.StepCounter();
 const RightStepCounter = new StepCounter.StepCounter();
 
-let stepsToday = 0;
+let stepsToday = getStepsToday();
+
+function getStepsToday() {
+  let today_12am = new Date();
+  today_12am.setHours(0);
+  today_12am.setMinutes(0);
+  today_12am.setSeconds(0);
+  today_12am.setMilliseconds(0);
+  console.log(today_12am);
+  console.log(today_12am.getTime() / 1000);
+  return getSumRecords('Steps.csv', today_12am.getTime() / 1000);
+}
 
 port.on('data', function (dataBuf) {
   for (i = 0; i < dataBuf.length; i++) {
@@ -133,11 +154,11 @@ port.on('data', function (dataBuf) {
           break;
         case Receiver.message_type.PPG_IR:
           PPGSenderIR.send(message.value);
-          SPO2_IR_MA.add(message.value*message.value); // Calculate Mean Square
+          SPO2_IR_MA.add(message.value * message.value); // Calculate Mean Square
           break;
         case Receiver.message_type.PPG_RED:
           PPGSenderRD.send(message.value);
-          SPO2_RD_MA.add(message.value*message.value); // Calculate Mean Square          
+          SPO2_RD_MA.add(message.value * message.value); // Calculate Mean Square          
           break;
         case Receiver.message_type.PRESSURE_A:
           let pressbufA = new Uint16Array(2);
@@ -182,22 +203,46 @@ function sendSteps() {
   wss.broadcast(stepsbuf);
 }
 
+function getSumRecords(file, start, end) {
+  let data = fs.readFileSync(path.join(__dirname, datafolder, file), 'utf8');
+  let lines = data.split(/\n|\r\n|\r/);
+  let startIndex = null;
+  let endIndex = null;
+  let i = 0;
+  let timestamp = parseInt(lines[i].split(',', 2)[0]);
+  console.log(lines);
+  while ((isNaN(timestamp) || timestamp < start) && i < lines.length - 1) {
+    i++;
+    timestamp = parseInt(lines[i].split(',', 2)[0]);
+  }
+  let sum = 0;
+  while ((isNaN(timestamp) || timestamp <= end || !end) && i < lines.length - 1) {
+    let value = parseInt(lines[i].split(',', 2)[1]);
+    if (!isNaN(value))
+      sum += value;
+    console.log(timestamp + ': ' + value);
+    i++;
+    if (i < lines.length)
+      timestamp = parseInt(lines[i].split(',', 2)[0]);
+  }
+  return sum;
+}
 /* -----------------------------------MINUTE-INTERVAL----------------------------------- */
 
-let findMinuteInterval = setInterval(function() {
+let findMinuteInterval = setInterval(function () {
   let now = new Date();
   if (now.getSeconds() == 0) {
-      console.log('min');
-      everyMinute();
-      clearInterval(findMinuteInterval);
-      setInterval(everyMinute, 60*1000);
+    console.log('min');
+    everyMinute();
+    clearInterval(findMinuteInterval);
+    setInterval(everyMinute, 60 * 1000);
   }
 }, 500);
 
 function everyMinute() {
-  let now = new Date();  
-  appendRecord('SPO2.csv',now, SPO2average.getAverage());
-  appendRecord('BPM.csv',now, BPMaverage.getAverage());
+  let now = new Date();
+  appendRecord('SPO2.csv', now, SPO2average.getAverage());
+  appendRecord('BPM.csv', now, BPMaverage.getAverage());
   SPO2average.reset();
   BPMaverage.reset();
   if (now.getMinutes() % 15 === 0) {
@@ -206,17 +251,15 @@ function everyMinute() {
 }
 
 function every15Minutes(now) {
-  let steps = LeftStepCounter.steps + RightStepCounter.steps;  
-  appendRecord('Steps.csv',now, steps);
+  let steps = LeftStepCounter.steps + RightStepCounter.steps;
+  appendRecord('Steps.csv', now, steps);
   stepsToday += steps;
   LeftStepCounter.reset();
   RightStepCounter.reset();
 }
 
-const datafolder = 'Data';
-
 function appendRecord(file, now, value) {
-  fs.appendFile(path.join(__dirname, datafolder, file), new Buffer(`${Math.round(now.getTime()/1000)},${value}\r\n`), function (err) {
+  fs.appendFile(path.join(__dirname, datafolder, file), new Buffer(`${Math.round(now.getTime() / 1000)},${value}\r\n`), function (err) {
     if (err) {
       return console.log(err);
     }
@@ -272,24 +315,20 @@ http.createServer(function (req, res) {
       }
     }
     sendCSV(res, URIfile, start, end);
-  /*} else if (URIfile === 'GUI.html' ||
-             URIfile === 'GUI.js' ||
-             URIfile === 'Plot.js' ||
-             URIfile === 'GUI.html') {
-    sendFile(res, URIfile)*/
+    /*} else if (URIfile === 'GUI.html' ||
+               URIfile === 'GUI.js' ||
+               URIfile === 'Plot.js' ||
+               URIfile === 'GUI.html') {
+      sendFile(res, URIfile)*/
   } else {
-    sendFile(res, URIfile);    
+    sendFile(res, URIfile);
     //res.write('404');
     //res.end();
   }
 }).listen(8080);
 
-
-const fs = require('fs');
-const path = require('path');
-
 function sendFile(res, file) {
-  file = file.replace(/\.\.\//,'');
+  file = file.replace(/\.\.\//, '');
   fs.readFile(path.join(__dirname, '..', file), function (err, data) {
     if (err) {
       res.writeHead(500);
@@ -299,15 +338,15 @@ function sendFile(res, file) {
     let extname = path.extname(file);
     let contentType = 'application/octet-stream';
     switch (extname) {
-        case '.js':
-            contentType = 'text/javascript';
-            break;
-        case '.css':
-            contentType = 'text/css';
-            break;
-        case '.html':
-            contentType = 'text/html';
-            break;
+      case '.js':
+        contentType = 'text/javascript';
+        break;
+      case '.css':
+        contentType = 'text/css';
+        break;
+      case '.html':
+        contentType = 'text/html';
+        break;
     }
     res.writeHead(200, { 'Content-Type': contentType });
     res.write(data)

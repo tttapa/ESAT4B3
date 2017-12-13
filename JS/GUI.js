@@ -63,6 +63,8 @@ const ECG_samplefreq = 360;
 const PPG_samplefreq = 50;
 const SPO2limit = 88;
 
+const SPO2minY = 60;
+
 let ECGPlotContainer = document.getElementById("ECGplot");
 let ECGPlot = new ScanningPlot(ECGPlotContainer, 5 * ECG_samplefreq / downsampleamount, "turquoise", false);
 
@@ -130,11 +132,12 @@ ws.onmessage = function (e) {
                 PPGAlarmInterval = null;
                 PPGButton.classList.remove('alarm');
             }
-            if (dataArray[1] !== 0) {
+            if (SPO2perc !== 0) {
                 SPO2 = SPO2perc.toFixed(1);
             }
             SPO2txt.textContent = SPO2;
-            SPO2Plot.add(SPO2perc / 100);
+            let SPO2plotval = map(SPO2perc, SPO2minY, 100, 0, 100);
+            SPO2Plot.add(SPO2plotval / 100);
             break;
         case message_type.PRESSURE_A:
             setFootPressure(1, dataArray[1] / 1023);
@@ -542,3 +545,8 @@ let findMinuteInterval = setInterval(function () {
         setInterval(drawCharts, 60 * 1000);
     }
 }, 500);
+
+function map(x, in_min, in_max, out_min, out_max)
+{
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
