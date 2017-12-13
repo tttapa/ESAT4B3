@@ -486,12 +486,18 @@ window.onresize = function (ev) {
 };
 
 function reDrawCharts() {
-    barChart.clearChart();
-    barChart.draw(stepData, barChartOptions);
-    BPMChart.clearChart();
-    BPMChart.draw(BPMData, BPMChartOptions);
-    SPO2Chart.clearChart();
-    SPO2Chart.draw(SPO2Data, SPO2ChartOptions);
+    if (barChart) {
+        barChart.clearChart();
+        barChart.draw(stepData, barChartOptions);
+    }
+    if (BPMChart) {
+        BPMChart.clearChart();
+        BPMChart.draw(BPMData, BPMChartOptions);
+    }
+    if (SPO2Chart) {
+        SPO2Chart.clearChart();
+        SPO2Chart.draw(SPO2Data, SPO2ChartOptions);
+    }
     updateBPMsGauge(null);
     updateStepsGauge(null);
 }
@@ -546,7 +552,6 @@ let findMinuteInterval = setInterval(function () {
     }
 }, 500);
 
-function map(x, in_min, in_max, out_min, out_max)
-{
-  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+function map(x, in_min, in_max, out_min, out_max) {
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }

@@ -339,7 +339,7 @@ function sendFile(res, file) {
   file = file.replace(/\.\.\//, '');
   fs.readFile(path.join(__dirname, '..', file), function (err, data) {
     if (err) {
-      res.writeHead(500);
+      res.writeHead(404);
       res.end();
       return console.log(err);
     }
@@ -365,7 +365,7 @@ function sendFile(res, file) {
 function sendCSV(res, file, start, end) {
   fs.readFile(path.join(__dirname, datafolder, file), 'utf8', function (err, data) {
     if (err) {
-      res.writeHead(500);
+      res.writeHead(404);
       res.end();
       return console.log(err);
     }
