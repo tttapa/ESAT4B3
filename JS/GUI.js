@@ -78,7 +78,7 @@ let PPGPlotRD = new ScanningPlot(PPGPlotContainerRD, 5 * PPG_samplefreq, "#FF11E
 PPGDetailPanel.classList.add("invisible");
 
 let SPO2PlotContainer = document.getElementById("SPO2plot");
-let SPO2Plot = new MovingPlot(SPO2PlotContainer, 60, "#FF11EE", true);
+let SPO2Plot = new MovingPlot(SPO2PlotContainer, 60, "#FF11EE", true, 3, 'white', 60);
 
 let BPMtxt = document.getElementById("BPM");
 let SPO2txt = document.getElementById("SPO2");

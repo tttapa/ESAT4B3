@@ -35,7 +35,7 @@ wss.broadcast = function broadcast(data) {
 wss.on('connection', function connection(ws, req) {
   ws.ip = req.connection.remoteAddress;
   console.log("Connected " + ws.ip);
-  sendSteps();  
+  sendSteps();
   ws.on('message', function incoming(data) {
     console.log(this.ip + ": " + data);
   });
@@ -204,26 +204,30 @@ function sendSteps() {
 }
 
 function getSumRecords(file, start, end) {
-  let data = fs.readFileSync(path.join(__dirname, datafolder, file), 'utf8');
-  let lines = data.split(/\n|\r\n|\r/);
-  let startIndex = null;
-  let endIndex = null;
-  let i = 0;
-  let timestamp = parseInt(lines[i].split(',', 2)[0]);
-  console.log(lines);
-  while ((isNaN(timestamp) || timestamp < start) && i < lines.length - 1) {
-    i++;
-    timestamp = parseInt(lines[i].split(',', 2)[0]);
-  }
-  let sum = 0;
-  while ((isNaN(timestamp) || timestamp <= end || !end) && i < lines.length - 1) {
-    let value = parseInt(lines[i].split(',', 2)[1]);
-    if (!isNaN(value))
-      sum += value;
-    console.log(timestamp + ': ' + value);
-    i++;
-    if (i < lines.length)
+  let sum = 0;  
+  try {
+    let data = fs.readFileSync(path.join(__dirname, datafolder, file), 'utf8');
+    let lines = data.split(/\n|\r\n|\r/);
+    let startIndex = null;
+    let endIndex = null;
+    let i = 0;
+    let timestamp = parseInt(lines[i].split(',', 2)[0]);
+    console.log(lines);
+    while ((isNaN(timestamp) || timestamp < start) && i < lines.length - 1) {
+      i++;
       timestamp = parseInt(lines[i].split(',', 2)[0]);
+    }
+    while ((isNaN(timestamp) || timestamp <= end || !end) && i < lines.length - 1) {
+      let value = parseInt(lines[i].split(',', 2)[1]);
+      if (!isNaN(value))
+        sum += value;
+      console.log(timestamp + ': ' + value);
+      i++;
+      if (i < lines.length)
+        timestamp = parseInt(lines[i].split(',', 2)[0]);
+    }
+  } catch (e) {
+    console.log(e);
   }
   return sum;
 }

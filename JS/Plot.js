@@ -3,7 +3,7 @@ class ScanningPlot {
         this.len = len;
         this.color = color;
         this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        this.svg.setAttribute("height", 200);
+        // this.svg.setAttribute("height", 200);
         this.svg.setAttribute("viewBox", `0 0 ${parent.clientWidth} ${parent.clientHeight}`);
         this.svg.setAttribute("preserveAspectRatio", "none");
         this.step = parent.clientWidth / this.len;
@@ -89,11 +89,11 @@ class ScanningPlot {
 };
 
 class MovingPlot {
-    constructor(parent, len, color, dots = false) {
+    constructor(parent, len, color, dots = false, lines = 0, linecolor = 'white', min = 0, max = 100) {
         this.len = len;
         this.color = color;
         this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        this.svg.setAttribute("height", 200);
+        // this.svg.setAttribute("height", 200);
         this.svg.setAttribute("viewBox", `0 0 ${parent.clientWidth} ${parent.clientHeight}`);
         this.svg.setAttribute("preserveAspectRatio", "none");
         this.width = parent.clientWidth;
@@ -109,6 +109,27 @@ class MovingPlot {
         this.counter = 0;
 
         this.previousValue = this.height;
+
+        for (let i = 0; i < lines; i++) {
+            let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", 0);
+            line.setAttribute("y1", this.height * (i + 1) / (lines + 1));
+            line.setAttribute("x2", this.width);
+            line.setAttribute("y2", this.height * (i + 1) / (lines + 1));
+            line.setAttribute("stroke", linecolor);
+            line.setAttribute("stroke-width", 1);
+            this.svg.appendChild(line);
+
+            let value = Math.round(min + (i + 1) / (lines + 1) * (max - min));
+            let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            text.setAttribute("font-family", "'Roboto',sans-serif");
+            text.setAttribute("font-size", 12);
+            text.setAttribute("x", 5);
+            text.setAttribute("y", this.height * (1 - ((i + 1) / (lines + 1))) - 2);
+            text.setAttribute("fill", linecolor);
+            text.textContent = value;
+            this.svg.appendChild(text);
+        }
     }
 
     add(value) {
@@ -144,8 +165,8 @@ class MovingPlot {
     }
     addValueL(value) {
         //if (this.counter !== 0) {
-            let line = this.createLine((this.counter - 1) * this.step, this.previousValue, this.counter * this.step, value);
-            this.g1.appendChild(line);            
+        let line = this.createLine((this.counter - 1) * this.step, this.previousValue, this.counter * this.step, value);
+        this.g1.appendChild(line);
         //}
         this.previousValue = value;
     }
@@ -165,7 +186,7 @@ class MovingPlot {
         line.setAttribute("x2", x2);
         line.setAttribute("y2", y2);
         line.setAttribute("stroke", this.color);
-        line.setAttribute("stroke-width", 2);        
+        line.setAttribute("stroke-width", 2);
         return line;
     }
 };
