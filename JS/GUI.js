@@ -88,7 +88,7 @@ let PPGAlarmInterval;
 
 ws.onmessage = function (e) {
     clearTimeout(ws.timeOut);
-    ws.timeOut = setTimeout(disconnect, 1000);
+    ws.timeOut = setTimeout(disconnect, 10000);
     let dataArray = new Uint16Array(e.data);
     // console.log(dataArray);  
     switch (dataArray[0]) {
