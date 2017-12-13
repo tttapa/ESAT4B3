@@ -85,7 +85,7 @@ let PPGPlotContainerIR = document.getElementById("PPGplotIR");
 let PPGPlotIR = new ScanningPlot(PPGPlotContainerIR, 5 * PPG_samplefreq, "#FF11EE", false);
 
 let PPGPlotContainerRD = document.getElementById("PPGplotRD");
-let PPGPlotRD = new ScanningPlot(PPGPlotContainerRD, 5 * PPG_samplefreq, "#FF11EE", false);
+let PPGPlotRD = new ScanningPlot(PPGPlotContainerRD, 5 * PPG_samplefreq, "#FF11EE", true);
 PPGDetailPanel.classList.add("invisible");
 
 let SPO2PlotContainer = document.getElementById("SPO2plot");
