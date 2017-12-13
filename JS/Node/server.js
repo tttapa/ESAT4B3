@@ -282,8 +282,8 @@ function appendRecord(file, now, value) {
 
 /* -----------------------------------SPO2-Calculation----------------------------------- */
 
-let V_DC_IR = 1;
-let V_DC_RD = 1.27;
+let V_DC_IR = 6.15 * 0.97 / 0.543; // TODO
+let V_DC_RD = 1.89;
 
 let SPO2Interval = setInterval(function () {
   let SPO2buf = new Uint16Array(2);
@@ -300,7 +300,9 @@ function getSPO2() {
   // console.log(`PPG Red V_RMS = ${V_AC_RMS_RD}`);
   // console.log(`PPG IR  V_RMS = ${V_AC_RMS_IR}\r\n`);
   // return 96 + 2 * Math.random(); // ;)
-  return 100 * (V_AC_RMS_RD / V_DC_RD) / (V_AC_RMS_IR / V_DC_IR);
+  let SPO2 = (V_AC_RMS_RD / V_DC_RD) / (V_AC_RMS_IR / V_DC_IR);
+  console.log(SPO2);
+  return 100 * SPO2;
 }
 
 /* -----------------------------------HTTP-SERVER----------------------------------- */

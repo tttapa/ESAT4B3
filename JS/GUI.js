@@ -62,6 +62,7 @@ const ECG_samplefreq = 360;
 
 const PPG_samplefreq = 50;
 const SPO2limit = 88;
+const SPO2_YLim_min = 80;
 
 const SPO2minY = 60;
 
@@ -82,14 +83,14 @@ let ECGPlot = new ScanningPlot(ECGPlotContainer, 5 * ECG_samplefreq / downsample
 let PPGDetailPanel = document.getElementById("PPGDetail");
 PPGDetailPanel.classList.remove("invisible");
 let PPGPlotContainerIR = document.getElementById("PPGplotIR");
-let PPGPlotIR = new ScanningPlot(PPGPlotContainerIR, 5 * PPG_samplefreq, "#FF11EE", false);
+let PPGPlotIR = new ScanningPlot(PPGPlotContainerIR, 5 * PPG_samplefreq, "#FF11EE", false, 1, '#EEE', -511, 511);
 
 let PPGPlotContainerRD = document.getElementById("PPGplotRD");
-let PPGPlotRD = new ScanningPlot(PPGPlotContainerRD, 5 * PPG_samplefreq, "#FF11EE", true);
+let PPGPlotRD = new ScanningPlot(PPGPlotContainerRD, 5 * PPG_samplefreq, "#FF11EE", false, 1, '#EEE', -511, 511);
 PPGDetailPanel.classList.add("invisible");
 
 let SPO2PlotContainer = document.getElementById("SPO2plot");
-let SPO2Plot = new MovingPlot(SPO2PlotContainer, 60, "#FF11EE", true, 3, '#EEE', 60, 100, ' %');
+let SPO2Plot = new MovingPlot(SPO2PlotContainer, 60, "#FF11EE", true, 3, '#EEE', SPO2_YLim_min, 100, ' %');
 
 let BPMtxt = document.getElementById("BPM");
 let SPO2txt = document.getElementById("SPO2");
@@ -147,7 +148,7 @@ ws.onmessage = function (e) {
                 SPO2 = SPO2perc.toFixed(1);
             }
             SPO2txt.textContent = SPO2;
-            let SPO2plotval = map(SPO2perc, SPO2minY, 100, 0, 1);
+            let SPO2plotval = map(SPO2perc, SPO2_YLim_min, 100, 0, 1);
             SPO2Plot.add(SPO2plotval);
             break;
         case message_type.PRESSURE_A:
