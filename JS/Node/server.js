@@ -315,8 +315,8 @@ function sendCSV(res, file, start, end) {
       if (end != null && end != 0 && endIndex == null && timestamp === end) {
         endIndex = i;
       }
-      console.log(timestamp + ' startIndex = ' + startIndex + ' endIndex = ' + endIndex +
-        ' start = ' + start + ' end = ' + end);
+      // console.log(timestamp + ' startIndex = ' + startIndex + ' endIndex = ' + endIndex +
+      //  ' start = ' + start + ' end = ' + end);
     }
     if (start == null || startIndex == null) {
       startIndex = 0;
@@ -325,7 +325,7 @@ function sendCSV(res, file, start, end) {
       endIndex = lines.length - 1;
     }
     if (end != null && end < parseInt(lines[0].split(',', 2)[0])) {
-      console.log('end < first enty');
+      // console.log('end < first enty');
       endIndex = -1;
     }
     res.writeHead(200, { 'Content-Type': 'text/csv' });
@@ -333,8 +333,8 @@ function sendCSV(res, file, start, end) {
       res.write(lines[i] + '\r\n');
     }
     res.end();
-    console.log(lines);
-    console.log(startIndex + ' - ' + endIndex);
+    // console.log(lines);
+    // console.log(startIndex + ' - ' + endIndex);
   });
 }
 //#endregion
