@@ -16,7 +16,7 @@ function main
 
     bytesPerMessage = 2;
     messagesPerSerialParse = 16;
-    
+
 %% Settings
 
     windowsize = 5;  % show 5 seconds of ECG and PPG data

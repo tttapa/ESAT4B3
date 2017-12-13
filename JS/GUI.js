@@ -26,12 +26,18 @@ function selectPanel() {
         activeButton = null;
         activePanel = mainpanel;
     }
+    reDrawCharts();
 }
-
-var ws = new WebSocket("ws://localhost:1425");
+console.log(window.location);
+let ws = new WebSocket(`ws://${window.location.hostname}:1425`);
 ws.binaryType = 'arraybuffer';
 ws.onopen = function (ev) {
     console.log("Connected");
+};
+ws.onerror = function (er) {
+    console.log(er);
+    document.getElementById("mainwindow").classList.add("offline");
+    setTimeout(function () { alert('Connection error.'); }, 100);
 };
 
 const message_type = {
@@ -75,13 +81,18 @@ let SPO2Plot = new MovingPlot(SPO2PlotContainer, 60, "#FF11EE", true);
 let BPMtxt = document.getElementById("BPM");
 let SPO2txt = document.getElementById("SPO2");
 
+let PPGAlarmInterval;
+
 ws.onmessage = function (e) {
+    clearTimeout(ws.timeOut);
+    ws.timeOut = setTimeout(disconnect, 500);
     let dataArray = new Uint16Array(e.data);
     // console.log(dataArray);  
     switch (dataArray[0]) {
         case message_type.ECG:
             for (i = 1; i < dataArray.length; i++) {
                 ECGPlot.add(dataArray[i] / 1023);
+                // ECGPlot.add((dataArray[i] / 1023)**2);
             }
             break;
         case message_type.PPG_IR:
@@ -105,8 +116,15 @@ ws.onmessage = function (e) {
             let SPO2perc = Math.round(dataArray[1] / 10) / 10;
             let SPO2 = '--,-';
             if (SPO2perc < SPO2limit) {
-                PPGButton.classList.add('alarm');
+                if (PPGAlarmInterval == null) {
+                    PPGButton.classList.add('alarm');
+                    PPGAlarmInterval = setInterval(function () {
+                        PPGButton.classList.toggle('alarm');
+                    }, 500);
+                }
             } else {
+                clearInterval(PPGAlarmInterval);
+                PPGAlarmInterval = null;
                 PPGButton.classList.remove('alarm');
             }
             if (dataArray[1] !== 0) {
@@ -130,7 +148,12 @@ ws.onmessage = function (e) {
     }
 };
 
-// Steps
+function disconnect() {
+    document.getElementById("mainwindow").classList.add("offline");
+    setTimeout(function () { alert('Connection lost.'); }, 1000);
+}
+
+// Steps, BPM & SPO2 plots
 
 google.charts.load("current", { packages: ["corechart", "bar", "gauge"] });
 google.charts.setOnLoadCallback(drawCharts);
@@ -143,16 +166,45 @@ function drawCharts() {
     let now = Math.floor(nowDate.getTime() / 1000);
 
 
-    let xmlhttp = new XMLHttpRequest();
-    xmlhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status == 200) {
-            let dataArray = parseCSV(this.responseText);
-            updateStepsChart(dataArray);
-        }
-    };
-    xmlhttp.open("GET", `http://localhost:8080/Steps.csv?start=${now - 24*60*60}&end=${now}`, true);
-    xmlhttp.send();
+    {
+        let xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                let dataArray = parseCSV(this.responseText);
+                updateStepsChart(dataArray);
+            }
+        };
+        xmlhttp.open("GET", `${window.location.origin}/Steps.csv?start=${now - 24 * 60 * 60}&end=${now}`, true);
+        xmlhttp.send();
+    }
+    {
+        let xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                let dataArray = parseCSV(this.responseText);
+                updateBPMChart(dataArray);
+            }
+        };
+        xmlhttp.open("GET", `${window.location.origin}/BPM.csv?start=${now - 24 * 60 * 60}&end=${now}`, true);
+        xmlhttp.send();
+    }
+    {
+        let BPMStatsRadioBtnTime = parseInt(document.querySelector('input[name = "timeframeBPM"]:checked').value);
+
+        let xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                let dataArray = parseCSV(this.responseText);
+                updateBPMChart(dataArray);
+            }
+        };
+        xmlhttp.open("GET", `/BPM.csv?start=${now - BPMStatsRadioBtnTime}&end=${now}`, true);
+        xmlhttp.send();
+    }
 }
+
+let BPMStats = document.getElementById("BPMStats");
+BPMStats.onchange = function () { drawCharts(); };
 
 function parseCSV(string) {
     var array = [];
@@ -182,8 +234,8 @@ let barChartOptions = {
             color: 'none',
             // count: 24
         },
-        minValue: new Date((1512990000) * 1000),
-        maxValue: new Date((1512990000 + 24 * 60 * 60) * 1000),
+        maxValue: new Date(),
+        minValue: new Date((new Date()).getTime() - 24 * 60 * 60 * 1000),
         // format: 'H:00',
 
     },
@@ -210,6 +262,10 @@ function updateStepsChart(array) {
 
     stepData.addRows(array);
 
+    let now = new Date();
+    barChartOptions.hAxis.maxValue = now;
+    barChartOptions.hAxis.minValue = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
     if (!barChart)
         barChart = new google.visualization.ColumnChart(document.getElementById('StepsBar'));
     barChart.draw(stepData, barChartOptions);
@@ -235,14 +291,74 @@ function updateStepsGauge(value) {
     stepGauge.draw(stepGaugeData, stepGaugeOptions);
 }
 
+let BPMChartOptions = {
+    // title: 'Number of steps per 15 minutes',
+    legend: { position: 'none' },
+    backgroundColor: 'none',
+    colors: ['turquoise'],
+    hAxis: {
+        // title: 'Time',
+        color: '#FFFFFF',
+        textStyle: {
+            color: '#FFFFFF'
+        },
+        gridlines: {
+            // color: 'none',
+            // count: 24
+        },
+        maxValue: new Date(),
+        minValue: new Date((new Date()).getTime() - 30 * 60 * 1000),
+        // format: 'H:00',
+
+    },
+    vAxis: {
+        title: 'BPM',
+        titleTextStyle: {
+            color: '#FFFFFF'
+        },
+        textStyle: {
+            color: '#FFFFFF'
+        },
+        gridlines: {
+            // color: '#333', 
+            // count: 4
+        }
+    }
+};
+
+let BPMChart;
+let BPMData;
+
+function updateBPMChart(array) {
+    BPMData = new google.visualization.DataTable();
+    BPMData.addColumn('datetime', 'Time');
+    BPMData.addColumn('number', 'Steps');
+
+    BPMData.addRows(array);
+
+    let BPMStatsRadioBtnTime = parseInt(document.querySelector('input[name = "timeframeBPM"]:checked').value);
+    let now = new Date();
+    BPMChartOptions.hAxis.maxValue = now;
+    BPMChartOptions.hAxis.minValue = new Date(now.getTime() - BPMStatsRadioBtnTime * 1000);
+
+    if (!BPMChart)
+        BPMChart = new google.visualization.LineChart(document.getElementById('BPMPlot'));
+    BPMChart.draw(BPMData, BPMChartOptions);
+}
+
 window.onresize = function (ev) {
     clearTimeout(window.resizeTimeout);
     window.resizeTimeout = setTimeout(function () {
-        barChart.clearChart();
-        barChart.draw(stepData, barChartOptions);
-        console.log('resize');
+        reDrawCharts();
     }, 200);
 };
+
+function reDrawCharts() {
+    barChart.clearChart();
+    barChart.draw(stepData, barChartOptions);
+    BPMChart.clearChart();
+    BPMChart.draw(BPMData, BPMChartOptions);
+}
 
 // Pressure 
 function HSVtoRGB(h, s, v) { // https://stackoverflow.com/questions/17242144/javascript-convert-hsb-hsv-color-to-rgb-accurately
@@ -282,3 +398,14 @@ function setFootPressure(foot, pressure) {
     footgrad.childNodes[3].setAttribute("stop-color", pressureToColor(pressure));
     footgrad.childNodes[1].setAttribute("stop-color", pressureToCenterColor(pressure));
 }
+
+
+let findMinuteInterval = setInterval(function () {
+    let now = new Date();
+    if (now.getSeconds() == 1) {
+        console.log('min');
+        drawCharts();
+        clearInterval(findMinuteInterval);
+        setInterval(drawCharts, 60 * 1000);
+    }
+}, 500);

@@ -48,7 +48,7 @@ function heartbeat() {
 const interval = setInterval(function ping() {
   wss.clients.forEach(function each(ws) {
     if (ws.isAlive === false) {
-      console.warn(ip + ' has been inactive for 10 seconds. Terminated.')
+      console.warn(ws.ip + ' has been inactive for 10 seconds. Terminated.')
       return ws.terminate();
     }
     ws.isAlive = false;
@@ -74,6 +74,7 @@ const ECGdownsampleamount = 2;
 const ECG_samplefreq = 360;
 const ECG_samplesPerFrame = Math.floor(ECG_samplefreq / ECGdownsampleamount / framerate);
 
+const PPG_samplefreq = 50;
 const PPG_samplesPerFrame = 2;
 
 console.log("Downsample by " + ECGdownsampleamount + " samples.");
@@ -93,6 +94,15 @@ let ECGsum = 0;
 const BPMCounter = require('./BPMCounter.js');
 const bpmctr = new BPMCounter.BPMCounter(ECG_samplefreq, 511, 30, 220);
 
+
+const Average = require('./Average.js');
+const BPMaverage = new Average.Average();
+const SPO2average = new Average.Average();
+
+const PPG_averageSecondsVRMS = 2;
+const SPO2_IR_MA = new Average.MovingAverage(PPG_samplefreq * PPG_averageSecondsVRMS);
+const SPO2_RD_MA = new Average.MovingAverage(PPG_samplefreq * PPG_averageSecondsVRMS);
+
 port.on('data', function (dataBuf) {
   for (i = 0; i < dataBuf.length; i++) {
     let message = receiver.receive(dataBuf[i]);
@@ -109,15 +119,19 @@ port.on('data', function (dataBuf) {
           if (bpmctr.run(message.value)) {
             let BPMbuf = new Uint16Array(2);
             BPMbuf[0] = Sender.message_type.BPM;
-            BPMbuf[1] = Math.round(bpmctr.getBPM() * 100);
+            let BPM = bpmctr.getBPM();
+            BPMbuf[1] = Math.round(BPM * 100);
             wss.broadcast(BPMbuf);
+            BPMaverage.add(BPM);
           }
           break;
         case Receiver.message_type.PPG_IR:
           PPGSenderIR.send(message.value);
+          SPO2_IR_MA.add(message.value*message.value); // Calculate Mean Square
           break;
         case Receiver.message_type.PPG_RED:
           PPGSenderRD.send(message.value);
+          SPO2_RD_MA.add(message.value*message.value); // Calculate Mean Square          
           break;
         case Receiver.message_type.PRESSURE_A:
           let pressbufA = new Uint16Array(2);
@@ -148,17 +162,57 @@ port.on('data', function (dataBuf) {
   }
 });
 
+/* -----------------------------------MINUTE-INTERVAL----------------------------------- */
+
+let findMinuteInterval = setInterval(function() {
+  let now = new Date();
+  if (now.getSeconds() == 0) {
+      console.log('min');
+      everyMinute();
+      clearInterval(findMinuteInterval);
+      setInterval(everyMinute, 60*1000);
+  }
+}, 500);
+
+function everyMinute() {
+  let now = new Date();  
+  appendRecord('SPO2.csv',now, SPO2average.getAverage());
+  appendRecord('BPM.csv',now, BPMaverage.getAverage());
+  SPO2average.reset();
+  BPMaverage.reset();
+  if (now.getMinutes() % 15 === 0) {
+    every15Minutes(now);
+  }
+}
+
+function every15Minutes(now) {
+  // saveSteps(now, StepCounter.getSteps());
+}
+
+const datafolder = 'Data';
+
+function appendRecord(file, now, value) {
+  fs.appendFile(path.join(__dirname, datafolder, file), new Buffer(`${Math.round(now.getTime()/1000)},${value}\r\n`), function (err) {
+    if (err) {
+      return console.log(err);
+    }
+    console.log(file + ' saved');
+  });
+}
+
 /* -----------------------------------SPO2-Calculation----------------------------------- */
 
 let SPO2Interval = setInterval(function () {
   let SPO2buf = new Uint16Array(2);
   SPO2buf[0] = Sender.message_type.SPO2;
-  SPO2buf[1] = Math.round(getSPO2() * 100);
+  let SPO2 = getSPO2();
+  SPO2buf[1] = Math.round(SPO2 * 100);
+  SPO2average.add(SPO2);
   wss.broadcast(SPO2buf);
 }, 1000);
 
 function getSPO2() {
-  return 96 + 2 * Math.random();
+  return 60 + 2 * Math.random();
 }
 
 /* -----------------------------------HTTP-SERVER----------------------------------- */
@@ -237,9 +291,6 @@ function sendFile(res, file) {
   });
 }
 
-
-const datafolder = 'Data';
-
 function sendCSV(res, file, start, end) {
   fs.readFile(path.join(__dirname, datafolder, file), 'utf8', function (err, data) {
     if (err) {
@@ -271,7 +322,7 @@ function sendCSV(res, file, start, end) {
       startIndex = 0;
     }
     if (end == null || endIndex == null) {
-      endIndex = lines.length;
+      endIndex = lines.length - 1;
     }
     if (end != null && end < parseInt(lines[0].split(',', 2)[0])) {
       console.log('end < first enty');

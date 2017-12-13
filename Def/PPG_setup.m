@@ -22,6 +22,7 @@ function [settings] = PPG_setup(fs)
     fc_highpass = 0.5;   
 
     % Filter coefficients
+
     settings.b_highpass = [1 -1];
     settings.a_highpass = [1 -0.995];
     

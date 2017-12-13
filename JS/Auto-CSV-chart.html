@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+</head>
+
+<body style="background-color: #333;">
+    <div id="StepsBar" style="width: 100%; height: 300px;"></div>
+    <div id="BPMHistory">
+        <form action="" onchange="drawCharts()">
+            <fieldset>
+                <legend>History</legend>
+                <input type="radio" name="timeframeBPM" value="1800" checked>30 minutes
+                <br>
+                <input type="radio" name="timeframeBPM" value="7200">2 hours
+                <br>
+                <input type="radio" name="timeframeBPM" value="21600">6 hours
+                <br>
+            </fieldset>
+        </form>
+    </div>
+</body>
+<script type="text/javascript">
+    google.charts.load('current', { 'packages': ['corechart'] });
+    google.charts.setOnLoadCallback(drawCharts);
+
+    function drawCharts() {
+        if (google.visualization == undefined) {
+            return;
+        }
+        let nowDate = new Date();
+        let now = Math.floor(nowDate.getTime() / 1000);
+        {
+            let BPMStatsRadioBtnTime = parseInt(document.querySelector('input[name = "timeframeBPM"]:checked').value);
+
+            let xmlhttp = new XMLHttpRequest();
+            xmlhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    let dataArray = parseCSV(this.responseText);
+                    updateBPMChart(dataArray);
+                }
+            };
+            xmlhttp.open("GET", `/BPM.csv?start=${now - BPMStatsRadioBtnTime}&end=${now}`, true);
+            xmlhttp.send();
+        }
+    }
+
+    function parseCSV(string) {
+        var array = [];
+        var lines = string.split("\n");
+        for (var i = 0; i < lines.length; i++) {
+            var data = lines[i].split(",", 2);
+            data[0] = new Date(parseInt(data[0]) * 1000);
+            data[1] = parseFloat(data[1]);
+            array.push(data);
+        }
+        return array;
+    }
+
+    let BPMChartOptions = {
+        // title: 'Number of steps per 15 minutes',
+        legend: { position: 'none' },
+        backgroundColor: 'none',
+        colors: ['turquoise'],
+        hAxis: {
+            // title: 'Time',
+            color: '#FFFFFF',
+            textStyle: {
+                color: '#FFFFFF'
+            },
+            gridlines: {
+                // color: 'none',
+                // count: 24
+            },
+            maxValue: new Date(),
+            minValue: new Date((new Date()).getTime() - 30 * 60 * 1000),
+            // format: 'H:00',
+
+        },
+        vAxis: {
+            title: 'BPM',
+            titleTextStyle: {
+                color: '#FFFFFF'
+            },
+            textStyle: {
+                color: '#FFFFFF'
+            },
+            gridlines: {
+                // color: '#333', 
+                // count: 4
+            }
+        }
+
+    };
+
+    let BPMChart;
+    let BPMData;
+
+    function updateBPMChart(array) {
+        BPMData = new google.visualization.DataTable();
+        BPMData.addColumn('datetime', 'Time');
+        BPMData.addColumn('number', 'Steps');
+
+        BPMData.addRows(array);
+
+        let BPMStatsRadioBtnTime = parseInt(document.querySelector('input[name = "timeframeBPM"]:checked').value);
+        let now = new Date();
+        BPMChartOptions.hAxis.maxValue = now;
+        BPMChartOptions.hAxis.minValue = new Date(now.getTime() - BPMStatsRadioBtnTime * 1000);
+
+        if (!BPMChart)
+            BPMChart = new google.visualization.LineChart(document.getElementById('StepsBar'));
+        BPMChart.draw(BPMData, BPMChartOptions);
+    }
+</script>
+
+</html>

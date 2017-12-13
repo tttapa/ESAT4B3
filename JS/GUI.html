@@ -2,6 +2,7 @@
 <html>
 
 <head>
+    <link rel="icon" href="favicon.png">
     <link rel="stylesheet" type="text/css" href="Style/style.css">
     <link href="Style/roboto.css" rel='stylesheet' type='text/css'>
     <link href="Style/icon.css" rel='stylesheet' type='text/css'>
@@ -12,19 +13,19 @@
     <header>
         HealthVision
     </header>
-    <div>
+    <div id="mainwindow">
         <nav>
             <div id="ECGButton" class="mainbutton ECG" data-panel="ECGDetail">
                 <div>ECG</div>
-                <div><span id="BPM">--,-</span>&nbsp;BPM</div>
+                <div><span id="BPM" class="buttonvalue">--,-</span><span class="buttonunit">&nbsp;BPM</div>
             </div>
             <div id="PPGButton" class="mainbutton PPG" data-panel="PPGDetail">
                 <div>SPO<sub>2</sub></div>
-                <div><span id="SPO2">--,-</span>&nbsp;%</div>
+                <div><span id="SPO2" class="buttonvalue">--,-</span><span class="buttonunit">&nbsp;%</span></div>
             </div>
             <div id="StepsButton" class="mainbutton Steps" data-panel="StepsDetail">
                 <div>Steps</div>
-                <div id="Steps">-</div>
+                <div id="Steps" class="buttonvalue">-</div>
             </div>
         </nav>
         <article>
@@ -34,65 +35,110 @@
                 <div id="StepsBar" class="Steps"></div>
             </div>
             <div id="ECGDetail" class="invisible ECG">
-                <div id="ECGStats ECG"></div>
-                <div id="BPMHistory ECG"></div>
+                <div id="ECGStats" class="flexRow">
+                    <div class="flexCol statspage">
+                        <div id="BPMStats" class="statfield">
+                            <h3>History</h3>
+                            <label>
+                                <input type="radio" name="timeframeBPM" value="1800" checked>30 minutes</label>
+                            <br>
+                            <label>
+                                <input type="radio" name="timeframeBPM" value="7200">2 hours</label>
+                            <br>
+                            <label>
+                                <input type="radio" name="timeframeBPM" value="21600">6 hours</label>
+                            <br>
+                        </div>
+                        <div class="statfield">
+                            <h3>Statistics</h3>
+                            <ul>
+                                <li>Average: <span id="BPMAvg">-</span></li>
+                                <li>Minimum: <span id="BPMMin">-</span></li>
+                                <li>Maximum: <span id="BPMMax">-</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div id="BPMGauge" class="gauge"></div>
+                </div>
+                <div id="BPMPlot"></div>
             </div>
             <div id="PPGDetail" class="invisible PPG">
                 <div id="PPGStats">
                     <div id="PPGplotIR" class="scanningplot PPG"></div>
-                    <div id="PPGplotRD" class="scanningplot PPG"></div>                        
+                    <div id="PPGplotRD" class="scanningplot PPG"></div>
                 </div>
-                <div id="SPO2History">History</div>
+                <div id="SPO2History">
+                    <form action="/action_page.php">
+                        <fieldset>
+                            <h3>History</h3>
+                            <input type="radio" name="timeframeSPO2" value="1800">30 minutes
+                            <br>
+                            <input type="radio" name="timeframeSPO2" value="7200">2 hours
+                            <br>
+                            <input type="radio" name="timeframeSPO2" value="21600">6 hours
+                            <br>
+                        </fieldset>
+                    </form>
+                </div>
             </div>
             <div id="StepsDetail" class="invisible Steps">
                 <div id="StepGoal">
                     <div id="StepsGauge"></div>
                 </div>
-                <div id="Pressure Steps"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 673.027 626.167">
-                    <defs>
-                      <radialGradient id="feetgrad1" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                        <stop offset="0%" stop-color="rgb(255,140,160)"/>
-                        <stop offset="100%" stop-color="red"/>
-                      </radialGradient>
-                      <radialGradient id="feetgrad2" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                        <stop offset="0%" stop-color="rgb(255,140,160)"/>
-                        <stop offset="100%" stop-color="red"/>
-                      </radialGradient>
-                      <radialGradient id="feetgrad3" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                        <stop offset="0%" stop-color="rgb(255,140,160)"/>
-                        <stop offset="100%" stop-color="red"/>
-                      </radialGradient>
-                      <radialGradient id="feetgrad4" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                        <stop offset="0%" stop-color="rgb(255,140,160)"/>
-                        <stop offset="100%" stop-color="red"/>
-                      </radialGradient>
-                      <filter id="filter" height="130%" width="130%">
-                        <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
-                        <feOffset dx="2" dy="2" result="offsetblur"/>
-                        <feComponentTransfer>
-                          <feFuncA slope="0.5" type="linear"/>
-                        </feComponentTransfer>
-                        <feMerge>
-                          <feMergeNode/>
-                          <feMergeNode in="SourceGraphic"/>
-                        </feMerge>
-                      </filter>
-                    </defs>
-                    <g fill="#fff" stroke="#000">
-                      <path d="M69.783 300.528c5.792 14.343 14.676 33.126 32.853 98.088 11.617 41.516 17.519 112.309 30.606 152.812 13.087 40.503 60.89 77.497 94.851 74.391 27.56-2.52 46.16-13.574 58.843-37.023 8.51-15.735 13.087-41.855 9.098-74.15-3.988-32.294-30.09-78.577-33.73-104.812-4.41-31.804-5.86-67.044-.803-100.897 3.15-21.091 11.45-35.526 15.108-66.975 3.954-33.977 5.067-67.113.373-86.93-5.846-24.68-19.863-32.6-38.899-41.112-46.86-20.957-163.93 20.851-192.185 77.724-28.254 56.872 18.092 94.542 23.885 108.884zM275.48 52.857c0 29.192-16.79 52.857-37.5 52.857s-37.5-23.665-37.5-52.857S217.27 0 237.98 0s37.5 23.665 37.5 52.857zm-81.786 7.182c2.369 20.717-7.626 38.873-22.324 40.553-14.697 1.68-28.532-13.75-30.9-34.468-2.37-20.716 7.625-38.873 22.323-40.553 14.697-1.68 28.532 13.751 30.9 34.468z"/>
-                      <path d="M135.853 78.932c5.422 19.856-1.603 39.07-15.69 42.917-14.086 3.846-29.901-9.132-35.323-28.987-5.422-19.856 1.603-39.07 15.69-42.917 14.087-3.847 29.901 9.131 35.323 28.987zm-50.829 27.657c6.882 17.285 2.52 35.255-9.744 40.138-12.263 4.882-27.783-5.173-34.665-22.458-6.881-17.285-2.519-35.256 9.745-40.138 12.263-4.882 27.783 5.173 34.664 22.458zM40.4 142.069c8.427 13.482 7.504 29.257-2.061 35.236-9.565 5.978-24.15-.105-32.576-13.587-8.427-13.482-7.504-29.257 2.06-35.236 9.566-5.978 24.15.105 32.577 13.587zM603.245 300.693c-5.793 14.343-14.677 33.126-32.854 98.088-11.617 41.516-17.519 112.309-30.606 152.812-13.087 40.503-60.89 77.497-94.851 74.391-27.56-2.52-46.16-13.574-58.843-37.023-8.51-15.735-13.086-41.855-9.098-74.15 3.989-32.294 30.09-78.577 33.73-104.812 4.41-31.804 5.86-67.044.803-100.897-3.15-21.091-11.45-35.526-15.108-66.975-3.953-33.977-5.066-67.113-.373-86.93 5.846-24.68 19.863-32.599 38.899-41.112 46.86-20.957 163.931 20.851 192.185 77.724 28.255 56.872-18.092 94.542-23.884 108.884zM397.547 53.022c0 29.192 16.79 52.857 37.5 52.857 20.711 0 37.5-23.665 37.5-52.857S455.758.165 435.047.165c-20.71 0-37.5 23.665-37.5 52.857zm81.786 7.182c-2.368 20.717 7.626 38.873 22.324 40.554 14.697 1.68 28.532-13.752 30.9-34.468 2.37-20.717-7.625-38.873-22.323-40.554-14.697-1.68-28.532 13.751-30.9 34.468z"/>
-                      <path d="M537.174 79.097c-5.422 19.856 1.603 39.07 15.69 42.917 14.086 3.847 29.901-9.132 35.323-28.987 5.422-19.856-1.603-39.07-15.69-42.917-14.086-3.847-29.901 9.132-35.323 28.987zm50.829 27.657c-6.882 17.285-2.52 35.256 9.744 40.138 12.263 4.882 27.783-5.173 34.665-22.458 6.881-17.285 2.519-35.256-9.744-40.138-12.264-4.882-27.784 5.173-34.665 22.458zm44.624 35.48c-8.426 13.482-7.504 29.258 2.061 35.236 9.565 5.978 24.15-.105 32.577-13.587 8.426-13.482 7.503-29.257-2.062-35.236-9.564-5.978-24.15.105-32.576 13.587z"/>
-                    </g>
-                    <circle cx="153.477" cy="185.316" r="25" fill="url(#feetgrad1)" filter="url(#filter)" transform="matrix(2 0 0 2 -146.953 -194.464)"/>
-                    <circle cx="153.477" cy="185.316" r="25" fill="url(#feetgrad2)" filter="url(#filter)" transform="matrix(2 0 0 2 -86.953 177.536)"/>
-                    <circle cx="153.477" cy="185.316" r="25" fill="url(#feetgrad3)" filter="url(#filter)" transform="matrix(2 0 0 2 207.074 -194.464)"/>
-                    <circle cx="153.477" cy="185.316" r="25" fill="url(#feetgrad4)" filter="url(#filter)" transform="matrix(2 0 0 2 147.074 177.536)"/>
-                  </svg></div>
+                <div id="Pressure Steps">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 673.027 626.167">
+                        <defs>
+                            <radialGradient id="feetgrad1" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                                <stop offset="0%" stop-color="rgb(255,140,160)" />
+                                <stop offset="100%" stop-color="red" />
+                            </radialGradient>
+                            <radialGradient id="feetgrad2" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                                <stop offset="0%" stop-color="rgb(255,140,160)" />
+                                <stop offset="100%" stop-color="red" />
+                            </radialGradient>
+                            <radialGradient id="feetgrad3" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                                <stop offset="0%" stop-color="rgb(255,140,160)" />
+                                <stop offset="100%" stop-color="red" />
+                            </radialGradient>
+                            <radialGradient id="feetgrad4" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                                <stop offset="0%" stop-color="rgb(255,140,160)" />
+                                <stop offset="100%" stop-color="red" />
+                            </radialGradient>
+                            <filter id="filter" height="130%" width="130%">
+                                <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
+                                <feOffset dx="2" dy="2" result="offsetblur" />
+                                <feComponentTransfer>
+                                    <feFuncA slope="0.5" type="linear" />
+                                </feComponentTransfer>
+                                <feMerge>
+                                    <feMergeNode/>
+                                    <feMergeNode in="SourceGraphic" />
+                                </feMerge>
+                            </filter>
+                        </defs>
+                        <g fill="#fff" stroke="#000">
+                            <path d="M69.783 300.528c5.792 14.343 14.676 33.126 32.853 98.088 11.617 41.516 17.519 112.309 30.606 152.812 13.087 40.503 60.89 77.497 94.851 74.391 27.56-2.52 46.16-13.574 58.843-37.023 8.51-15.735 13.087-41.855 9.098-74.15-3.988-32.294-30.09-78.577-33.73-104.812-4.41-31.804-5.86-67.044-.803-100.897 3.15-21.091 11.45-35.526 15.108-66.975 3.954-33.977 5.067-67.113.373-86.93-5.846-24.68-19.863-32.6-38.899-41.112-46.86-20.957-163.93 20.851-192.185 77.724-28.254 56.872 18.092 94.542 23.885 108.884zM275.48 52.857c0 29.192-16.79 52.857-37.5 52.857s-37.5-23.665-37.5-52.857S217.27 0 237.98 0s37.5 23.665 37.5 52.857zm-81.786 7.182c2.369 20.717-7.626 38.873-22.324 40.553-14.697 1.68-28.532-13.75-30.9-34.468-2.37-20.716 7.625-38.873 22.323-40.553 14.697-1.68 28.532 13.751 30.9 34.468z"
+                            />
+                            <path d="M135.853 78.932c5.422 19.856-1.603 39.07-15.69 42.917-14.086 3.846-29.901-9.132-35.323-28.987-5.422-19.856 1.603-39.07 15.69-42.917 14.087-3.847 29.901 9.131 35.323 28.987zm-50.829 27.657c6.882 17.285 2.52 35.255-9.744 40.138-12.263 4.882-27.783-5.173-34.665-22.458-6.881-17.285-2.519-35.256 9.745-40.138 12.263-4.882 27.783 5.173 34.664 22.458zM40.4 142.069c8.427 13.482 7.504 29.257-2.061 35.236-9.565 5.978-24.15-.105-32.576-13.587-8.427-13.482-7.504-29.257 2.06-35.236 9.566-5.978 24.15.105 32.577 13.587zM603.245 300.693c-5.793 14.343-14.677 33.126-32.854 98.088-11.617 41.516-17.519 112.309-30.606 152.812-13.087 40.503-60.89 77.497-94.851 74.391-27.56-2.52-46.16-13.574-58.843-37.023-8.51-15.735-13.086-41.855-9.098-74.15 3.989-32.294 30.09-78.577 33.73-104.812 4.41-31.804 5.86-67.044.803-100.897-3.15-21.091-11.45-35.526-15.108-66.975-3.953-33.977-5.066-67.113-.373-86.93 5.846-24.68 19.863-32.599 38.899-41.112 46.86-20.957 163.931 20.851 192.185 77.724 28.255 56.872-18.092 94.542-23.884 108.884zM397.547 53.022c0 29.192 16.79 52.857 37.5 52.857 20.711 0 37.5-23.665 37.5-52.857S455.758.165 435.047.165c-20.71 0-37.5 23.665-37.5 52.857zm81.786 7.182c-2.368 20.717 7.626 38.873 22.324 40.554 14.697 1.68 28.532-13.752 30.9-34.468 2.37-20.717-7.625-38.873-22.323-40.554-14.697-1.68-28.532 13.751-30.9 34.468z"
+                            />
+                            <path d="M537.174 79.097c-5.422 19.856 1.603 39.07 15.69 42.917 14.086 3.847 29.901-9.132 35.323-28.987 5.422-19.856-1.603-39.07-15.69-42.917-14.086-3.847-29.901 9.132-35.323 28.987zm50.829 27.657c-6.882 17.285-2.52 35.256 9.744 40.138 12.263 4.882 27.783-5.173 34.665-22.458 6.881-17.285 2.519-35.256-9.744-40.138-12.264-4.882-27.784 5.173-34.665 22.458zm44.624 35.48c-8.426 13.482-7.504 29.258 2.061 35.236 9.565 5.978 24.15-.105 32.577-13.587 8.426-13.482 7.503-29.257-2.062-35.236-9.564-5.978-24.15.105-32.576 13.587z"
+                            />
+                        </g>
+                        <circle cx="153.477" cy="190" r="25" fill="url(#feetgrad1)" filter="url(#filter)" transform="matrix(2 0 0 2 -146.953 -194.464)"
+                        />
+                        <circle cx="153.477" cy="185.316" r="25" fill="url(#feetgrad2)" filter="url(#filter)" transform="matrix(2 0 0 2 -86.953 177.536)"
+                        />
+                        <circle cx="153.477" cy="190" r="25" fill="url(#feetgrad3)" filter="url(#filter)" transform="matrix(2 0 0 2 207.074 -194.464)"
+                        />
+                        <circle cx="153.477" cy="185.316" r="25" fill="url(#feetgrad4)" filter="url(#filter)" transform="matrix(2 0 0 2 147.074 177.536)"
+                        />
+                    </svg>
+                </div>
             </div>
         </article>
     </div>
-    <script src="Plot.js"></script>        
-    <script src="GUI.js"></script>    
+    <script src="Plot.js"></script>
+    <script src="GUI.js"></script>
 </body>
 
 </html>
