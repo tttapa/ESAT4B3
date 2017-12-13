@@ -144,6 +144,7 @@ div#PPGplotIR, div#PPGplotRD {
 
 input[type="radio"] {
     margin-right: 1em;
+    margin-left: 1em;
 }
 
 .flexCol {

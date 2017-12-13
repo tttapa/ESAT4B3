@@ -85,7 +85,7 @@ let PPGAlarmInterval;
 
 ws.onmessage = function (e) {
     clearTimeout(ws.timeOut);
-    ws.timeOut = setTimeout(disconnect, 500);
+    ws.timeOut = setTimeout(disconnect, 1000);
     let dataArray = new Uint16Array(e.data);
     // console.log(dataArray);  
     switch (dataArray[0]) {
@@ -170,22 +170,11 @@ function drawCharts() {
         let xmlhttp = new XMLHttpRequest();
         xmlhttp.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
-                let dataArray = parseCSV(this.responseText);
+                let dataArray = parseCSV(this.responseText).data;
                 updateStepsChart(dataArray);
             }
         };
         xmlhttp.open("GET", `${window.location.origin}/Steps.csv?start=${now - 24 * 60 * 60}&end=${now}`, true);
-        xmlhttp.send();
-    }
-    {
-        let xmlhttp = new XMLHttpRequest();
-        xmlhttp.onreadystatechange = function () {
-            if (this.readyState == 4 && this.status == 200) {
-                let dataArray = parseCSV(this.responseText);
-                updateBPMChart(dataArray);
-            }
-        };
-        xmlhttp.open("GET", `${window.location.origin}/BPM.csv?start=${now - 24 * 60 * 60}&end=${now}`, true);
         xmlhttp.send();
     }
     {
@@ -194,8 +183,13 @@ function drawCharts() {
         let xmlhttp = new XMLHttpRequest();
         xmlhttp.onreadystatechange = function () {
             if (this.readyState == 4 && this.status == 200) {
-                let dataArray = parseCSV(this.responseText);
-                updateBPMChart(dataArray);
+                let parsed = parseCSV(this.responseText);
+
+                document.getElementById("BPMAvg").textContent = parsed.avg;
+                document.getElementById("BPMMin").textContent = parsed.min;
+                document.getElementById("BPMMax").textContent = parsed.max;
+
+                updateBPMChart(parsed.data);
             }
         };
         xmlhttp.open("GET", `/BPM.csv?start=${now - BPMStatsRadioBtnTime}&end=${now}`, true);
@@ -208,14 +202,29 @@ BPMStats.onchange = function () { drawCharts(); };
 
 function parseCSV(string) {
     var array = [];
+    var max = 0;
+    var min = 65535; // I'm lazy
+    let sum = 0.0;
     var lines = string.split("\n");
     for (var i = 0; i < lines.length; i++) {
         var data = lines[i].split(",", 2);
         data[0] = new Date(parseInt(data[0]) * 1000);
         data[1] = parseFloat(data[1]);
+        if (isNaN(data[1]))
+            continue;
+        if (data[1] > max)
+            max = data[1];
+        if (data[1] < min)
+            min = data[1];
+        sum += data[1];
         array.push(data);
     }
-    return array;
+    ret = new Object();
+    ret.data = array;
+    ret.max = (Math.round(max * 10) / 10).toFixed(1);
+    ret.min = (Math.round(min * 10) / 10).toFixed(1);;
+    ret.avg = (Math.round(sum * 10 / array.length) / 10).toFixed(1);;
+    return ret;
 }
 
 let barChartOptions = {
