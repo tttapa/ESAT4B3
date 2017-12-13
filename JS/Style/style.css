@@ -135,11 +135,11 @@ div#PPGplotIR, div#PPGplotRD {
 }
 
 .statfield {
-    font-size: 1.4em;
-    height: 100%;
-    margin: 1em;
+    font-size: 1.2em;
+    margin: 0.5em;
     box-sizing: border-box;
-    min-width: 10em;    
+    min-width: 10em;
+    flex-grow: 1;
 }
 
 input[type="radio"] {
@@ -164,8 +164,10 @@ input[type="radio"] {
 }
 
 .gauge {
-    flex-grow: 1;
     height: 100%;
+    margin: auto;
+    padding: 2em;
+    min-width: 30%;
 }
 
 h3 {
@@ -179,4 +181,12 @@ h3 {
     padding: 1em;
     margin: 0.7em;
     box-sizing: border-box;
+    height: 95%;
+    flex-wrap: wrap;
+    overflow: hidden;
+}
+
+#SPO2Plot {
+    flex-shrink: 1;
+    width: 80%;
 }

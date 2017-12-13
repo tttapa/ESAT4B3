@@ -64,22 +64,34 @@
                 <div id="BPMPlot"></div>
             </div>
             <div id="PPGDetail" class="invisible PPG">
-                <div id="PPGStats">
+                <div id="PPGPlots">
                     <div id="PPGplotIR" class="scanningplot PPG"></div>
                     <div id="PPGplotRD" class="scanningplot PPG"></div>
                 </div>
-                <div id="SPO2History">
-                    <form action="/action_page.php">
-                        <fieldset>
+                <div id="PPGStats" class="flexRow">
+                    <div class="flexCol statspage">
+                        <div id="SPO2Stats" class="statfield">
                             <h3>History</h3>
-                            <input type="radio" name="timeframeSPO2" value="1800">30 minutes
+                            <label>
+                                <input type="radio" name="timeframeSPO2" value="1800" checked>30 minutes</label>
                             <br>
-                            <input type="radio" name="timeframeSPO2" value="7200">2 hours
+                            <label>
+                                <input type="radio" name="timeframeSPO2" value="7200">2 hours</label>
                             <br>
-                            <input type="radio" name="timeframeSPO2" value="21600">6 hours
+                            <label>
+                                <input type="radio" name="timeframeSPO2" value="21600">6 hours</label>
                             <br>
-                        </fieldset>
-                    </form>
+                        </div>
+                        <div class="statfield">
+                            <h3>Statistics</h3>
+                            <ul>
+                                <li>Average: <span id="SPO2Avg">-</span></li>
+                                <li>Minimum: <span id="SPO2Min">-</span></li>
+                                <li>Maximum: <span id="SPO2Max">-</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div id="SPO2Plot"></div>
                 </div>
             </div>
             <div id="StepsDetail" class="invisible Steps">

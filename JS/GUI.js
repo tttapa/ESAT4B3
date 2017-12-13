@@ -106,11 +106,13 @@ ws.onmessage = function (e) {
             }
             break;
         case message_type.BPM:
-            let BPM = '--,-';
-            if (dataArray[1] !== 0) {
-                BPM = (Math.round(dataArray[1] / 10) / 10).toFixed(1);
+            let BPMtextval = '--,-';
+            let BPM = Math.round(dataArray[1] / 10) / 10;
+            if (BPM !== 0) {
+                BPMtextval = BPM.toFixed(1);
             }
-            BPMtxt.textContent = BPM;
+            updateBPMsGauge(BPM);
+            BPMtxt.textContent = BPMtextval;
             break;
         case message_type.SPO2:
             let SPO2perc = Math.round(dataArray[1] / 10) / 10;
@@ -195,10 +197,31 @@ function drawCharts() {
         xmlhttp.open("GET", `/BPM.csv?start=${now - BPMStatsRadioBtnTime}&end=${now}`, true);
         xmlhttp.send();
     }
+    {
+        let SPO02StatsRadioBtnTime = parseInt(document.querySelector('input[name = "timeframeSPO2"]:checked').value);
+
+        let xmlhttp = new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                let parsed = parseCSV(this.responseText);
+
+                document.getElementById("SPO2Avg").textContent = parsed.avg;
+                document.getElementById("SPO2Min").textContent = parsed.min;
+                document.getElementById("SPO2Max").textContent = parsed.max;
+
+                updateSPO2Chart(parsed.data);
+            }
+        };
+        xmlhttp.open("GET", `/SPO2.csv?start=${now - SPO02StatsRadioBtnTime}&end=${now}`, true);
+        xmlhttp.send();
+    }
 }
 
 let BPMStats = document.getElementById("BPMStats");
 BPMStats.onchange = function () { drawCharts(); };
+
+let SPO2Stats = document.getElementById("SPO2Stats");
+SPO2Stats.onchange = function () { drawCharts(); };
 
 function parseCSV(string) {
     var array = [];
@@ -300,6 +323,35 @@ function updateStepsGauge(value) {
     stepGauge.draw(stepGaugeData, stepGaugeOptions);
 }
 
+let BPMGaugeOptions = {
+    // width: 400, height: 120,
+    yellowFrom: 30, yellowTo: 60,
+    minorTicks: 5,
+    min: 30,
+    max: 220,
+    yellowColor: 'blue',
+    greenFrom: 60, greenTo: 200,
+    redFrom: 200, redTo: 220,
+    forceIFrame: true,
+};
+
+let BPMGauge;
+let BPMGaugeData;
+
+function updateBPMsGauge(value) {
+    if (value != null) {
+        BPMGaugeData = google.visualization.arrayToDataTable([
+            ['Label', 'Value'],
+            ['BPM', value],
+        ]);
+    }
+
+    if (!BPMGauge)
+        BPMGauge = new google.visualization.Gauge(document.getElementById('BPMGauge'));
+    if (BPMGaugeData)
+        BPMGauge.draw(BPMGaugeData, BPMGaugeOptions);
+}
+
 let BPMChartOptions = {
     // title: 'Number of steps per 15 minutes',
     legend: { position: 'none' },
@@ -355,6 +407,61 @@ function updateBPMChart(array) {
     BPMChart.draw(BPMData, BPMChartOptions);
 }
 
+let SPO2ChartOptions = {
+    // title: 'Number of steps per 15 minutes',
+    legend: { position: 'none' },
+    backgroundColor: 'none',
+    colors: ['#FF55EE'],
+    hAxis: {
+        // title: 'Time',
+        color: '#FFFFFF',
+        textStyle: {
+            color: '#FFFFFF'
+        },
+        gridlines: {
+            // color: 'none',
+            // count: 24
+        },
+        maxValue: new Date(),
+        minValue: new Date((new Date()).getTime() - 30 * 60 * 1000),
+        // format: 'H:00',
+
+    },
+    vAxis: {
+        title: 'SPO2',
+        titleTextStyle: {
+            color: '#FFFFFF'
+        },
+        textStyle: {
+            color: '#FFFFFF'
+        },
+        gridlines: {
+            // color: '#333', 
+            // count: 4
+        }
+    }
+};
+
+let SPO2Chart;
+let SPO2Data;
+
+function updateSPO2Chart(array) {
+    SPO2Data = new google.visualization.DataTable();
+    SPO2Data.addColumn('datetime', 'Time');
+    SPO2Data.addColumn('number', 'Steps');
+
+    SPO2Data.addRows(array);
+
+    let SPO2StatsRadioBtnTime = parseInt(document.querySelector('input[name = "timeframeSPO2"]:checked').value);
+    let now = new Date();
+    SPO2ChartOptions.hAxis.maxValue = now;
+    SPO2ChartOptions.hAxis.minValue = new Date(now.getTime() - SPO2StatsRadioBtnTime * 1000);
+
+    if (!SPO2Chart)
+        SPO2Chart = new google.visualization.LineChart(document.getElementById('SPO2Plot'));
+    SPO2Chart.draw(SPO2Data, SPO2ChartOptions);
+}
+
 window.onresize = function (ev) {
     clearTimeout(window.resizeTimeout);
     window.resizeTimeout = setTimeout(function () {
@@ -367,6 +474,9 @@ function reDrawCharts() {
     barChart.draw(stepData, barChartOptions);
     BPMChart.clearChart();
     BPMChart.draw(BPMData, BPMChartOptions);
+    SPO2Chart.clearChart();
+    SPO2Chart.draw(SPO2Data, SPO2ChartOptions);
+    updateBPMsGauge(null);
 }
 
 // Pressure 
