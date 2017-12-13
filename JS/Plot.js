@@ -89,7 +89,7 @@ class ScanningPlot {
 };
 
 class MovingPlot {
-    constructor(parent, len, color, dots = false, lines = 0, linecolor = 'white', min = 0, max = 100) {
+    constructor(parent, len, color, dots = false, lines = 0, linecolor = 'white', min = 0, max = 100, unit = '') {
         this.len = len;
         this.color = color;
         this.svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -127,7 +127,7 @@ class MovingPlot {
             text.setAttribute("x", 5);
             text.setAttribute("y", this.height * (1 - ((i + 1) / (lines + 1))) - 2);
             text.setAttribute("fill", linecolor);
-            text.textContent = value;
+            text.textContent = value + unit;
             this.svg.appendChild(text);
         }
     }
