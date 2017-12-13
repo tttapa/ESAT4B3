@@ -103,6 +103,12 @@ const PPG_averageSecondsVRMS = 2;
 const SPO2_IR_MA = new Average.MovingAverage(PPG_samplefreq * PPG_averageSecondsVRMS);
 const SPO2_RD_MA = new Average.MovingAverage(PPG_samplefreq * PPG_averageSecondsVRMS);
 
+const StepCounter = require('./StepCounter.js');
+const LeftStepCounter = new StepCounter.StepCounter();
+const RightStepCounter = new StepCounter.StepCounter();
+
+let stepsToday = 0;
+
 port.on('data', function (dataBuf) {
   for (i = 0; i < dataBuf.length; i++) {
     let message = receiver.receive(dataBuf[i]);
@@ -138,6 +144,9 @@ port.on('data', function (dataBuf) {
           pressbufA[0] = Sender.message_type.PRESSURE_A;
           pressbufA[1] = message.value;
           wss.broadcast(pressbufA);
+          if (LeftStepCounter.add(message.value)) {
+            sendSteps();
+          }
           break;
         case Receiver.message_type.PRESSURE_B:
           let pressbufB = new Uint16Array(2);
@@ -150,6 +159,9 @@ port.on('data', function (dataBuf) {
           pressbufC[0] = Sender.message_type.PRESSURE_C;
           pressbufC[1] = message.value;
           wss.broadcast(pressbufC);
+          if (RightStepCounter.add(message.value)) {
+            sendSteps();
+          }
           break;
         case Receiver.message_type.PRESSURE_D:
           let pressbufD = new Uint16Array(2);
@@ -161,6 +173,14 @@ port.on('data', function (dataBuf) {
     }
   }
 });
+
+function sendSteps() {
+  let steps = stepsToday + LeftStepCounter.steps + RightStepCounter.steps;
+  let stepsbuf = new Uint16Array(2);
+  stepsbuf[0] = Sender.message_type.STEPS;
+  stepsbuf[1] = steps;
+  wss.broadcast(stepsbuf);
+}
 
 /* -----------------------------------MINUTE-INTERVAL----------------------------------- */
 
@@ -186,7 +206,11 @@ function everyMinute() {
 }
 
 function every15Minutes(now) {
-  // saveSteps(now, StepCounter.getSteps());
+  let steps = LeftStepCounter.steps + RightStepCounter.steps;  
+  appendRecord('Steps.csv',now, steps);
+  stepsToday += steps;
+  LeftStepCounter.reset();
+  RightStepCounter.reset();
 }
 
 const datafolder = 'Data';

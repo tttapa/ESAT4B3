@@ -80,6 +80,7 @@ let SPO2Plot = new MovingPlot(SPO2PlotContainer, 60, "#FF11EE", true);
 
 let BPMtxt = document.getElementById("BPM");
 let SPO2txt = document.getElementById("SPO2");
+let Steptxt = document.getElementById("Steps");
 
 let PPGAlarmInterval;
 
@@ -147,6 +148,10 @@ ws.onmessage = function (e) {
         case message_type.PRESSURE_D:
             setFootPressure(4, dataArray[1] / 1023);
             break;
+        case message_type.STEPS:
+            Steptxt.textContent = dataArray[1];
+            updateStepsGauge(dataArray[1]);
+            break;
     }
 };
 
@@ -166,7 +171,6 @@ function drawCharts() {
     }
     let nowDate = new Date();
     let now = Math.floor(nowDate.getTime() / 1000);
-
 
     {
         let xmlhttp = new XMLHttpRequest();
@@ -311,16 +315,25 @@ let stepGaugeOptions = {
 };
 
 let stepGauge;
+let stepGaugeData;
+
+let stepGoal = 6000;
 
 function updateStepsGauge(value) {
-    let stepGaugeData = google.visualization.arrayToDataTable([
-        ['Label', 'Value'],
-        ['Steps (%)', value],
-    ]);
+    value *= 100;
+    value /= stepGoal;
+    value = Math.round(value);
+    if (value != null) {
+        stepGaugeData = google.visualization.arrayToDataTable([
+            ['Label', 'Value'],
+            ['Steps (%)', value],
+        ]);
+    }
 
     if (!stepGauge)
         stepGauge = new google.visualization.Gauge(document.getElementById('StepsGauge'));
-    stepGauge.draw(stepGaugeData, stepGaugeOptions);
+    if (stepGaugeData)
+        stepGauge.draw(stepGaugeData, stepGaugeOptions);
 }
 
 let BPMGaugeOptions = {
@@ -477,6 +490,7 @@ function reDrawCharts() {
     SPO2Chart.clearChart();
     SPO2Chart.draw(SPO2Data, SPO2ChartOptions);
     updateBPMsGauge(null);
+    updateStepsGauge(null);
 }
 
 // Pressure 

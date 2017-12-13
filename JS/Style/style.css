@@ -168,6 +168,7 @@ input[type="radio"] {
     margin: auto;
     padding: 2em;
     min-width: 30%;
+    box-sizing: border-box;
 }
 
 h3 {
@@ -189,4 +190,9 @@ h3 {
 #SPO2Plot {
     flex-shrink: 1;
     width: 80%;
+}
+
+#StepGoal {
+    display: initial;
+    align-self: center;
 }

@@ -29,7 +29,10 @@ const uint8_t pressurePins[4] = {A0, A1, A2, A3};
 
 const float ECG_samplefreq  = 360;
 const float Pres_samplefreq = 50;
-const float PPG_samplefreq  = 300;
+const float PPG_samplefreq  = 50;
+
+const float PPG_originalSamplefreq = 300;
+const int downsamplePPG = round(PPG_originalSamplefreq / PPG_samplefreq);
 
 void setup() {
   Serial.begin(115200);
@@ -104,7 +107,7 @@ void loop() {
 #elif defined(PPG_DATA)
     uint16_t value_RD = pgm_read_word_near(PPG_data + PPG_index);
     uint16_t value_IR = value_RD * 0.8 + 20;
-    PPG_index = (PPG_index + 1) % PPG_len;
+    PPG_index = (PPG_index + downsamplePPG) % PPG_len;
 #endif
     send(value_RD, PPG_RED);
     send(value_IR, PPG_IR);
