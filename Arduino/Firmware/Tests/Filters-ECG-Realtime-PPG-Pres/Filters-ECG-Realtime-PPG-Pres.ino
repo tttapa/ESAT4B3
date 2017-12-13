@@ -22,12 +22,12 @@ const unsigned long Pres_interval = round(1e6 / Pres_samplefreq);
 
 const uint8_t ECG_pin = A4;
 
-const int16_t DC_offset = 250;
+const int16_t ECG_DC_offset = 250;
 
 const uint8_t PPG_IR_pin = A4;
 const uint8_t PPG_RD_pin = A5;
 
-const uint16_t threshold = DC_offset + 200;
+const int16_t PPG_DC_offset = 511;
 
 const uint16_t maxdistance = 360 * 60 / 30; // Min 30 BPM
 
@@ -50,6 +50,18 @@ FIRFilter notch(b_notch);
 IIRFilter lp(b_lp, a_lp);
 IIRFilter hp(b_hp, a_hp);
 
+const float b_lp_PPG[] = { 0.638945525159022, 1.27789105031804, 0.638945525159022 };
+const float a_lp_PPG[] = { 1, 1.14298050253990,  0.412801598096189 };
+
+const float b_hp_PPG[] = { 1, -1 };
+const float a_hp_PPG[] = { 1, -0.9 };
+
+IIRFilter lp_PPG_IR(b_lp_PPG, a_lp_PPG);
+IIRFilter hp_PPG_IR(b_hp_PPG, a_hp_PPG);
+
+IIRFilter lp_PPG_RD(b_lp_PPG, a_lp_PPG);
+IIRFilter hp_PPG_RD(b_hp_PPG, a_hp_PPG);
+
 uint8_t messageToSend[2];
 
 #ifdef PRES_SENSOR
@@ -57,7 +69,7 @@ RunningAverage<uint16_t, 16> pressureAverages[4];
 uint16_t previousPressVals[4] = { -1, -1, -1, -1};
 const uint8_t pressurePins[4] = {A0, A1, A2, A3};
 #endif
- 
+
 void setup() {
   Serial.begin(115200);
   pinMode(LED_BUILTIN, OUTPUT);
@@ -79,8 +91,8 @@ void loop() {
     int16_t value = pgm_read_word_near(ECG_data + ECG_index);
     ECG_index = (ECG_index + 1) % ECG_len;
 #endif
-    float filteredf = notch.filter(lp.filter(hp.filter(value - DC_offset)));
-    int16_t filtered = round(filteredf) + DC_offset;
+    float filteredf = notch.filter(lp.filter(hp.filter(value - ECG_DC_offset)));
+    int16_t filtered = constrain(round(filteredf) + ECG_DC_offset, 0, 1023);
     send(filtered, ECG);
   }
 #endif
@@ -93,14 +105,20 @@ void loop() {
     PPG_index = 0;
   } else if (micros() - PPG_prevmicros >= PPG_interval) {
 #ifdef PPG_SENSOR
-    uint16_t value_RD = analogRead(PPG_RD_pin);
-    uint16_t value_IR = analogRead(PPG_IR_pin);
+    int16_t value_RD = analogRead(PPG_RD_pin);
+    int16_t value_IR = analogRead(PPG_IR_pin);
 #elif defined(PPG_DATA)
-    uint16_t value_RD = pgm_read_word_near(PPG_data + PPG_index);
-    uint16_t value_IR = value_RD * 0.8 + 20;
+    int16_t value_RD = pgm_read_word_near(PPG_data + PPG_index);
+    int16_t value_IR = value_RD * 0.8 + 20;
     PPG_index = (PPG_index + downsamplePPG) % PPG_len;
 #endif
+    float filtered_RD = lp_PPG_RD.filter(
+                        hp_PPG_RD.filter(value_RD - PPG_DC_offset));
+    value_RD = constrain(round(filtered_RD) + PPG_DC_offset, 0, 1023);
     send(value_RD, PPG_RED);
+    float filtered_IR = lp_PPG_IR.filter(
+                        hp_PPG_IR.filter(value_IR - PPG_DC_offset));
+    value_IR = constrain(round(filtered_IR) + PPG_DC_offset, 0, 1023);
     send(value_IR, PPG_IR);
     PPG_prevmicros += PPG_interval;
   }

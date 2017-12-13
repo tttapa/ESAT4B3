@@ -21,11 +21,16 @@ header {
     background-color: #222;
     box-shadow: 2px 2px 5px #555;
     font-size: 2.4em;
-    padding: 1em;
+    padding: 0.6em;
     text-align: center;
     box-sizing: border-box;
     color: #EEE;
     z-index: 3;
+}
+
+img#logo {
+    height: 1.6em;
+    /* margin: auto; */
 }
 
 nav {
@@ -106,7 +111,7 @@ div#main > div {
 div#PPGplotIR, div#PPGplotRD {
     height: 40%;
     border: 1px solid;
-    margin: 16px;
+    margin: 0.7em;
 }
 
 .invisible {
@@ -160,15 +165,16 @@ input[type="radio"] {
     display: flex;
     flex-direction: row;
     min-height: 0;
-    justify-content: space-evenly;
+    justify-content: flex-start;
 }
 
 .gauge {
     height: 100%;
     margin: auto;
     padding: 2em;
-    min-width: 30%;
+    min-width: 25%;
     box-sizing: border-box;
+    display: inline;
 }
 
 h3 {
