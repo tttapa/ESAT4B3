@@ -73,12 +73,33 @@ const interval = setInterval(function ping() {
 
 /* -----------------------------------SERIAL-PORT----------------------------------- */
 
-const port = new SerialPort('/dev/ttyACM0', {
-  baudRate: 115200,
-}, function (err) {
-  if (err) {
-    return console.log('Error: ', err.message);
+let port;
+SerialPort.list(function (err, ports) {
+  if (ports.length == 0) {
+    console.log("No serial ports available");
+    return;
   }
+  let comName = null;
+  ports.forEach(function(port) {
+    console.log(port.comName);
+    console.log(port.pnpId);
+    console.log(port.manufacturer);
+    if (port.manufacturer == 'Arduino LLC (www.arduino.cc)') {
+      comName = port.comName;
+      console.log('Found Arduino');
+      console.log('');
+    }
+  });
+  if (comName == null)
+    comName = ports[0].comName;
+  port = new SerialPort(comName, {
+    baudRate: 115200,
+  }, function (err) {
+    if (err) {
+      return console.log('Serial port error: ', err.message);
+    }
+  });
+  port.on('data', receiveSerial);
 });
 
 const framerate = 30;
@@ -137,7 +158,7 @@ function getStepsToday() {
   return getSumRecords('Steps.csv', today_12am.getTime() / 1000);
 }
 
-port.on('data', function (dataBuf) {
+function receiveSerial(dataBuf) {
   for (i = 0; i < dataBuf.length; i++) {
     let message = receiver.receive(dataBuf[i]);
     if (message != null) {
@@ -202,7 +223,7 @@ port.on('data', function (dataBuf) {
       }
     }
   }
-});
+}
 
 function sendSteps() {
   let steps = stepsToday + LeftStepCounter.steps + RightStepCounter.steps;
