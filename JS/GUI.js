@@ -320,7 +320,7 @@ let stepGaugeOptions = {
 let stepGauge;
 let stepGaugeData;
 
-let stepGoal = 6000;
+let stepGoal = 10000;
 
 function updateStepsGauge(value) {
     value *= 100;

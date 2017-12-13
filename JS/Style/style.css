@@ -21,11 +21,16 @@ header {
     background-color: #222;
     box-shadow: 2px 2px 5px #555;
     font-size: 2.4em;
-    padding: 1em;
+    padding: 0.6em;
     text-align: center;
     box-sizing: border-box;
     color: #EEE;
     z-index: 3;
+}
+
+img#logo {
+    height: 1.6em;
+    /* margin: auto; */
 }
 
 nav {
