@@ -5,9 +5,11 @@ const WebSocket = require('ws');
 
 const SerialPort = require('serialport');
 
+const http = require('http');
 
 
 const datafolder = 'Data';
+const hostingFolder = '../html';
 
 if (!fs.existsSync(path.join(__dirname, datafolder))) {
   fs.mkdirSync(path.join(__dirname, datafolder));
@@ -17,25 +19,26 @@ if (!fs.existsSync(path.join(__dirname, datafolder))) {
 
 const wss = new WebSocket.Server({ port: 1425 });
 
-// Broadcast to all.
+// Broadcast to all: loop over all connected clients and send the data
 wss.broadcast = function broadcast(data) {
   try {
     wss.clients.forEach(function each(client) {
       if (client.readyState === WebSocket.OPEN) {
         client.send(data, function ack(er) {
-          if (typeof er !== 'undefined') {
-            console.error("ERROR!");
+          if (er) {
+            console.error("Error in WebSocket send: ");
             console.error(er);
           }
         });
       }
     });
   } catch (e) {
-    console.error("EXCEPTION!");
+    console.error("Exception in WebSocket send: ");
     console.error(e);
   }
 };
 
+// When a new client connects: attach some events
 wss.on('connection', function connection(ws, req) {
   ws.ip = req.connection.remoteAddress;
   console.log("Connected " + ws.ip);
@@ -60,6 +63,8 @@ function heartbeat() {
   this.isAlive = true;
 }
 
+// Send ping frames every 10 seconds. Clients should respond with a pong frame within
+// 10 seconds. If not, terminate client.
 const interval = setInterval(function ping() {
   wss.clients.forEach(function each(ws) {
     if (ws.isAlive === false) {
@@ -77,7 +82,7 @@ const port = new SerialPort('/dev/ttyACM0', {
   baudRate: 115200,
 }, function (err) {
   if (err) {
-    return console.log('Error: ', err.message);
+    return console.log('Error opening Serial port: ', err.message);
   }
 });
 
@@ -280,9 +285,9 @@ function appendRecord(file, now, value) {
   });
 }
 
-/* -----------------------------------SPO2-Calculation----------------------------------- */
+//#region /* -----------------------------------SPO2-Calculation----------------------------------- */
 
-let V_DC_IR = 6.15 * 0.97 / 0.543; // TODO
+let V_DC_IR = 6.15;
 let V_DC_RD = 1.89;
 
 let SPO2Interval = setInterval(function () {
@@ -300,127 +305,130 @@ function getSPO2() {
   // console.log(`PPG Red V_RMS = ${V_AC_RMS_RD}`);
   // console.log(`PPG IR  V_RMS = ${V_AC_RMS_IR}\r\n`);
   // return 96 + 2 * Math.random(); // ;)
-  let SPO2 = (V_AC_RMS_RD / V_DC_RD) / (V_AC_RMS_IR / V_DC_IR);
+  let SPO2 = 110 - 25 * (V_AC_RMS_RD / V_DC_RD) / (V_AC_RMS_IR / V_DC_IR);
   console.log(SPO2);
-  return 100 * SPO2;
+  return SPO2;
 }
 
-/* -----------------------------------HTTP-SERVER----------------------------------- */
+//#endregion
+
+//#region /* -----------------------------------HTTP-SERVER---------------------------------------- */
 
 // TODO change hosting folder 
 
-//#region http
-var http = require('http');
-http.createServer(function (req, res) {
-  let URIparts = req.url.split('?', 2);
-  let URIfile = URIparts[0];
-  // URIfile = URIfile.replace(/^.*\//, '');
-  URIfile = URIfile.replace(/^\//, '');
-  let URIoptions = URIparts[1];
+http.createServer(HTTPhandler).listen(8080);  // Start an HTTP server that listens on port 8080
+
+function HTTPhandler(req, res) {
+  // req.url = '/filename.ext?start=1234&end=5678'
+  let URIparts = req.url.split('?', 2); // '/filename.ext', 'start=1234&end=5678'
+  let URIfile = URIparts[0];            // '/filename.ext'
+  URIfile = URIfile.replace(/^\//, ''); // 'filename.ext' (remove '/' at the start)
+  let URIoptions = URIparts[1];         // 'start=1234&end=5678'
+
   if (URIfile === 'Steps.csv' ||
     URIfile === 'SPO2.csv' ||
     URIfile === 'BPM.csv') {
     let start = null;
     let end = null;
     if (URIoptions) {
-      start = URIoptions.match(/start=\d+/);
-      if (start != null) {
-        start = parseInt(start[0].split('=')[1]);
-      }
-      end = URIoptions.match(/end=\d+/);
-      if (end != null) {
-        end = parseInt(end[0].split('=')[1]);
-        if (start != null && end < start) {
-          res.write('400');
-          res.end();
-          return;
-        }
+      start = URIoptions.match(/.*start=(\d+).*/) ? parseInt(URIoptions.replace(/.*start=(\d+).*/, '$1')) : null;
+      end = URIoptions.match(/.*end=(\d+).*/) ? URIoptions.replace(/.*end=(\d+).*/, '$1') : null;
+
+      if (start != null && end != null && end < start) {
+        res.write('400'); // 400: Bad request
+        res.end();
+        return;
       }
     }
     sendCSV(res, URIfile, start, end);
-    /*} else if (URIfile === 'GUI.html' ||
-               URIfile === 'GUI.js' ||
-               URIfile === 'Plot.js' ||
-               URIfile === 'GUI.html') {
-      sendFile(res, URIfile)*/
   } else {
     sendFile(res, URIfile);
-    //res.write('404');
-    //res.end();
   }
-}).listen(8080);
+}
 
 function sendFile(res, file) {
   file = file.replace(/\.\.\//, '');
-  fs.readFile(path.join(__dirname, '..', file), function (err, data) {
+  fs.readFile(path.join(__dirname, hostingFolder, file), function (err, data) {
     if (err) {
-      res.writeHead(404);
+      res.writeHead(404);  // Error, file not found
       res.end();
       return console.log(err);
     }
-    let extname = path.extname(file);
-    let contentType = 'application/octet-stream';
-    switch (extname) {
-      case '.js':
-        contentType = 'text/javascript';
-        break;
-      case '.css':
-        contentType = 'text/css';
-        break;
-      case '.html':
-        contentType = 'text/html';
-        break;
-    }
-    res.writeHead(200, { 'Content-Type': contentType });
-    res.write(data)
-    res.end();
+    let contentType = getContentType(file);
+    res.writeHead(200, { 'Content-Type': contentType }); // 200: OK
+    res.write(data); // Send the file
+    res.end(); // Finish response and close connection
   });
+}
+
+function getContentType(filename) {  // Get MIME type based on file extension
+  let extname = path.extname(filename);
+  let contentType = 'application/octet-stream';
+  switch (extname) {
+    case '.js':
+      contentType = 'text/javascript';
+      break;
+    case '.css':
+      contentType = 'text/css';
+      break;
+    case '.html':
+      contentType = 'text/html';
+      break;
+  }
+  return contentType;
 }
 
 function sendCSV(res, file, start, end) {
   fs.readFile(path.join(__dirname, datafolder, file), 'utf8', function (err, data) {
     if (err) {
-      res.writeHead(404);
+      res.writeHead(404);  // Error, file not found
       res.end();
       return console.log(err);
+      console.log();
     }
     let lines = data.split(/\n|\r\n|\r/);
-    let startIndex = null;
-    let endIndex = null;
-    for (i = 0; i < lines.length; i++) {
-      if (lines[i] == '') {
-        continue; // ignore empty lines
-      }
-      let timestamp = parseInt(lines[i].split(',', 2)[0]);
-      if (start != null && startIndex == null && timestamp >= start) {
-        startIndex = i;
-      }
-      if (end != null && end != 0 && endIndex == null && timestamp > end) {
-        endIndex = i - 1;
-      }
-      if (end != null && end != 0 && endIndex == null && timestamp === end) {
-        endIndex = i;
-      }
-      // console.log(timestamp + ' startIndex = ' + startIndex + ' endIndex = ' + endIndex +
-      //  ' start = ' + start + ' end = ' + end);
-    }
-    if (start == null || startIndex == null) {
-      startIndex = 0;
-    }
-    if (end == null || endIndex == null) {
-      endIndex = lines.length - 1;
-    }
-    if (end != null && end < parseInt(lines[0].split(',', 2)[0])) {
-      // console.log('end < first enty');
-      endIndex = -1;
-    }
+    let [startIndex, endIndex] = getRecordsBetween(lines, start, end);
     res.writeHead(200, { 'Content-Type': 'text/csv' });
-    for (i = startIndex; i <= endIndex; i++) {
+    for (i = startIndex; i <= endIndex; i++) { // Write out the selected records
       res.write(lines[i] + '\r\n');
     }
     res.end();
-    // console.log(lines);
-    // console.log(startIndex + ' - ' + endIndex);
   });
+}
+
+function getRecordsBetween(lines, start, end) {
+  let startIndex = null;
+  let endIndex = null;
+  for (i = 0; i < lines.length; i++) {
+    if (lines[i] == '') {
+      continue; // ignore empty lines
+    }
+    let timestamp = parseInt(lines[i].split(',', 2)[0]);  // Read timestamp (first value in entry)
+    if (start != null &&
+      startIndex == null && timestamp >= start) {  // if this is the first timestamp greater than or equal to start timestamp
+      startIndex = i;
+    }
+    if (end != null && end != 0 &&
+      endIndex == null && timestamp > end) { // if this is the first timestamp greater than the end timestamp
+      endIndex = i - 1;
+      break;
+    }
+    if (end != null && end != 0
+      && endIndex == null && timestamp === end) { // if the timestamp is the end timestamp
+      endIndex = i;
+      break;
+    }
+  }
+  if (start == null || startIndex == null) {
+    startIndex = 0;
+  }
+  if (end == null || endIndex == null) {
+    endIndex = lines.length - 1;
+  }
+  let firstTimestamp = parseInt(lines[0].split(',', 2)[0]);
+  if (end != null && end < firstTimestamp) {
+    endIndex = -1;
+  }
+  return [startIndex, endIndex];
 }
 //#endregion
