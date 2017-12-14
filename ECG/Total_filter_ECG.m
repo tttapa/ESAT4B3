@@ -1,7 +1,7 @@
 clear
 %% 
 % Importing Data
-load('100m.mat');
+% load('100m.mat');
 data_number = 1;
 
 % Sample  and Nyquist (sample freq/2) frequency 
@@ -11,9 +11,9 @@ f_nyquist = fs/2;
 % Selecting Interval of the data with start and end value
 signal_start  = 1500;
 signal_end = 15000; 
-
+signal =csvread('RealDataArduino.csv');
 % Signal    
-signal = val(data_number, signal_start:signal_end);
+% signal = val(data_number, signal_start:signal_end);
 signal_length = length(signal);
 
 % Length has to be even
@@ -30,7 +30,7 @@ end
 syms z
 
 % Cut off frequency
-fc_notch = 60;
+fc_notch = 50;
 theta_notch = fc_notch/f_nyquist*pi;
 
 % Determine b-coefficient
@@ -185,7 +185,7 @@ figure, freqz(b, a, signal_length, fs);
 % % _________________________________________________________________________
 % % Plot without first segment (no start-up noise)
 % % _________________________________________________________________________
-noise_end = 1001;
+noise_end = 1000;
 red_signal_start = signal_start + noise_end;
 
 % Define reduced x for signal plot
@@ -217,8 +217,8 @@ subplot 211
 plot(red_x,signal(red_signal_start:end), 'color', [0 0 0] + 0.05 )          
 title('Niet-gefilterd signaal')
 xlabel('Tijd (s)')
-xlim([0,5.5])
-ylim([850,1250])
+% xlim([0,5.5])
+% ylim([850,1250])
 set(gca, 'PlotBoxAspectRatio', [3 1 1], ...
     'LineWidth', 1, ...
     'Box', 'on', ...
@@ -227,8 +227,8 @@ subplot 212
 plot(red_x,filtered_signal(red_signal_start:end), 'color', [0 0 0] + 0.05 )
 title('Gefilterd signaal')
 xlabel('Tijd (s)')
-xlim([0,5.5])
-ylim([-100,250])
+% xlim([0,5.5])
+% ylim([-100,250])
 set(gca, 'PlotBoxAspectRatio', [3 1 1], ...
     'LineWidth', 1, ...
     'Box', 'on', ...
@@ -244,7 +244,7 @@ title('Vermogensdichtheid van het gefilterd en niet-gefilterd signaal');
 xlabel('Frequentie (Hz)');
 ylabel('Magnitude (dB)');
 xlim([0,180])
-ylim([-60,30])
+% ylim([-60,30])
 set(gca, 'PlotBoxAspectRatio', [2 2 1], ...
     'LineWidth', 1, ...
     'Box', 'on', ...
