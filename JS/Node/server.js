@@ -126,10 +126,12 @@ const PPGSenderRD = new Sender.BufferedSender(wss, Sender.message_type.PPG_RED, 
 let ECGctr = 0;
 let ECGsum = 0;
 
-const RpeakThres = 256; // of square !
+const ECG_DC_offset = 250;
+const RpeakThres = 30; // of square !
+const diffThres = 12; // of square !
 
 const BPMCounter = require('./BPMCounter.js');
-const bpmctr = new BPMCounter.BPMCounter(ECG_samplefreq, RpeakThres, 30, 220);
+const bpmctr = new BPMCounter.BPMCounter(ECG_samplefreq, RpeakThres, 30, 220, diffThres);
 
 const PPG_DC_offset = 511;
 
@@ -171,7 +173,8 @@ function receiveSerial(dataBuf) {
             ECGsum = 0;
             ECGctr = 0;
           }
-          if (bpmctr.run(message.value * message.value / 1023)) { // Square to make peaks higher
+          let ECG_squared = (message.value - ECG_DC_offset)*(message.value - ECG_DC_offset);
+          if (bpmctr.run(ECG_squared / 1023)) { // Square to make R-peaks higher
             let BPMbuf = new Uint16Array(2);
             BPMbuf[0] = Sender.message_type.BPM;
             let BPM = bpmctr.getBPM();
