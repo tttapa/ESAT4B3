@@ -76,67 +76,26 @@ const interval = setInterval(function ping() {
   });
 }, 10000);
 
-/* -----------------------------------SERIAL-PORT----------------------------------- */
-
-let port;
-SerialPort.list(function (err, ports) {
-  if (ports.length == 0) {
-    console.log("No serial ports available");
-    return;
-  }
-  let comName = null;
-  ports.forEach(function(port) {
-    console.log(port.comName);
-    console.log(port.pnpId);
-    console.log(port.manufacturer);
-    if (port.manufacturer == 'Arduino LLC (www.arduino.cc)') {
-      comName = port.comName;
-      console.log('Found Arduino');
-      console.log('');
-    }
-  });
-  if (comName == null)
-    comName = ports[0].comName;
-  port = new SerialPort(comName, {
-    baudRate: 115200,
-  }, function (err) {
-    if (err) {
-      return console.log('Serial port error: ', err.message);
-    }
-  });
-  port.on('data', receiveSerial);
-});
+/* -----------------------------------STEPCOUNTERS--BPMCOUNTER--AVERAGES------------------------------------- */
 
 const framerate = 30;
 
 const ECGdownsampleamount = 2;
 
 const ECG_samplefreq = 360;
-const ECG_samplesPerFrame = Math.floor(ECG_samplefreq / ECGdownsampleamount / framerate);
 
 const PPG_samplefreq = 50;
 const PPG_samplesPerFrame = 2;
-
-console.log("Downsample by " + ECGdownsampleamount + " samples.");
-console.log(ECG_samplesPerFrame + " samples per frame.");
-
-const Receiver = require('./Receiver.js');
-const receiver = new Receiver.Receiver();
-
-const Sender = require('./Sender.js');
-const ECGsender = new Sender.BufferedSender(wss, Sender.message_type.ECG, ECG_samplesPerFrame);
-const PPGSenderIR = new Sender.BufferedSender(wss, Sender.message_type.PPG_IR, PPG_samplesPerFrame);
-const PPGSenderRD = new Sender.BufferedSender(wss, Sender.message_type.PPG_RED, PPG_samplesPerFrame);
-
-let ECGctr = 0;
-let ECGsum = 0;
 
 const ECG_DC_offset = 250;
 const RpeakThres = 30; // of square !
 const diffThres = 12; // of square !
 
+const minBPM = 30;
+const maxBPM = 240;
+
 const BPMCounter = require('./BPMCounter.js');
-const bpmctr = new BPMCounter.BPMCounter(ECG_samplefreq, RpeakThres, 30, 220, diffThres);
+const bpmctr = new BPMCounter.BPMCounter(ECG_samplefreq, RpeakThres, minBPM, maxBPM, diffThres);
 
 const PPG_DC_offset = 511;
 
@@ -165,13 +124,89 @@ function getStepsToday() {
   return getSumRecords('Steps.csv', today_12am.getTime() / 1000);
 }
 
+function getSumRecords(file, start, end) {
+  let sum = 0;
+  try {
+    let data = fs.readFileSync(path.join(__dirname, datafolder, file), 'utf8');
+    let lines = data.split(/\n|\r\n|\r/);
+    let startIndex = null;
+    let endIndex = null;
+    let i = 0;
+    let timestamp = parseInt(lines[i].split(',', 2)[0]);
+    console.log(lines);
+    while ((isNaN(timestamp) || timestamp < start) && i < lines.length - 1) {
+      i++;
+      timestamp = parseInt(lines[i].split(',', 2)[0]);
+    }
+    while ((isNaN(timestamp) || timestamp <= end || !end) && i < lines.length - 1) {
+      let value = parseInt(lines[i].split(',', 2)[1]);
+      if (!isNaN(value))
+        sum += value;
+      console.log(timestamp + ': ' + value);
+      i++;
+      if (i < lines.length)
+        timestamp = parseInt(lines[i].split(',', 2)[0]);
+    }
+  } catch (e) {
+    console.log(e);
+  }
+  return sum;
+}
+
+//#region /* -----------------------------------SERIAL-PORT----------------------------------- */
+
+let port;
+SerialPort.list(function (err, ports) {
+  if (ports.length == 0) {
+    console.log("No serial ports available");
+    return;
+  }
+  let comName = null;
+  ports.forEach(function(port) {
+    console.log(port.comName);
+    console.log('\t'+port.pnpId);
+    console.log('\t'+port.manufacturer);
+    if (port.manufacturer == 'Arduino LLC (www.arduino.cc)') {
+      comName = port.comName;
+      console.log('\tFound Arduino');
+      console.log('');
+    }
+  });
+  if (comName == null)
+    comName = ports[0].comName;
+  port = new SerialPort(comName, {
+    baudRate: 115200,
+  }, function (err) {
+    if (err) {
+      return console.log('Serial port error: ', err.message);
+    }
+  });
+  port.on('data', receiveSerial);
+});
+
+const ECG_samplesPerFrame = Math.floor(ECG_samplefreq / ECGdownsampleamount / framerate);
+
+console.log("Downsample by " + ECGdownsampleamount + " samples.");
+console.log(ECG_samplesPerFrame + " samples per frame.");
+
+let ECGctr = 0; // For downsampling
+let ECGsum = 0;
+
+const Receiver = require('./Receiver.js');
+const receiver = new Receiver.Receiver();
+
+const Sender = require('./Sender.js');
+const ECGsender = new Sender.BufferedSender(wss, Sender.message_type.ECG, ECG_samplesPerFrame);
+const PPGSenderIR = new Sender.BufferedSender(wss, Sender.message_type.PPG_IR, PPG_samplesPerFrame);
+const PPGSenderRD = new Sender.BufferedSender(wss, Sender.message_type.PPG_RED, PPG_samplesPerFrame);
+
 function receiveSerial(dataBuf) {
   for (i = 0; i < dataBuf.length; i++) {
     let message = receiver.receive(dataBuf[i]);
     if (message != null) {
       switch (message.type) {
         case Receiver.message_type.ECG:
-          ECGsum += message.value; // * message.value / 1023; // TODO
+          ECGsum += message.value;
           ECGctr++;
           if (ECGctr >= ECGdownsampleamount) {
             ECGsender.send(ECGsum / ECGdownsampleamount);
@@ -241,35 +276,9 @@ function sendSteps() {
   wss.broadcast(stepsbuf);
 }
 
-function getSumRecords(file, start, end) {
-  let sum = 0;
-  try {
-    let data = fs.readFileSync(path.join(__dirname, datafolder, file), 'utf8');
-    let lines = data.split(/\n|\r\n|\r/);
-    let startIndex = null;
-    let endIndex = null;
-    let i = 0;
-    let timestamp = parseInt(lines[i].split(',', 2)[0]);
-    console.log(lines);
-    while ((isNaN(timestamp) || timestamp < start) && i < lines.length - 1) {
-      i++;
-      timestamp = parseInt(lines[i].split(',', 2)[0]);
-    }
-    while ((isNaN(timestamp) || timestamp <= end || !end) && i < lines.length - 1) {
-      let value = parseInt(lines[i].split(',', 2)[1]);
-      if (!isNaN(value))
-        sum += value;
-      console.log(timestamp + ': ' + value);
-      i++;
-      if (i < lines.length)
-        timestamp = parseInt(lines[i].split(',', 2)[0]);
-    }
-  } catch (e) {
-    console.log(e);
-  }
-  return sum;
-}
-/* -----------------------------------MINUTE-INTERVAL----------------------------------- */
+//#endregion
+
+//#region /* -----------------------------------MINUTE-INTERVAL----------------------------------- */
 
 let findMinuteInterval = setInterval(function () {
   let now = new Date();
@@ -301,13 +310,17 @@ function every15Minutes(now) {
 }
 
 function appendRecord(file, now, value) {
-  fs.appendFile(path.join(__dirname, datafolder, file), new Buffer(`${Math.round(now.getTime() / 1000)},${value}\r\n`), function (err) {
+  let timestamp = Math.round(now.getTime() / 1000);
+  let entry =  new Buffer(`${timestamp},${value}\r\n`);
+  fs.appendFile(path.join(__dirname, datafolder, file), entry, function (err) {
     if (err) {
       return console.log(err);
     }
     console.log(file + ' saved');
   });
 }
+
+//#endregion
 
 //#region /* -----------------------------------SPO2-Calculation----------------------------------- */
 
@@ -337,8 +350,6 @@ function getSPO2() {
 //#endregion
 
 //#region /* -----------------------------------HTTP-SERVER---------------------------------------- */
-
-// TODO change hosting folder 
 
 http.createServer(HTTPhandler).listen(8080);  // Start an HTTP server that listens on port 8080
 
