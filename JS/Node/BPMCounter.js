@@ -1,16 +1,19 @@
 class BPMCounter {
-    constructor(samplefreq = 360, threshold = 511, minBPM = 30, maxBPM = 220) {
+    constructor(samplefreq = 360, threshold = 511, minBPM = 30, maxBPM = 220, difThreshold = 0) {
         this.samplefreq = samplefreq;
         this.threshold = threshold;
         this.maxdistance = samplefreq * 60 / minBPM;
         this.mindistance = samplefreq * 60 / maxBPM;
+        this.difThreshold = difThreshold;
 
         this.ctr = 0;
         this.prevCtr = 0;
         this.max = 0;
+        this.prevValue = 0;
     }
     run(value) {
         let distance = 0;
+        let dif = value - this.prevValue;
         if (this.prevCtr > 0)
             this.prevCtr++;
 
@@ -38,10 +41,11 @@ class BPMCounter {
             this.prevCtr = 0;
             distance = -1;
             this.BPM = 0;
-        } else if (value >= this.threshold) {      // New peak, first sample above threshold
+        } else if (value >= this.threshold && (dif >= this.difThreshold || this.difThreshold === 0)) {      // New peak, first sample above threshold
             this.ctr = 0;
             this.max = value;
         }
+        this.prevValue = value;
         return distance;
     }
     getBPM() {

@@ -78,12 +78,33 @@ const interval = setInterval(function ping() {
 
 /* -----------------------------------SERIAL-PORT----------------------------------- */
 
-const port = new SerialPort('/dev/ttyACM0', {
-  baudRate: 115200,
-}, function (err) {
-  if (err) {
-    return console.log('Error opening Serial port: ', err.message);
+let port;
+SerialPort.list(function (err, ports) {
+  if (ports.length == 0) {
+    console.log("No serial ports available");
+    return;
   }
+  let comName = null;
+  ports.forEach(function(port) {
+    console.log(port.comName);
+    console.log(port.pnpId);
+    console.log(port.manufacturer);
+    if (port.manufacturer == 'Arduino LLC (www.arduino.cc)') {
+      comName = port.comName;
+      console.log('Found Arduino');
+      console.log('');
+    }
+  });
+  if (comName == null)
+    comName = ports[0].comName;
+  port = new SerialPort(comName, {
+    baudRate: 115200,
+  }, function (err) {
+    if (err) {
+      return console.log('Serial port error: ', err.message);
+    }
+  });
+  port.on('data', receiveSerial);
 });
 
 const framerate = 30;
@@ -110,10 +131,12 @@ const PPGSenderRD = new Sender.BufferedSender(wss, Sender.message_type.PPG_RED, 
 let ECGctr = 0;
 let ECGsum = 0;
 
-const RpeakThres = 256; // of square !
+const ECG_DC_offset = 250;
+const RpeakThres = 30; // of square !
+const diffThres = 12; // of square !
 
 const BPMCounter = require('./BPMCounter.js');
-const bpmctr = new BPMCounter.BPMCounter(ECG_samplefreq, RpeakThres, 30, 220);
+const bpmctr = new BPMCounter.BPMCounter(ECG_samplefreq, RpeakThres, 30, 220, diffThres);
 
 const PPG_DC_offset = 511;
 
@@ -142,7 +165,7 @@ function getStepsToday() {
   return getSumRecords('Steps.csv', today_12am.getTime() / 1000);
 }
 
-port.on('data', function (dataBuf) {
+function receiveSerial(dataBuf) {
   for (i = 0; i < dataBuf.length; i++) {
     let message = receiver.receive(dataBuf[i]);
     if (message != null) {
@@ -155,7 +178,8 @@ port.on('data', function (dataBuf) {
             ECGsum = 0;
             ECGctr = 0;
           }
-          if (bpmctr.run(message.value * message.value / 1023)) { // Square to make peaks higher
+          let ECG_squared = (message.value - ECG_DC_offset)*(message.value - ECG_DC_offset);
+          if (bpmctr.run(ECG_squared / 1023)) { // Square to make R-peaks higher
             let BPMbuf = new Uint16Array(2);
             BPMbuf[0] = Sender.message_type.BPM;
             let BPM = bpmctr.getBPM();
@@ -207,7 +231,7 @@ port.on('data', function (dataBuf) {
       }
     }
   }
-});
+}
 
 function sendSteps() {
   let steps = stepsToday + LeftStepCounter.steps + RightStepCounter.steps;
