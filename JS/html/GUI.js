@@ -38,7 +38,7 @@ ws.onopen = function (ev) {
     console.log("Connected");
 };
 ws.onerror = function (er) {
-    console.log(er);
+    console.error(er);
     document.getElementById("mainwindow").classList.add("offline");
     setTimeout(function () { alert('Connection error.'); }, 100);
 };
@@ -64,8 +64,10 @@ const downsampleamount = 2;
 const ECG_samplefreq = 360;
 
 const PPG_samplefreq = 50;
-const SPO2limit = 88;
-const SPO2_YLim_min = 80;
+const SPO2limit = 90;
+const SPO2_YLim_min = 90;
+
+const PPG_lines = 4;
 
 const SPO2minY = 60;
 
@@ -93,7 +95,7 @@ let PPGPlotRD = new ScanningPlot(PPGPlotContainerRD, 5 * PPG_samplefreq, "#FF11E
 PPGDetailPanel.classList.add("invisible");
 
 let SPO2PlotContainer = document.getElementById("SPO2plot");
-let SPO2Plot = new MovingPlot(SPO2PlotContainer, 60, "#FF11EE", true, 3, '#EEE', SPO2_YLim_min, 100, ' %');
+let SPO2Plot = new MovingPlot(SPO2PlotContainer, 60, "#FF11EE", true, PPG_lines, '#EEE', SPO2_YLim_min, 100, ' %');
 
 let BPMtxt = document.getElementById("BPM");
 let SPO2txt = document.getElementById("SPO2");
@@ -424,7 +426,7 @@ let BPMData;
 function updateBPMChart(array) {
     BPMData = new google.visualization.DataTable();
     BPMData.addColumn('datetime', 'Time');
-    BPMData.addColumn('number', 'Steps');
+    BPMData.addColumn('number', 'BPM');
 
     BPMData.addRows(array);
 
@@ -439,7 +441,6 @@ function updateBPMChart(array) {
 }
 
 let SPO2ChartOptions = {
-    // title: 'Number of steps per 15 minutes',
     legend: { position: 'none' },
     backgroundColor: 'none',
     colors: ['#FF55EE'],
@@ -479,7 +480,7 @@ let SPO2Data;
 function updateSPO2Chart(array) {
     SPO2Data = new google.visualization.DataTable();
     SPO2Data.addColumn('datetime', 'Time');
-    SPO2Data.addColumn('number', 'Steps');
+    SPO2Data.addColumn('number', 'SPO2');
 
     SPO2Data.addRows(array);
 
@@ -501,6 +502,9 @@ window.onresize = function (ev) {
 };
 
 function reDrawCharts() {
+    if (google.visualization == undefined) {
+        return;
+    }
     if (barChart) {
         barChart.clearChart();
         barChart.draw(stepData, barChartOptions);
