@@ -21,7 +21,7 @@ header {
     position: relative;
     width: 100%;
     background-color: #222;
-    box-shadow: 2px 2px 5px #555;
+    box-shadow: 2px 2px 5px #222;
     font-size: 2.4em;
     padding: 0.6em;
     text-align: center;
@@ -34,7 +34,8 @@ header {
     position: absolute;
     right: 1em;
     top: 50%;
-    background-color: #4455FF;
+    /* background-color: #4455FF; */
+    background-color: #3c6382;
     width: 1.6em;
     height: 1.6em;
     line-height: 1.6em;
@@ -42,17 +43,17 @@ header {
     border-radius: 50%;
     text-align: center;
     vertical-align: middle;
-    box-shadow: inset -1px -1px 2px #111;
+    box-shadow: inset -1px -1px 2px #222;
     cursor: pointer;
     transition: box-shadow 0.1s;
 }
 
 #userlogo:hover {
-    box-shadow: inset -2px -2px 5px #111
+    box-shadow: inset -2px -2px 5px #222
 }
 
 img#logo {
-    height: 1.6em;
+    height: 2em;
     /* margin: auto; */
 }
 
@@ -61,6 +62,7 @@ nav {
     height: 100%;
     flex-direction: column;
     justify-content: space-evenly;
+    background-color: #1b242b;
 }
 nav > div {
     /* flex-grow: 1; */
@@ -69,10 +71,10 @@ article {
     flex-shrink: 1;
     flex-grow: 1;
     height: 100%;
-    box-shadow: 2px 2px 5px #555;
+    box-shadow: 2px 2px 5px #222;
     z-index: 2; 
     padding: 0 1em;
-    background-color: #777;  
+    background-color: #232c34;  
     overflow: hidden;  
 }
 article > div, article > div > div {
@@ -90,16 +92,16 @@ nav > div.alarm {
 }
 
 nav > div.active {
-    background-color: #777;
+    background-color: #3c6382;
     z-index: 2;
 }
 
 div.mainbutton {
     padding: 1em 0.7em;
-    background-color: #222;
+    background-color: #373f49;
     margin: 16px;
     border-radius: 8px;
-    box-shadow: 2px 2px 5px #555;     
+    box-shadow: 2px 2px 5px #222;     
     text-align: center;
     font-size: 1.6em;
     z-index: 1;
@@ -227,9 +229,9 @@ ul {
 .statspage {
     background-color: white;
     color: #444;
-    box-shadow: 2px 3px 5px #333;
+    box-shadow: 2px 3px 5px #222;
     padding: 1em;
-    margin: 0.7em;
+    margin: 1.7em 0.7em;
     box-sizing: border-box;
     /* height: 95%; */
     flex-wrap: wrap;
@@ -326,4 +328,11 @@ span.unit {
 div#userbuttons > input, div#userbuttons > button {
     width: 40%;
     margin: auto;
+}
+
+img#colorbar {
+    width: auto;
+    height: auto;
+    margin: auto;
+    max-width: 90%;
 }
