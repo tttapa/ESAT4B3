@@ -10,6 +10,19 @@ PPGButton.onclick = selectPanel;
 const StepsButton = document.getElementById("StepsButton");
 StepsButton.onclick = selectPanel;
 
+const userpanel = document.getElementById("userpanel");
+const header = document.getElementsByTagName("header")[0];
+
+header.onclick = function() {
+    userpanel.classList.add("uservisible");
+}
+
+userpanel.onclick = function() {
+    userpanel.classList.add("fadeout");
+    userpanel.classList.remove("uservisible");
+    setTimeout(function() { userpanel.classList.remove("fadeout"); }, 500);
+}
+
 function selectPanel() {
     let detailPanel = document.getElementById(this.dataset.panel);
     if (this.classList.toggle("active")) {

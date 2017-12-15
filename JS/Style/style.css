@@ -2,7 +2,8 @@ html {
     height: 100%;
 }
 body {
-    padding: 0px;
+    /* padding: 0px 24px 0px 0px; */
+    padding: 0;
     margin: 0px;
     font-family: 'Roboto', sans-serif;
     height: 100%;
@@ -227,4 +228,58 @@ ul {
     width: 100%;
     max-height: 90%;
     align-self: center;
+}
+
+div#userpanel {
+    height: 100%;
+    position: fixed;
+    box-sizing: border-box;
+    padding: 24px;
+    width: 100%;
+    background-color: white;
+    /* box-shadow: -2px 2px 5px #333; */
+    transition: opacity 0.5s;
+    opacity: 0;
+    z-index: 0;
+}
+div#userpanel > div {
+    margin: auto;
+}
+
+div#userpanel.uservisible {
+    opacity: 1;
+    z-index: 3;
+}
+
+div#userpanel.fadeout {
+    opacity: 0;
+    z-index: 3;
+}
+
+div#userpanel h2 {
+    text-align: center;
+}
+
+div#userpanel form > div, div#userpanel form > div > input {
+    width: 100%;
+}
+div#userpanel form > div > i.material-icons {
+    font-size: 1.1em;
+    vertical-align: text-bottom;
+    line-height: 1.1em;
+    color: #AAA;
+    float: right;
+    cursor: default;
+}
+div#userpanel input {
+    box-sizing: border-box;
+    margin-bottom: 1em;
+}
+input.unit {
+    padding-right: 1.6em;
+}
+span.unit {
+    margin-left: -1.6em;
+    font-size: 0.9em;
+    opacity: 0.8;
 }
