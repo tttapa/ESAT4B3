@@ -260,10 +260,10 @@ div#userpanel h2 {
     text-align: center;
 }
 
-div#userpanel form > div, div#userpanel form > div > input {
+#userform > div, #userform > div > input {
     width: 100%;
 }
-div#userpanel form > div > i.material-icons {
+#userform > div > i.material-icons {
     font-size: 1.1em;
     vertical-align: text-bottom;
     line-height: 1.1em;
@@ -282,4 +282,13 @@ span.unit {
     margin-left: -1.6em;
     font-size: 0.9em;
     opacity: 0.8;
+}
+
+#usericon {
+    position: absolute;
+}
+
+div#userbuttons > input, div#userbuttons > button {
+    width: 40%;
+    margin: auto;
 }
