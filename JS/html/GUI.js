@@ -131,7 +131,7 @@ ws.onmessage = function (e) {
         case message_type.BPM:
             let BPMtextval = '--,-';
             let BPM = Math.round(dataArray[1] / 10) / 10;
-            if (BPM < parseInt(BPMGaugeOptions.greenFrom) || BPM > parseInt(BPMGaugeOptions.greenTo)) {
+            if (BPM != 0 && (BPM < parseInt(BPMGaugeOptions.greenFrom) || BPM > parseInt(BPMGaugeOptions.greenTo))) {
                 console.log("BPM error");
                 if (BPMAlarmInterval == null) {
                     ECGButton.classList.add('alarm');
@@ -153,7 +153,7 @@ ws.onmessage = function (e) {
         case message_type.SPO2:
             let SPO2perc = Math.round(dataArray[1] / 10) / 10;
             let SPO2 = '--,-';
-            if (SPO2perc < SPO2limit) {
+            if (SPO2perc != 0 && SPO2perc < SPO2limit) {
                 if (PPGAlarmInterval == null) {
                     PPGButton.classList.add('alarm');
                     PPGAlarmInterval = setInterval(function () {

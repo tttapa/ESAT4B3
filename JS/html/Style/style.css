@@ -101,13 +101,20 @@ div.mainbutton {
     background-color: #373f49;
     margin: 16px;
     border-radius: 8px;
-    box-shadow: 2px 2px 5px #222;     
+    box-shadow: 3px 3px 5px #111;     
     text-align: center;
     font-size: 1.6em;
     z-index: 1;
     min-width: 7em;
     transition: background-color 0.25s, color 0.25s;
     cursor: pointer;
+    transition: box-shadow 0.1s, margin 0.1s;
+}
+
+div.mainbutton:hover, nav > div.active {
+    box-shadow: 1px 1px 2px #111;
+    /* margin-bottom: 14px; */
+    /* margin-top: 18px; */
 }
 
 .ECG {
@@ -211,6 +218,7 @@ input[type="radio"] {
     margin: auto;
     padding: 1em;
     /* min-width: 25%; */
+    width: 25%;
     box-sizing: border-box;
     /* display: inline; */
     align-self: center;

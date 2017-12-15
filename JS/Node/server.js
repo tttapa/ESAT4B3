@@ -234,7 +234,7 @@ function handleSerialMessage(message) {
         ECGctr = 0;
       }
       let ECG_squared = (message.value - ECG_DC_offset) * (message.value - ECG_DC_offset);
-      if (bpmctr.run(ECG_squared / 1023) != -1) { // Square to make R-peaks higher
+      if (bpmctr.run(ECG_squared / 1023) != 0) { // Square to make R-peaks higher
         let BPMbuf = new Uint16Array(2);
         BPMbuf[0] = Sender.message_type.BPM;
         let BPM = bpmctr.getBPM();
