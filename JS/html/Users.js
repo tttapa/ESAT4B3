@@ -1,20 +1,40 @@
 header.onclick = showUserPanel;
 
+loadUserData();
+
+function loadUserData() {
+    sendGETRequest('/users', function(data) {
+        getUserData(data);
+    });
+}
+
 function showUserPanel() {
+    sendGETRequest('/users', function(data) {
+        getUserData(data);
+        userpanel.classList.add("uservisible");
+    });
+}
+
+function sendGETRequest(uri, cb) {
     let xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
         if (this.readyState == 4 && this.status == 200) {
-            let formdata = JSON.parse(xhttp.responseText);
-            document.getElementById("username").value = formdata.username;
-            document.getElementById("age").value = formdata.age;
-            document.getElementById("weight").value = formdata.weight;
-            document.getElementById("height").value = formdata.height;
-            document.getElementById("stepgoal").value = formdata.stepgoal;
-            userpanel.classList.add("uservisible");
+            cb(xhttp.responseText);
         }
     };
-    xhttp.open("GET", "/users", true);
+    xhttp.open("GET", uri, true);
     xhttp.send();
+}
+
+function getUserData(data) {
+    let formdata = JSON.parse(data);
+    document.getElementById("username").value = formdata.username;
+    document.getElementById("age").value = formdata.age;
+    document.getElementById("weight").value = formdata.weight;
+    document.getElementById("height").value = formdata.height;
+    document.getElementById("stepgoal").value = formdata.stepgoal;
+    updateBPMsGaugeLimits(formdata.age);
+    updateStepGoal(formdata.stepgoal);
 }
 
 function hideUserPanel() {
@@ -34,12 +54,16 @@ function sendUserForm() {
     console.log(data);
     let xhttp = new XMLHttpRequest();
     xhttp.onreadystatechange = function() {
-        if (this.readyState == 4 && this.status != 200) {
-            alert("Sending user data failed!");
+        if (this.readyState == 4) {
+            if (this.status == 200) {
+                loadUserData();
+            } else {
+                alert("Sending user data failed!");
+            }
         }
     };
     xhttp.open("POST", "/users", true);
-    xhttp.send();
+    xhttp.send(data);
     hideUserPanel();
     return false;
 }

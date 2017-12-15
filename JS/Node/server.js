@@ -389,6 +389,31 @@ function HTTPhandler(req, res) {
       }
     }
     sendCSV(res, URIfile, start, end);
+  } else if (URIfile == 'users') {
+    if (req.method === 'GET') {
+      sendFile(res, 'users.json');
+    } else if (req.method === 'POST') {
+      console.log("POST");
+      let postData = '';  
+      req.on('data', function (chunk) {
+        postData += chunk;
+      });
+
+      req.on('end', function () {
+        console.log("end");
+        console.log(postData);
+        try {
+        let userdata = JSON.parse(postData);
+        console.log(userdata);
+        } catch (e) {
+          console.error("Unable to parse JSON user data.");
+        }
+        res.writeHead(200);
+        res.end();
+      });
+    } else {
+      res.end();
+    }
   } else {
     sendFile(res, URIfile);
   }
@@ -421,6 +446,9 @@ function getContentType(filename) {  // Get MIME type based on file extension
       break;
     case '.html':
       contentType = 'text/html';
+      break;
+    case '.json':
+      contentType = 'application/json';
       break;
   }
   return contentType;

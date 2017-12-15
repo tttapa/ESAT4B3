@@ -339,7 +339,16 @@ let stepGaugeData;
 
 let stepGoal = 10000;
 
+function updateStepGoal(newGoal) {
+    stepGoal = newGoal;
+    updateStepsGauge(null);
+    console.log("StepGoal updated");
+}
+
 function updateStepsGauge(value) {
+    if (google.visualization == undefined) {
+        return;
+    }
     value *= 100;
     value /= stepGoal;
     value = Math.round(value);
@@ -352,7 +361,7 @@ function updateStepsGauge(value) {
 
     if (!stepGauge)
         stepGauge = new google.visualization.Gauge(document.getElementById('StepsGauge'));
-    if (stepGaugeData)
+    if (stepGauge && stepGaugeData)
         stepGauge.draw(stepGaugeData, stepGaugeOptions);
 }
 
@@ -363,7 +372,7 @@ let BPMGaugeOptions = {
     min: 30,
     max: 220,
     yellowColor: 'blue',
-    greenFrom: 60, greenTo: 200,
+    greenFrom: 50, greenTo: 200,
     redFrom: 200, redTo: 220,
     forceIFrame: true,
 };
@@ -372,6 +381,9 @@ let BPMGauge;
 let BPMGaugeData;
 
 function updateBPMsGauge(value) {
+    if (google.visualization == undefined) {
+        return;
+    }
     if (value != null) {
         BPMGaugeData = google.visualization.arrayToDataTable([
             ['Label', 'Value'],
@@ -381,8 +393,15 @@ function updateBPMsGauge(value) {
 
     if (!BPMGauge)
         BPMGauge = new google.visualization.Gauge(document.getElementById('BPMGauge'));
-    if (BPMGaugeData)
+    if (BPMGauge && BPMGaugeData)
         BPMGauge.draw(BPMGaugeData, BPMGaugeOptions);
+}
+
+function updateBPMsGaugeLimits(age) {
+    let maxBPM = 220 - age;
+    BPMGaugeOptions.greenTo = maxBPM;
+    BPMGaugeOptions.redFrom = maxBPM;
+    updateBPMsGauge(null);
 }
 
 let BPMChartOptions = {
