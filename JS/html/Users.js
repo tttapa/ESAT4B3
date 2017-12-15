@@ -1,4 +1,4 @@
-header.onclick = showUserPanel;
+document.getElementById("userlogo").onclick = showUserPanel;
 
 loadUserData();
 

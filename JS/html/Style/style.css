@@ -18,6 +18,7 @@ body > div {
 }
 
 header {
+    position: relative;
     width: 100%;
     background-color: #222;
     box-shadow: 2px 2px 5px #555;
@@ -27,6 +28,27 @@ header {
     box-sizing: border-box;
     color: #EEE;
     z-index: 3;
+}
+
+#userlogo {
+    position: absolute;
+    right: 1em;
+    top: 50%;
+    background-color: #4455FF;
+    width: 1.6em;
+    height: 1.6em;
+    line-height: 1.6em;
+    margin-top: -0.8em;
+    border-radius: 50%;
+    text-align: center;
+    vertical-align: middle;
+    box-shadow: inset -1px -1px 2px #111;
+    cursor: pointer;
+    transition: box-shadow 0.1s;
+}
+
+#userlogo:hover {
+    box-shadow: inset -2px -2px 5px #111
 }
 
 img#logo {
@@ -117,6 +139,19 @@ div#PPGplotIR, div#PPGplotRD {
 
 .invisible {
     display: none;
+}
+
+.scanningplot {
+    position: relative;
+}
+
+.plottitle {
+    width: 100%;
+    font-size: 1.2em;
+    text-align: center;
+    position: absolute;
+    top: 0;
+    padding: 2px;
 }
 
 .scanningplot > svg {

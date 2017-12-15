@@ -67,9 +67,11 @@ const PPG_samplefreq = 50;
 const SPO2limit = 90;
 const SPO2_YLim_min = 90;
 
-const PPG_lines = 4;
+const SPO2_lines = 4;
 
 const SPO2minY = 60;
+
+const PPG_lines = 3;
 
 const DC_offset = 240;
 
@@ -88,19 +90,20 @@ let ECGPlot = new ScanningPlot(ECGPlotContainer, 5 * ECG_samplefreq / downsample
 let PPGDetailPanel = document.getElementById("PPGDetail");
 PPGDetailPanel.classList.remove("invisible");
 let PPGPlotContainerIR = document.getElementById("PPGplotIR");
-let PPGPlotIR = new ScanningPlot(PPGPlotContainerIR, 5 * PPG_samplefreq, "#FF11EE", false, 1, '#EEE', -511, 511);
+let PPGPlotIR = new ScanningPlot(PPGPlotContainerIR, 5 * PPG_samplefreq, "#FF11EE", false, PPG_lines, '#EEE', -510, 510);
 
 let PPGPlotContainerRD = document.getElementById("PPGplotRD");
-let PPGPlotRD = new ScanningPlot(PPGPlotContainerRD, 5 * PPG_samplefreq, "#FF11EE", false, 1, '#EEE', -511, 511);
+let PPGPlotRD = new ScanningPlot(PPGPlotContainerRD, 5 * PPG_samplefreq, "#FF11EE", false, PPG_lines, '#EEE', -510, 510);
 PPGDetailPanel.classList.add("invisible");
 
 let SPO2PlotContainer = document.getElementById("SPO2plot");
-let SPO2Plot = new MovingPlot(SPO2PlotContainer, 60, "#FF11EE", true, PPG_lines, '#EEE', SPO2_YLim_min, 100, ' %');
+let SPO2Plot = new MovingPlot(SPO2PlotContainer, 60, "#FF11EE", true, SPO2_lines, '#EEE', SPO2_YLim_min, 100, ' %');
 
 let BPMtxt = document.getElementById("BPM");
 let SPO2txt = document.getElementById("SPO2");
 let Steptxt = document.getElementById("Steps");
 
+let BPMAlarmInterval;
 let PPGAlarmInterval;
 
 ws.onmessage = function (e) {
@@ -128,6 +131,19 @@ ws.onmessage = function (e) {
         case message_type.BPM:
             let BPMtextval = '--,-';
             let BPM = Math.round(dataArray[1] / 10) / 10;
+            if (BPM < parseInt(BPMGaugeOptions.greenFrom) || BPM > parseInt(BPMGaugeOptions.greenTo)) {
+                console.log("BPM error");
+                if (BPMAlarmInterval == null) {
+                    ECGButton.classList.add('alarm');
+                    BPMAlarmInterval = setInterval(function () {
+                        ECGButton.classList.toggle('alarm');
+                    }, 500);
+                }
+            } else {
+                clearInterval(BPMAlarmInterval);
+                BPMlarmInterval = null;
+                ECGButton.classList.remove('alarm');
+            }
             if (BPM !== 0) {
                 BPMtextval = BPM.toFixed(1);
             }

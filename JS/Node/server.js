@@ -43,6 +43,8 @@ const PPG_samplesPerFrame = 2;
 const PPG_DC_offset = 511;
 const PPG_averageSecondsVRMS = 2;
 
+const PPG_V_RMS_thres = 0.1;
+
 //#endregion
 
 //#region /* -----------------------------------WEBSOCKET----------------------------------- */
@@ -232,7 +234,7 @@ function handleSerialMessage(message) {
         ECGctr = 0;
       }
       let ECG_squared = (message.value - ECG_DC_offset) * (message.value - ECG_DC_offset);
-      if (bpmctr.run(ECG_squared / 1023)) { // Square to make R-peaks higher
+      if (bpmctr.run(ECG_squared / 1023) != -1) { // Square to make R-peaks higher
         let BPMbuf = new Uint16Array(2);
         BPMbuf[0] = Sender.message_type.BPM;
         let BPM = bpmctr.getBPM();
@@ -355,8 +357,11 @@ let SPO2Interval = setInterval(function () {
 function getSPO2() {
   let V_AC_RMS_RD = Math.sqrt(SPO2_RD_MA.getAverage());
   let V_AC_RMS_IR = Math.sqrt(SPO2_IR_MA.getAverage());
-  let R = (V_AC_RMS_RD / V_DC_RD) / (V_AC_RMS_IR / V_DC_IR);
-  let SPO2 = 110 - 25 * R;
+  let SPO2 = 0;
+  if (V_AC_RMS_IR > PPG_V_RMS_thres && V_AC_RMS_RD > PPG_V_RMS_thres) {
+    let R = (V_AC_RMS_RD / V_DC_RD) / (V_AC_RMS_IR / V_DC_IR);
+    SPO2 = 110 - 25 * R;
+  }
   return SPO2;
 }
 

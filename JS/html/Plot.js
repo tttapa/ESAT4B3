@@ -105,7 +105,7 @@ class ScanningPlot {
         line.setAttribute("x2", x2);
         line.setAttribute("y2", y2);
         line.setAttribute("stroke", this.color);
-        line.setAttribute("stroke-width", 2);
+        line.setAttribute("stroke-width", 3);
         return line;
     }
 };
@@ -208,7 +208,7 @@ class MovingPlot {
         line.setAttribute("x2", x2);
         line.setAttribute("y2", y2);
         line.setAttribute("stroke", this.color);
-        line.setAttribute("stroke-width", 2);
+        line.setAttribute("stroke-width", 3);
         return line;
     }
 };

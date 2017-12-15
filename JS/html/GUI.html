@@ -13,6 +13,7 @@
 <body>
     <header>
         <img id="logo" src="logo.png">
+        <div id="userlogo">P</div>
     </header>
     <div id="mainwindow">
         <nav>
@@ -65,8 +66,8 @@
             </div>
             <div id="PPGDetail" class="invisible PPG">
                 <div id="PPGPlots">
-                    <div id="PPGplotIR" class="scanningplot PPG"></div>
-                    <div id="PPGplotRD" class="scanningplot PPG"></div>
+                    <div id="PPGplotIR" class="scanningplot PPG"><div class="plottitle">PPG Infrared</div></div>
+                    <div id="PPGplotRD" class="scanningplot PPG"><div class="plottitle">PPG Red</div></div>
                 </div>
                 <div id="PPGStats" class="flexRow">
                     <div class="flexCol statspage">
@@ -169,7 +170,7 @@
             <div>Height:</div><div><input type="number" id="height" name="height" class="unit"><span class="unit">cm</span></div>
             <div>BMI:&nbsp;<i class="material-icons" title="Body Mass Index">help</i></div><div><input type="number" id="BMI" name="BMI" readonly></div><!-- TODO: extra uitleg -->
             <div>Daily step goal:</div><div><input type="number" id="stepgoal" name="stepgoal" ></div>
-            <div><div id="userbuttons"><input type="submit" value="Save" style="float: left;"><button style="float: right;">Cancel</button></div></div>
+            <div><div id="userbuttons"><input type="submit" value="Save" style="float: left;"><button style="float: right;" onclick="hideUserPanel(); return false;">Cancel</button></div></div>
             </form>
         </div>
     </div>

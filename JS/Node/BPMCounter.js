@@ -30,6 +30,7 @@ class BPMCounter {
                     } else {
                         distance = -1;
                         this.BPM = 0;
+                        console.log("BPM too high!");
                     }
                 }
                 this.prevCtr = this.ctr;
@@ -41,6 +42,7 @@ class BPMCounter {
             this.prevCtr = 0;
             distance = -1;
             this.BPM = 0;
+            console.log("BPM too low!");
         } else if (value >= this.threshold && (dif >= this.difThreshold || this.difThreshold === 0)) {      // New peak, first sample above threshold
             this.ctr = 0;
             this.max = value;

@@ -6,6 +6,7 @@
 #define USE_PROTOCOL
 // #define ECG_SENSOR
 #define ECG_DATA
+// #define PPG_SENSOR
 #define PPG_DATA
 #define PRES_CTR
 
