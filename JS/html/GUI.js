@@ -197,12 +197,13 @@ function disconnect() {
 }
 
 // Steps, BPM & SPO2 plots
-
-google.charts.load("current", { packages: ["corechart", "bar", "gauge"] });
-google.charts.setOnLoadCallback(drawCharts);
+if (typeof(google) == 'undefined') {
+    google.charts.load("current", { packages: ["corechart", "bar", "gauge"] });
+    google.charts.setOnLoadCallback(drawCharts);
+}
 
 function drawCharts() {
-    if (google.visualization == undefined) {
+    if (typeof(google) == 'undefined' || typeof(google.visualization) == 'undefined') {
         return;
     }
     let nowDate = new Date();
@@ -321,7 +322,6 @@ let barChartOptions = {
             // count: 4
         }
     }
-
 };
 
 let barChart;
@@ -362,7 +362,7 @@ function updateStepGoal(newGoal) {
 }
 
 function updateStepsGauge(value) {
-    if (google.visualization == undefined) {
+    if (typeof(google) == 'undefined' || typeof(google.visualization) == 'undefined') {
         return;
     }
     value *= 100;
@@ -397,7 +397,7 @@ let BPMGauge;
 let BPMGaugeData;
 
 function updateBPMsGauge(value) {
-    if (google.visualization == undefined) {
+    if (typeof(google) == 'undefined' || typeof(google.visualization) == 'undefined') {
         return;
     }
     if (value != null) {
@@ -415,9 +415,11 @@ function updateBPMsGauge(value) {
 
 function updateBPMsGaugeLimits(age) {
     let maxBPM = 220 - age;
-    BPMGaugeOptions.greenTo = maxBPM;
-    BPMGaugeOptions.redFrom = maxBPM;
-    updateBPMsGauge(null);
+    if (BPMGaugeOptions) {
+        BPMGaugeOptions.greenTo = maxBPM;
+        BPMGaugeOptions.redFrom = maxBPM;
+        updateBPMsGauge(null);
+    }
 }
 
 let BPMChartOptions = {
@@ -537,7 +539,7 @@ window.onresize = function (ev) {
 };
 
 function reDrawCharts() {
-    if (google.visualization == undefined) {
+    if (typeof(google) == 'undefined' || typeof(google.visualization) == 'undefined') {
         return;
     }
     if (barChart) {
