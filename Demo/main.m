@@ -3,11 +3,12 @@ function main
 %% MIDI
 
     deviceName = 'Arduino Leonardo';
-    channel = 1;
-    controller = 19;
-    midicontrolsObject = midicontrols(channel*1000+controller, 'MIDIDevice',deviceName);
 
-    midicallback(midicontrolsObject,@dispMIDI)
+    midicontrolsAngle = midicontrols(1*1000+19, 'MIDIDevice',deviceName);
+    midicallback(midicontrolsAngle,@midiAngle)
+    
+    midicontrolsRadius = midicontrols(1*1000+7, 'MIDIDevice',deviceName);
+    midicallback(midicontrolsRadius,@midiRadius)
 
 %% ECG Data
     
@@ -29,14 +30,15 @@ function main
     yFFT = 10*log10(yFFT(1:end/2+1).^2);
     xFFT = linspace(0,fs/2, length(yFFT));
     pFFT = plot(aFFT, xFFT, yFFT);
-    aFFT.set('XLim',[0 fs/2],'YLim',[-60,100]);
+    aFFT.set('XLim',[0 fs/2],'YLim',[-20,100]);
 
 %% Z domain stuff
 
     theta = 0;
+    radius = 0;
 
-    a = cos(theta);
-    b = sin(theta);
+    a = radius * cos(theta);
+    b = radius * sin(theta);
     b_coeff = [a^2 + b^2, -2*a, 1];
     disp(b_coeff);
 
@@ -84,10 +86,19 @@ function main
         pause(0.2);
     end
 
-    function dispMIDI(obj)
+    function midiAngle(obj)
         theta = midiread(obj)*pi;
-        a = cos(theta);
-        b = sin(theta);
+        update;
+    end
+
+    function midiRadius(obj)
+        radius = midiread(obj);
+        update;
+    end
+
+    function update
+        a = radius * cos(theta);
+        b = radius * sin(theta);
         b_coeff = [a^2 + b^2, -2*a, 1];
         disp(b_coeff);
 
