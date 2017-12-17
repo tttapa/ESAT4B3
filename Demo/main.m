@@ -1,5 +1,6 @@
 function main
     close all;
+%% MIDI
 
     deviceName = 'Arduino Leonardo';
     channel = 1;
@@ -8,7 +9,31 @@ function main
 
     midicallback(midicontrolsObject,@dispMIDI)
 
-    theta =pi/4;
+%% ECG Data
+    
+    fs = 360;
+    seconds = 2;
+    DC_offset = 250;
+    
+    data = csvread('../Data/RealDataArduino.csv');
+    data = data(1:seconds*fs) - DC_offset;
+    
+    figure;
+    aECG = axes;
+    pECG = plot(aECG, data);
+    aECG.set('XLim',[0 length(data)-1],'YLim',[-200,400]);
+    
+    figure;
+    aFFT = axes;
+    yFFT = real(fft(data));
+    yFFT = 10*log10(yFFT(1:end/2+1).^2);
+    xFFT = linspace(0,fs/2, length(yFFT));
+    pFFT = plot(aFFT, xFFT, yFFT);
+    aFFT.set('XLim',[0 fs/2],'YLim',[-60,100]);
+
+%% Z domain stuff
+
+    theta = 0;
 
     a = cos(theta);
     b = sin(theta);
@@ -22,8 +47,11 @@ function main
     logH = 10*log10(H_sq);
     figure;
     freqResp = axes;
-    f = plot(freqResp, omega, logH);
-    freqResp.set('XLim',[0,pi],'YLim',[-60,20]);
+    hold(freqResp, 'on');
+    xOmega = linspace(0, fs/2, length(logH));
+    f = plot(freqResp, xOmega, logH);
+    plot(freqResp,[50 50],[-60 20],'--k');
+    freqResp.set('XLim',[0,fs/2],'YLim',[-60,20]);
     
     [Re,Im] = meshgrid(-2:0.01:2, -2:0.01:2);
     Z = ((Re - a).^2+(Im - b).^2).*((Re - a).^2+(Im + b).^2);
@@ -83,5 +111,12 @@ function main
         
         set(surfBottom,'ZData',logZ);
         set(unitCircleBottom,'ZData',logCircZ);
+        
+        % ECG
+        filtered = filter(b_coeff, 1, data);
+        pECG.set('YData', filtered);
+        yFFT = real(fft(filtered));
+        yFFT = 10*log10(yFFT(1:end/2+1).^2);
+        pFFT.set('YData', yFFT);
     end
 end
