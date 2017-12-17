@@ -197,10 +197,8 @@ function disconnect() {
 }
 
 // Steps, BPM & SPO2 plots
-if (typeof(google) == 'undefined') {
-    google.charts.load("current", { packages: ["corechart", "bar", "gauge"] });
-    google.charts.setOnLoadCallback(drawCharts);
-}
+google.charts.load("current", { packages: ["corechart", "bar", "gauge"] });
+google.charts.setOnLoadCallback(drawCharts);
 
 function drawCharts() {
     if (typeof(google) == 'undefined' || typeof(google.visualization) == 'undefined') {

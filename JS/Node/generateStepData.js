@@ -32,9 +32,28 @@ let timestamp = today_12am.getTime() / 1000;
 
 let now = (new Date()).getTime() / 1000;
 
+let data = ''
 let i = 0;
 while (timestamp < now && i < steps.length) {
-    console.log(`${timestamp},${steps[i]}`);
+    // console.log(`${timestamp},${steps[i]}`);
+    data += `${timestamp},${steps[i]}\r\n`;
     i++;
     timestamp += 15 * 60;
 }
+
+const fs = require('fs');
+const path = require('path');
+
+
+const datafolder = 'Data';
+if (!fs.existsSync(path.join(__dirname, datafolder))) {
+    fs.mkdirSync(path.join(__dirname, datafolder));
+}
+
+fs.writeFile(path.join(__dirname, datafolder,'Steps.csv'), data, function (err) {
+    if (err) {
+        return console.log(err);
+    }
+
+    console.log("The file was saved!");
+}); 

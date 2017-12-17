@@ -350,7 +350,8 @@ let SPO2Interval = setInterval(function () {
   SPO2buf[0] = Sender.message_type.SPO2;
   let SPO2 = getSPO2();
   SPO2buf[1] = Math.round(SPO2 * 100);
-  SPO2average.add(SPO2);
+  if (SPO2 != 0)
+    SPO2average.add(SPO2);
   wss.broadcast(SPO2buf);
 }, 1000);
 

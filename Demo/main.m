@@ -37,16 +37,24 @@ function main
     theta = 0;
     radius = 0;
 
-    a = radius * cos(theta);
-    b = radius * sin(theta);
-    b_coeff = [a^2 + b^2, -2*a, 1];
-    disp(b_coeff);
-
+    [Re,Im] = meshgrid(-2:0.01:2, -2:0.01:2);
     omega = 0:0.01:pi;
     Z_re = cos(omega); % Real part of z
     Z_im = sin(omega); % Imaginary part of z
-    H_sq = ((Z_re - a).^2+(Z_im - b).^2).*((Z_re - a).^2+(Z_im + b).^2);
-    logH = 10*log10(H_sq);
+    
+    circT = 0:0.01:2*pi;
+    circX = cos(circT);
+    circY = sin(circT);
+    
+    b_coeff = [];
+    logH = [];
+    logZ = [];
+    logCircZ = [];
+
+    calculateZ;
+    
+%% Plots
+
     figure;
     freqResp = axes;
     hold(freqResp, 'on');
@@ -54,17 +62,7 @@ function main
     f = plot(freqResp, xOmega, logH);
     plot(freqResp,[50 50],[-60 20],'--k');
     freqResp.set('XLim',[0,fs/2],'YLim',[-60,20]);
-    
-    [Re,Im] = meshgrid(-2:0.01:2, -2:0.01:2);
-    Z = ((Re - a).^2+(Im - b).^2).*((Re - a).^2+(Im + b).^2);
-    logZ = 10*log10(Z);
-    
-    circT = 0:0.01:2*pi;
-    circX = cos(circT);
-    circY = sin(circT);
-    circZ = ((circX - a).^2+(circY - b).^2).*((circX - a).^2+(circY + b).^2);
-    logCircZ = 10*log10(circZ);
-    
+        
     figure;
     asTop = axes;
     hold(asTop,'on');
@@ -80,7 +78,8 @@ function main
     unitCircleBottom = plot3(circX, circY, logCircZ,'r');
     campos([2,2,-20]);
     asBottom.set('XLim',[-2,2],'YLim',[-2,2],'ZLim',[-60,30]);
-    
+
+%% Loop and callbacks
 
     while 1
         pause(0.2);
@@ -96,24 +95,27 @@ function main
         update;
     end
 
-    function update
+%% Calculate and update plots
+
+    function calculateZ
         a = radius * cos(theta);
         b = radius * sin(theta);
         b_coeff = [a^2 + b^2, -2*a, 1];
-        disp(b_coeff);
 
-        Z_re = cos(omega); % Real part of z
-        Z_im = sin(omega); % Imaginary part of z
         H_sq = ((Z_re - a).^2+(Z_im - b).^2).*((Z_re - a).^2+(Z_im + b).^2);
         logH = 10*log10(H_sq);
 
-        Z = ((Re - a).^2+(Im - b).^2).*((Re - a).^2+(Im + b).^2);
-        logZ = 10*log10(Z);
-        
-        circZ = ((circX - a).^2+(circY - b).^2).*((circX - a).^2+(circY + b).^2);
-        logCircZ = 10*log10(circZ);
-        
+        Z_sq = ((Re - a).^2+(Im - b).^2).*((Re - a).^2+(Im + b).^2);
+        logZ = 10*log10(Z_sq);
         logZ(logZ<-60) = -60;
+
+        circZ_sq = ((circX - a).^2+(circY - b).^2).*((circX - a).^2+(circY + b).^2);
+        logCircZ = 10*log10(circZ_sq);
+        logCircZ(logCircZ<-60) = -60;
+    end
+
+    function update
+        calculateZ;
 
         set(f,'YData',logH);
         
