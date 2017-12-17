@@ -105,6 +105,7 @@ let Steptxt = document.getElementById("Steps");
 
 let BPMAlarmInterval;
 let PPGAlarmInterval;
+let PanicAlarmInterval;
 
 ws.onmessage = function (e) {
     clearTimeout(ws.timeOut);
@@ -188,6 +189,26 @@ ws.onmessage = function (e) {
             Steptxt.textContent = dataArray[1];
             updateStepsGauge(dataArray[1]);
             break;
+        case message_type.COMMAND:
+            console.log(`Command: ${dataArray[1]}`);
+            if (dataArray[1] == 1) {
+                if (PanicAlarmInterval == null) {
+                    header.classList.add('alarm');
+                    PanicAlarmInterval = setInterval(function () {
+                        header.classList.toggle('alarm');
+                    }, 500);
+                    header.onclick = function () {
+                        clearInterval(PanicAlarmInterval);
+                        PanicAlarmInterval = null;
+                        header.classList.remove('alarm');
+                    };
+                }
+            } else if (dataArray[1] == 0) {
+                clearInterval(PanicAlarmInterval);
+                PanicAlarmInterval = null;
+                header.classList.remove('alarm');
+            }
+            break;
     }
 };
 
@@ -201,7 +222,7 @@ google.charts.load("current", { packages: ["corechart", "bar", "gauge"] });
 google.charts.setOnLoadCallback(drawCharts);
 
 function drawCharts() {
-    if (typeof(google) == 'undefined' || typeof(google.visualization) == 'undefined') {
+    if (!google || !google.visualization) {
         return;
     }
     let nowDate = new Date();
@@ -360,7 +381,7 @@ function updateStepGoal(newGoal) {
 }
 
 function updateStepsGauge(value) {
-    if (typeof(google) == 'undefined' || typeof(google.visualization) == 'undefined') {
+    if (!google || !google.visualization) {
         return;
     }
     value *= 100;
@@ -395,7 +416,7 @@ let BPMGauge;
 let BPMGaugeData;
 
 function updateBPMsGauge(value) {
-    if (typeof(google) == 'undefined' || typeof(google.visualization) == 'undefined') {
+    if (!google || !google.visualization) {
         return;
     }
     if (value != null) {
@@ -537,7 +558,7 @@ window.onresize = function (ev) {
 };
 
 function reDrawCharts() {
-    if (typeof(google) == 'undefined' || typeof(google.visualization) == 'undefined') {
+    if (!google || !google.visualization) {
         return;
     }
     if (barChart) {

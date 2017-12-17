@@ -283,6 +283,13 @@ function handleSerialMessage(message) {
       pressbufD[1] = message.value;
       wss.broadcast(pressbufD);
       break;
+    case Receiver.message_type.COMMAND:
+      console.log(`Command: ${message.value}`);
+      let cmdBuff = new Uint16Array(2);
+      cmdBuff[0] = Sender.message_type.COMMAND;
+      cmdBuff[1] = message.value;
+      wss.broadcast(cmdBuff);
+      break;
   }
 }
 
@@ -400,7 +407,7 @@ function HTTPhandler(req, res) {
       sendFile(res, 'users.json');
     } else if (req.method === 'POST') {
       console.log("POST");
-      let postData = '';  
+      let postData = '';
       req.on('data', function (chunk) {
         postData += chunk;
       });
@@ -409,8 +416,8 @@ function HTTPhandler(req, res) {
         console.log("end");
         console.log(postData);
         try {
-        let userdata = JSON.parse(postData);
-        console.log(userdata);
+          let userdata = JSON.parse(postData);
+          console.log(userdata);
         } catch (e) {
           console.error("Unable to parse JSON user data.");
         }

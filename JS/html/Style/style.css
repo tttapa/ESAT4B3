@@ -28,6 +28,7 @@ header {
     box-sizing: border-box;
     color: #EEE;
     z-index: 3;
+    transition: background-color 0.25s;
 }
 
 #userlogo {
@@ -85,7 +86,7 @@ article > div, article > div > div {
     max-width: 100%;
     min-height: 0;
 }
-nav > div.alarm {
+.alarm {
     background-color: #FF1111 !important;
     z-index: 2;
     color: white;
