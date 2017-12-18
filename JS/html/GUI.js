@@ -218,15 +218,19 @@ function disconnect() {
 }
 
 // Steps, BPM & SPO2 plots
-google.charts.load("current", { packages: ["corechart", "bar", "gauge"] });
-google.charts.setOnLoadCallback(drawCharts);
+if (typeof(google) != 'undefined') {
+    google.charts.load("current", { packages: ["corechart", "bar", "gauge"] });
+    google.charts.setOnLoadCallback(drawCharts);
+} else {
+    console.error('Cannot load Google Charts');
+}
 
 function drawCharts() {
-    if (!google || !google.visualization) {
+    if (typeof(google) == 'undefined' || typeof(google.visualization) == 'undefined') {
         return;
     }
     clearCharts();
-    
+
     let nowDate = new Date();
     let now = Math.floor(nowDate.getTime() / 1000);
 
@@ -383,7 +387,7 @@ function updateStepGoal(newGoal) {
 }
 
 function updateStepsGauge(value) {
-    if (!google || !google.visualization) {
+    if (typeof(google) == 'undefined' || typeof(google.visualization) == 'undefined') {
         return;
     }
     value *= 100;
@@ -418,7 +422,7 @@ let BPMGauge;
 let BPMGaugeData;
 
 function updateBPMsGauge(value) {
-    if (!google || !google.visualization) {
+    if (typeof(google) == 'undefined' || typeof(google.visualization) == 'undefined') {
         return;
     }
     if (value != null) {
@@ -560,7 +564,7 @@ window.onresize = function (ev) {
 };
 
 function reDrawCharts() {
-    if (!google || !google.visualization) {
+    if (typeof(google) == 'undefined' || typeof(google.visualization) == 'undefined') {
         return;
     }
     if (barChart) {
