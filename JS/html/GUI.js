@@ -10,6 +10,9 @@ PPGButton.onclick = selectPanel;
 const StepsButton = document.getElementById("StepsButton");
 StepsButton.onclick = selectPanel;
 
+const userpanel = document.getElementById("userpanel");
+const header = document.getElementsByTagName("header")[0];
+
 function selectPanel() {
     let detailPanel = document.getElementById(this.dataset.panel);
     if (this.classList.toggle("active")) {
@@ -35,7 +38,7 @@ ws.onopen = function (ev) {
     console.log("Connected");
 };
 ws.onerror = function (er) {
-    console.log(er);
+    console.error(er);
     document.getElementById("mainwindow").classList.add("offline");
     setTimeout(function () { alert('Connection error.'); }, 100);
 };
@@ -61,10 +64,14 @@ const downsampleamount = 2;
 const ECG_samplefreq = 360;
 
 const PPG_samplefreq = 50;
-const SPO2limit = 88;
-const SPO2_YLim_min = 80;
+const SPO2limit = 90;
+const SPO2_YLim_min = 90;
+
+const SPO2_lines = 4;
 
 const SPO2minY = 60;
+
+const PPG_lines = 3;
 
 const DC_offset = 240;
 
@@ -83,20 +90,22 @@ let ECGPlot = new ScanningPlot(ECGPlotContainer, 5 * ECG_samplefreq / downsample
 let PPGDetailPanel = document.getElementById("PPGDetail");
 PPGDetailPanel.classList.remove("invisible");
 let PPGPlotContainerIR = document.getElementById("PPGplotIR");
-let PPGPlotIR = new ScanningPlot(PPGPlotContainerIR, 5 * PPG_samplefreq, "#FF11EE", false, 1, '#EEE', -511, 511);
+let PPGPlotIR = new ScanningPlot(PPGPlotContainerIR, 5 * PPG_samplefreq, "#FF11EE", false, PPG_lines, '#EEE', -510, 510);
 
 let PPGPlotContainerRD = document.getElementById("PPGplotRD");
-let PPGPlotRD = new ScanningPlot(PPGPlotContainerRD, 5 * PPG_samplefreq, "#FF11EE", false, 1, '#EEE', -511, 511);
+let PPGPlotRD = new ScanningPlot(PPGPlotContainerRD, 5 * PPG_samplefreq, "#FF11EE", false, PPG_lines, '#EEE', -510, 510);
 PPGDetailPanel.classList.add("invisible");
 
 let SPO2PlotContainer = document.getElementById("SPO2plot");
-let SPO2Plot = new MovingPlot(SPO2PlotContainer, 60, "#FF11EE", true, 3, '#EEE', SPO2_YLim_min, 100, ' %');
+let SPO2Plot = new MovingPlot(SPO2PlotContainer, 60, "#FF11EE", true, SPO2_lines, '#EEE', SPO2_YLim_min, 100, ' %');
 
 let BPMtxt = document.getElementById("BPM");
 let SPO2txt = document.getElementById("SPO2");
 let Steptxt = document.getElementById("Steps");
 
+let BPMAlarmInterval;
 let PPGAlarmInterval;
+let PanicAlarmInterval;
 
 ws.onmessage = function (e) {
     clearTimeout(ws.timeOut);
@@ -123,6 +132,19 @@ ws.onmessage = function (e) {
         case message_type.BPM:
             let BPMtextval = '--,-';
             let BPM = Math.round(dataArray[1] / 10) / 10;
+            if (BPM != 0 && (BPM < parseInt(BPMGaugeOptions.greenFrom) || BPM > parseInt(BPMGaugeOptions.greenTo))) {
+                console.log("BPM error");
+                if (BPMAlarmInterval == null) {
+                    ECGButton.classList.add('alarm');
+                    BPMAlarmInterval = setInterval(function () {
+                        ECGButton.classList.toggle('alarm');
+                    }, 500);
+                }
+            } else {
+                clearInterval(BPMAlarmInterval);
+                BPMlarmInterval = null;
+                ECGButton.classList.remove('alarm');
+            }
             if (BPM !== 0) {
                 BPMtextval = BPM.toFixed(1);
             }
@@ -132,7 +154,7 @@ ws.onmessage = function (e) {
         case message_type.SPO2:
             let SPO2perc = Math.round(dataArray[1] / 10) / 10;
             let SPO2 = '--,-';
-            if (SPO2perc < SPO2limit) {
+            if (SPO2perc != 0 && SPO2perc < SPO2limit) {
                 if (PPGAlarmInterval == null) {
                     PPGButton.classList.add('alarm');
                     PPGAlarmInterval = setInterval(function () {
@@ -167,6 +189,26 @@ ws.onmessage = function (e) {
             Steptxt.textContent = dataArray[1];
             updateStepsGauge(dataArray[1]);
             break;
+        case message_type.COMMAND:
+            console.log(`Command: ${dataArray[1]}`);
+            if (dataArray[1] == 1) {
+                if (PanicAlarmInterval == null) {
+                    header.classList.add('alarm');
+                    PanicAlarmInterval = setInterval(function () {
+                        header.classList.toggle('alarm');
+                    }, 500);
+                    header.onclick = function () {
+                        clearInterval(PanicAlarmInterval);
+                        PanicAlarmInterval = null;
+                        header.classList.remove('alarm');
+                    };
+                }
+            } else if (dataArray[1] == 0) {
+                clearInterval(PanicAlarmInterval);
+                PanicAlarmInterval = null;
+                header.classList.remove('alarm');
+            }
+            break;
     }
 };
 
@@ -176,14 +218,19 @@ function disconnect() {
 }
 
 // Steps, BPM & SPO2 plots
-
-google.charts.load("current", { packages: ["corechart", "bar", "gauge"] });
-google.charts.setOnLoadCallback(drawCharts);
+if (typeof(google) != 'undefined') {
+    google.charts.load("current", { packages: ["corechart", "bar", "gauge"] });
+    google.charts.setOnLoadCallback(drawCharts);
+} else {
+    console.error('Cannot load Google Charts');
+}
 
 function drawCharts() {
-    if (google.visualization == undefined) {
+    if (typeof(google) == 'undefined' || typeof(google.visualization) == 'undefined') {
         return;
     }
+    clearCharts();
+
     let nowDate = new Date();
     let now = Math.floor(nowDate.getTime() / 1000);
 
@@ -300,7 +347,6 @@ let barChartOptions = {
             // count: 4
         }
     }
-
 };
 
 let barChart;
@@ -334,7 +380,16 @@ let stepGaugeData;
 
 let stepGoal = 10000;
 
+function updateStepGoal(newGoal) {
+    stepGoal = newGoal;
+    updateStepsGauge(null);
+    console.log("StepGoal updated");
+}
+
 function updateStepsGauge(value) {
+    if (typeof(google) == 'undefined' || typeof(google.visualization) == 'undefined') {
+        return;
+    }
     value *= 100;
     value /= stepGoal;
     value = Math.round(value);
@@ -347,7 +402,7 @@ function updateStepsGauge(value) {
 
     if (!stepGauge)
         stepGauge = new google.visualization.Gauge(document.getElementById('StepsGauge'));
-    if (stepGaugeData)
+    if (stepGauge && stepGaugeData)
         stepGauge.draw(stepGaugeData, stepGaugeOptions);
 }
 
@@ -358,7 +413,7 @@ let BPMGaugeOptions = {
     min: 30,
     max: 220,
     yellowColor: 'blue',
-    greenFrom: 60, greenTo: 200,
+    greenFrom: 50, greenTo: 200,
     redFrom: 200, redTo: 220,
     forceIFrame: true,
 };
@@ -367,6 +422,9 @@ let BPMGauge;
 let BPMGaugeData;
 
 function updateBPMsGauge(value) {
+    if (typeof(google) == 'undefined' || typeof(google.visualization) == 'undefined') {
+        return;
+    }
     if (value != null) {
         BPMGaugeData = google.visualization.arrayToDataTable([
             ['Label', 'Value'],
@@ -376,8 +434,17 @@ function updateBPMsGauge(value) {
 
     if (!BPMGauge)
         BPMGauge = new google.visualization.Gauge(document.getElementById('BPMGauge'));
-    if (BPMGaugeData)
+    if (BPMGauge && BPMGaugeData)
         BPMGauge.draw(BPMGaugeData, BPMGaugeOptions);
+}
+
+function updateBPMsGaugeLimits(age) {
+    let maxBPM = 220 - age;
+    if (BPMGaugeOptions) {
+        BPMGaugeOptions.greenTo = maxBPM;
+        BPMGaugeOptions.redFrom = maxBPM;
+        updateBPMsGauge(null);
+    }
 }
 
 let BPMChartOptions = {
@@ -421,7 +488,7 @@ let BPMData;
 function updateBPMChart(array) {
     BPMData = new google.visualization.DataTable();
     BPMData.addColumn('datetime', 'Time');
-    BPMData.addColumn('number', 'Steps');
+    BPMData.addColumn('number', 'BPM');
 
     BPMData.addRows(array);
 
@@ -436,7 +503,6 @@ function updateBPMChart(array) {
 }
 
 let SPO2ChartOptions = {
-    // title: 'Number of steps per 15 minutes',
     legend: { position: 'none' },
     backgroundColor: 'none',
     colors: ['#FF55EE'],
@@ -476,7 +542,7 @@ let SPO2Data;
 function updateSPO2Chart(array) {
     SPO2Data = new google.visualization.DataTable();
     SPO2Data.addColumn('datetime', 'Time');
-    SPO2Data.addColumn('number', 'Steps');
+    SPO2Data.addColumn('number', 'SPO2');
 
     SPO2Data.addRows(array);
 
@@ -498,6 +564,9 @@ window.onresize = function (ev) {
 };
 
 function reDrawCharts() {
+    if (typeof(google) == 'undefined' || typeof(google.visualization) == 'undefined') {
+        return;
+    }
     if (barChart) {
         barChart.clearChart();
         barChart.draw(stepData, barChartOptions);
@@ -512,6 +581,18 @@ function reDrawCharts() {
     }
     updateBPMsGauge(null);
     updateStepsGauge(null);
+}
+
+function clearCharts() {
+    if (barChart) {
+        barChart.clearChart();
+    }
+    if (BPMChart) {
+        BPMChart.clearChart();
+    }
+    if (SPO2Chart) {
+        SPO2Chart.clearChart();
+    }
 }
 
 // Pressure 
