@@ -39,3 +39,19 @@ xlabel('Sample');
 ylabel('Amplitude');
 xlim([1 720]);
 legend('Discrete derivative of the filtered ECG signal','Discrete derivative of the square of the filtered ECG signal', 'Location','southeast');
+
+%% PPT
+
+figure;
+plot(filtered,'k','LineWidth',1);
+ylabel('Amplitude');
+title('Filtered ECG signal');
+xlabel('Sample');
+xlim([1 720]);
+
+figure;
+plot(difsq,'k','LineWidth',1);
+ylabel('Amplitude');
+title('Discrete derivative of filtered ECG signal');
+xlabel('Sample');
+xlim([1 720]);
