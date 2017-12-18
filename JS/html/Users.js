@@ -1,11 +1,29 @@
 document.getElementById("userlogo").onclick = showUserPanel;
 
+let newuser = document.getElementById("newuser");
+newuser.onclick = newUser;
+
+document.getElementById("height").oninput = updateBMI;
+document.getElementById("weight").oninput = updateBMI;
+
+function newUser() {
+    document.getElementById("username").readOnly = false;
+    document.getElementById("username").value = '';
+    document.getElementById("age").value = 0;
+    document.getElementById("weight").value = 0;
+    document.getElementById("height").value = 0;
+    document.getElementById("stepgoal").value = 10000;
+    document.getElementById("BMI").value = 0;
+    userpanel.classList.add("uservisible");        
+}
+
 loadUserData();
 
 function loadUserData() {
     sendGETRequest('/users', function (data) {
         updateUserData(data);
     });
+//    userpanel.classList.add("uservisible");    
 }
 
 function showUserPanel() {
@@ -26,9 +44,6 @@ function sendGETRequest(uri, cb) {
     xhttp.send();
 }
 
-document.getElementById("height").oninput = updateBMI;
-document.getElementById("weight").oninput = updateBMI;
-
 function updateBMI() {
     let height = document.getElementById("height").value / 100;
     let weight = document.getElementById("weight").value;
@@ -39,6 +54,10 @@ function updateUserData(data) {
     let usersJson = JSON.parse(data);
     updateUserFields(usersJson);
     updateUserSelector(usersJson);
+    document.getElementById("userlogo").textContent = usersJson.selectedUser[0];
+    let user = usersJson.users[usersJson.selectedUser];
+    updateBPMsGaugeLimits(user.age);
+    updateStepGoal(user.stepgoal);
 }
 function updateUserFields(usersJson) {
     let user = usersJson.users[usersJson.selectedUser];
@@ -47,16 +66,17 @@ function updateUserFields(usersJson) {
     document.getElementById("weight").value = user.weight;
     document.getElementById("height").value = user.height;
     document.getElementById("stepgoal").value = user.stepgoal;
-    updateBPMsGaugeLimits(user.age);
-    updateStepGoal(user.stepgoal);
-    document.getElementById("userlogo").textContent = user.username[0];
     updateBMI();
 }
 function updateUserSelector(usersJson) {
     let userselector = document.getElementById("userselector");
-    while (userselector.firstChild) {
-        userselector.removeChild(userselector.firstChild);
-    }
+    let children = userselector.childNodes;
+    console.log(children);
+    children.forEach(child => {
+        if (child != newuser)
+            userselector.removeChild(child);
+    });
+
     console.log(usersJson);
     for (let key in usersJson.users) {
         let user = usersJson.users[key];
@@ -68,7 +88,7 @@ function updateUserSelector(usersJson) {
         userButton.onclick = function () {
             usersJson.selectedUser = folder;
             updateUserFields(usersJson);
-            userselector.parentElement.blur(); // TODO
+            userpanel.classList.add("uservisible");
         };
         userselector.appendChild(userButton);
     }
@@ -83,6 +103,7 @@ function hideUserPanel() {
 
 function sendUserForm() {
     let formdata = new Object();
+    document.getElementById("username").readOnly = true;
     formdata.username = document.getElementById("username").value;
     formdata.age = document.getElementById("age").value;
     formdata.weight = document.getElementById("weight").value;

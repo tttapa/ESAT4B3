@@ -13,7 +13,12 @@
 <body>
     <header>
         <img id="logo" src="logo.png">
-        <div id="userlogo">P</div>
+        <div class="dropdown" id="userheaderbutton">
+            <div class="dropbtn" id="userlogo"></div>
+            <div class="dropdown-content" id="userselector">
+                <div id="newuser">New user &hellip;</div>
+            </div>
+        </div>
     </header>
     <div id="mainwindow">
         <nav>
@@ -162,18 +167,14 @@
         </article>
     </div>
     <div id="userpanel">
-        <div class="dropdown">
-            <button class="dropbtn" id"userdropbtn">Change user</button>
-            <div class="dropdown-content" id="userselector"></div>
-        </div>
         <div>
             <h2>User details</h2>
             <form id="userform" onsubmit="return sendUserForm();" action="">
-            <div>Username:</div><div><input type="text" id="username" name="username" readonly></div>
-            <div>Age:</div><div><input type="number" id="age" name="age" ></div>
+            <div>Username:</div><div><input type="text" id="username" name="username" minlength="4" readonly></div>
+            <div>Age:</div><div><input type="number" id="age" name="age"></div>
             <div>Weight:</div><div><input type="number" id="weight" name="weight" class="unit"><span class="unit">kg</span></div>
             <div>Height:</div><div><input type="number" id="height" name="height" class="unit"><span class="unit">cm</span></div>
-            <div>BMI:&nbsp;<i class="material-icons" title="Body Mass Index">help</i></div><div><input type="number" id="BMI" name="BMI" readonly></div><!-- TODO: extra uitleg -->
+            <div>BMI:&nbsp;<i class="material-icons" title="Body Mass Index">help</i></div><div><input type="text" id="BMI" name="BMI" readonly></div><!-- TODO: extra uitleg -->
             <div>Daily step goal:</div><div><input type="number" id="stepgoal" name="stepgoal" ></div>
             <div><div id="userbuttons"><input type="submit" value="Save" style="float: left;"><button style="float: right;" onclick="hideUserPanel(); return false;">Cancel</button></div></div>
             </form>
