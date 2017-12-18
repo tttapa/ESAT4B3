@@ -45,6 +45,8 @@ const PPG_averageSecondsVRMS = 2;
 
 const PPG_V_RMS_thres = 0.1;
 
+const errorSPO2 = false; // Show SpO2 = 70% to test warning
+
 //#endregion
 
 //#region /* --------------------------------USERS-------------------------------- */
@@ -450,7 +452,11 @@ function getSPO2() {
     let R = (V_AC_RMS_RD / V_DC_RD) / (V_AC_RMS_IR / V_DC_IR);
     SPO2 = 110 - 25 * R;
   }
-  return SPO2;
+  if (errorSPO2) {
+    return 70+2*Math.random();    
+  } else {
+    return SPO2;
+  }
 }
 
 //#endregion

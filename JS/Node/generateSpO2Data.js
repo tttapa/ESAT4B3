@@ -18,11 +18,11 @@ const path = require('path');
 
 
 const datafolder = 'Data';
-if (!fs.existsSync(path.join(__dirname, datafolder))) {
-    fs.mkdirSync(path.join(__dirname, datafolder));
+if (!fs.existsSync(path.join(__dirname, datafolder, 'Jane Doe'))) {
+    fs.mkdirSync(path.join(__dirname, datafolder, 'Jane Doe'));
 }
 
-fs.writeFile(path.join(__dirname, datafolder,'SPO2.csv'), data, function (err) {
+fs.writeFile(path.join(__dirname, datafolder, 'Jane Doe', 'SPO2.csv'), data, function (err) {
     if (err) {
         return console.log(err);
     }

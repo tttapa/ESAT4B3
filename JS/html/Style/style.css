@@ -95,7 +95,7 @@ article > div, article > div > div {
 .alarm {
     background-color: #FF1111 !important;
     z-index: 2;
-    color: white;
+    color: white !important;
 }
 
 nav > div.active {
@@ -113,9 +113,8 @@ div.mainbutton {
     font-size: 1.6em;
     z-index: 1;
     min-width: 7em;
-    transition: background-color 0.25s, color 0.25s;
+    transition: background-color 0.25s, color 0.25s, box-shadow 0.1s, margin 0.1s;
     cursor: pointer;
-    transition: box-shadow 0.1s, margin 0.1s;
 }
 
 div.mainbutton:hover, nav > div.active {
