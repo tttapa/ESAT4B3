@@ -225,6 +225,8 @@ function drawCharts() {
     if (!google || !google.visualization) {
         return;
     }
+    clearCharts();
+    
     let nowDate = new Date();
     let now = Math.floor(nowDate.getTime() / 1000);
 
@@ -575,6 +577,18 @@ function reDrawCharts() {
     }
     updateBPMsGauge(null);
     updateStepsGauge(null);
+}
+
+function clearCharts() {
+    if (barChart) {
+        barChart.clearChart();
+    }
+    if (BPMChart) {
+        BPMChart.clearChart();
+    }
+    if (SPO2Chart) {
+        SPO2Chart.clearChart();
+    }
 }
 
 // Pressure 

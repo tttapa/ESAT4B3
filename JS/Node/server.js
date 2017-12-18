@@ -47,6 +47,82 @@ const PPG_V_RMS_thres = 0.1;
 
 //#endregion
 
+//#region /* --------------------------------USERS-------------------------------- */
+
+let userJsonTxt = '';
+try {
+  userJsonTxt = fs.readFileSync(path.join(__dirname, datafolder, 'users.json'));
+} catch (e) {
+  console.error(e);
+}
+let userJson;
+try {
+  userJson = JSON.parse(userJsonTxt);
+} catch (e) {
+  console.error(e);
+  userJson = new Object();
+  userJson.selectedUser = "User1";
+  userJson.users = new Object();
+  let user = new Object();
+  user.username = "User 1";
+  user.age = 40;
+  user.height = 180;
+  user.weight = 75;
+  user.stepgoal = 10000;
+  addOrUpdateUser(user);
+}
+
+function createFolderName(name) {
+  let folder = name;
+  folder.replace(/[^a-zA-Z\d ]+/, '_'); // Replace all strange characters with underscores
+  folder.replace(/(^_)|(_$)/, ''); // Strip leading and trailing underscores
+  folder.replace(/(^ )|( $)/, ''); // Strip leading and trailing spaces
+  return folder;
+}
+
+function addOrUpdateUser(user) {
+  user.folder = createFolderName(user.username);
+  if (userJson.users[user.folder] == undefined) {
+    fs.mkdir(path.join(__dirname, datafolder, user.folder));
+  }
+  userJson.users[user.folder] = user;
+  if (user.folder != userJson.selectedUser) {
+    userJson.selectedUser = user.folder;    
+    LeftStepCounter.reset();
+    RightStepCounter.reset();
+    SPO2average.reset();
+    BPMaverage.reset();
+    stepsToday = getStepsToday();
+    sendSteps();
+  }
+  saveUserJson();
+}
+
+function saveUserJson() {
+  let userJsonTxt = JSON.stringify(userJson);
+  fs.writeFile(path.join(__dirname, datafolder, 'users.json'), userJsonTxt, function (err) {
+    if (err) {
+      return console.log(err);
+    }
+    console.log("The user file was saved!");
+  });
+}
+
+function sendUserFile(res) {
+  fs.readFile(path.join(__dirname, datafolder, 'users.json'), function (err, data) {
+    if (err) {
+      res.writeHead(404);  // Error, file not found
+      res.end();
+      return console.log(err);
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' }); // 200: OK
+    res.write(data); // Send the file
+    res.end(); // Finish response and close connection
+  });
+}
+
+//#endregion
+
 //#region /* -----------------------------------WEBSOCKET----------------------------------- */
 
 const wss = new WebSocket.Server({ port: 1425 });
@@ -139,7 +215,7 @@ function getStepsToday() {
 function getSumRecords(file, start, end) {
   let sum = 0;
   try {
-    let data = fs.readFileSync(path.join(__dirname, datafolder, file), 'utf8');
+    let data = fs.readFileSync(path.join(__dirname, datafolder, userJson.selectedUser, file), 'utf8');
     let lines = data.split(/\n|\r\n|\r/);
     let i = 0;
     let timestamp = parseInt(lines[i].split(',', 2)[0]);
@@ -331,12 +407,16 @@ function every15Minutes(now) {
   stepsToday += steps;
   LeftStepCounter.reset();
   RightStepCounter.reset();
+  if (now.getHours() == 0 && now.getMinutes() == 0) {
+    stepsToday = 0;
+    sendSteps();
+  }
 }
 
 function appendRecord(file, now, value) {
   let timestamp = Math.round(now.getTime() / 1000);
   let entry = new Buffer(`${timestamp},${value}\r\n`);
-  fs.appendFile(path.join(__dirname, datafolder, file), entry, function (err) {
+  fs.appendFile(path.join(__dirname, datafolder, userJson.selectedUser, file), entry, function (err) {
     if (err) {
       console.error('Unable to save record: ');
       return console.error(err);
@@ -404,7 +484,7 @@ function HTTPhandler(req, res) {
     sendCSV(res, URIfile, start, end);
   } else if (URIfile == 'users') {
     if (req.method === 'GET') {
-      sendFile(res, 'users.json');
+      sendUserFile(res);
     } else if (req.method === 'POST') {
       console.log("POST");
       let postData = '';
@@ -417,9 +497,10 @@ function HTTPhandler(req, res) {
         console.log(postData);
         try {
           let userdata = JSON.parse(postData);
-          console.log(userdata);
+          addOrUpdateUser(userdata);
         } catch (e) {
           console.error("Unable to parse JSON user data.");
+          console.error(e);
         }
         res.writeHead(200);
         res.end();
@@ -468,7 +549,7 @@ function getContentType(filename) {  // Get MIME type based on file extension
 }
 
 function sendCSV(res, file, start, end) {
-  fs.readFile(path.join(__dirname, datafolder, file), 'utf8', function (err, data) {
+  fs.readFile(path.join(__dirname, datafolder, userJson.selectedUser, file), 'utf8', function (err, data) {
     if (err) {
       res.writeHead(404);  // Error, file not found
       res.end();
