@@ -14,7 +14,7 @@ function newUser() {
     document.getElementById("height").value = 0;
     document.getElementById("stepgoal").value = 10000;
     document.getElementById("BMI").value = 0;
-    userpanel.classList.add("uservisible");        
+    userpanel.classList.add("uservisible");
 }
 
 loadUserData();
@@ -23,7 +23,7 @@ function loadUserData() {
     sendGETRequest('/users', function (data) {
         updateUserData(data);
     });
-//    userpanel.classList.add("uservisible");    
+    //    userpanel.classList.add("uservisible");    
 }
 
 function showUserPanel() {
@@ -59,6 +59,7 @@ function updateUserData(data) {
     updateBPMsGaugeLimits(user.age);
     updateStepGoal(user.stepgoal);
 }
+
 function updateUserFields(usersJson) {
     let user = usersJson.users[usersJson.selectedUser];
     document.getElementById("username").value = user.username;
@@ -68,20 +69,35 @@ function updateUserFields(usersJson) {
     document.getElementById("stepgoal").value = user.stepgoal;
     updateBMI();
 }
+
 function updateUserSelector(usersJson) {
     let userselector = document.getElementById("userselector");
     let children = userselector.childNodes;
     console.log(children);
-    children.forEach(child => {
-        if (child != newuser)
-            userselector.removeChild(child);
+    let childrenToRemove = [];
+    children.forEach(function(child) {
+        if (child.id !== newuser.id) {
+            console.log('Removing child');
+            console.log(child);
+            childrenToRemove.push(child);
+        } else {
+            console.log('Not removing child');
+            console.log(child);
+        }
     });
+    childrenToRemove.forEach(function(child) {
+        userselector.removeChild(child);
+    });
+    children = userselector.childNodes;
+    console.log(children.length);
 
     console.log(usersJson);
     for (let key in usersJson.users) {
-        let user = usersJson.users[key];
-        if (user.username == usersJson.selectedUser)
+        console.log(key);
+        if (key == usersJson.selectedUser)
             continue;
+
+        let user = usersJson.users[key];
         let userButton = document.createElement("div");
         let folder = user.folder;
         userButton.textContent = user.username;
@@ -92,7 +108,6 @@ function updateUserSelector(usersJson) {
         };
         userselector.appendChild(userButton);
     }
-
 }
 
 function hideUserPanel() {
