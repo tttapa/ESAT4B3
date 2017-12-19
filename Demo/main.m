@@ -4,10 +4,10 @@ function main
 
     deviceName = 'Arduino Leonardo';
 
-    midicontrolsAngle = midicontrols(1*1000+19, 'MIDIDevice',deviceName);
+    midicontrolsAngle = midicontrols(1*1000+4, 'MIDIDevice',deviceName);
     midicallback(midicontrolsAngle,@midiAngle)
     
-    midicontrolsRadius = midicontrols(1*1000+7, 'MIDIDevice',deviceName);
+    midicontrolsRadius = midicontrols(1*1000+0, 'MIDIDevice',deviceName);
     midicallback(midicontrolsRadius,@midiRadius)
 
 %% ECG Data
@@ -18,14 +18,17 @@ function main
     
     data = csvread('../Data/RealDataArduino.csv');
     data = data(1:seconds*fs) - DC_offset;
+        
+    f = figure;
+    aOrigECG = subplot(2, 3, 1);
+    pECG = plot(aOrigECG, data);
+    aOrigECG.set('XLim',[0 length(data)-1],'YLim',[-200,400]);
     
-    figure;
-    aECG = axes;
+    aECG = subplot(2, 3, 4);
     pECG = plot(aECG, data);
     aECG.set('XLim',[0 length(data)-1],'YLim',[-200,400]);
     
-    figure;
-    aFFT = axes;
+    aFFT = subplot(2, 3, 5);
     yFFT = real(fft(data));
     yFFT = 10*log10(yFFT(1:end/2+1).^2);
     xFFT = linspace(0,fs/2, length(yFFT));
@@ -55,24 +58,21 @@ function main
     
 %% Plots
 
-    figure;
-    freqResp = axes;
+    freqResp = subplot(2, 3, 2);
     hold(freqResp, 'on');
     xOmega = linspace(0, fs/2, length(logH));
     f = plot(freqResp, xOmega, logH);
     plot(freqResp,[50 50],[-60 20],'--k');
     freqResp.set('XLim',[0,fs/2],'YLim',[-60,20]);
         
-    figure;
-    asTop = axes;
+    asTop = subplot(2, 3, 3);
     hold(asTop,'on');
     surfTop = surf(asTop, Re, Im, logZ,'FaceAlpha',0.7,'EdgeColor', 'none');
     unitCircleTop = plot3(circX, circY, logCircZ,'r');
     campos([2,2,100]);
     asTop.set('XLim',[-2,2],'YLim',[-2,2],'ZLim',[-60,30]);
 
-    figure;
-    asBottom = axes;
+    asBottom = subplot(2, 3, 6);
     hold(asBottom,'on');
     surfBottom = surf(asBottom, Re, Im, logZ,'FaceAlpha',0.7,'EdgeColor', 'none');
     unitCircleBottom = plot3(circX, circY, logCircZ,'r');
@@ -81,7 +81,7 @@ function main
 
 %% Loop and callbacks
 
-    while 1
+    while ishandle(f)
         pause(0.2);
     end
 
