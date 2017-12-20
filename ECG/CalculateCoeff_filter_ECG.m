@@ -1,6 +1,6 @@
 
 % Sample  and Nyquist (sample freq/2) frequency 
-fs = 360; 
+fs = 120; 
 f_nyquist = fs/2;
 
 syms z
@@ -23,6 +23,9 @@ coeff_b = coeffs(H_b(z));
 % Rescale b with DC-gain
 b_notch = double(coeff_b./H_b(1));                                                              
 a_notch = 1;
+
+freqz(b_notch, a_notch);
+
 %%
 % __________________________________________________________²_______________
 % BUTTERWORTH LOW PASS FILTER
@@ -35,7 +38,9 @@ order_lowpass = 5;
 fc_lowpass = 35;  
 
 % Determine filter coefficients
-[b_lowpass,a_lowpass]= butter(order_lowpass,fc_lowpass/f_nyquist);          
+[b_lowpass,a_lowpass]= butter(order_lowpass,fc_lowpass/f_nyquist);
+figure,
+freqz(b_lowpass, a_lowpass);
 
 % Plot frequency response of the filter 
 % figure, freqz(b_lowpass, a_lowpass, signal_length, fs)
@@ -50,7 +55,10 @@ fc_highpass = 0.5;
 
 % Filter coefficients
 b_highpass = [1 -1];
-a_highpass = [1 -0.995];
+a_highpass = [1 -0.985];
+
+figure,
+
 
 % Plot frequency response of the filter 
 % figure, freqz(b_highpass,a_highpass, signal_length, fs);
