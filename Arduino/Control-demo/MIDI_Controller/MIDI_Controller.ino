@@ -34,6 +34,8 @@ Analog knobsSide[] = {
 };
 */
 
+Analog side = {A8,  0x24, 1};
+
 DigitalCC switches[] = { // MATLAB only supports control messages
     {2, 0x10, 1},
     {3, 0x11, 1},

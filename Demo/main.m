@@ -21,6 +21,8 @@ function main
     catch
         poles = false(1,8);
     end
+    
+    gain = 0;
         
     midiAngles = midicontrols.empty();
     for j = 1:8
@@ -39,6 +41,9 @@ function main
         midiPoles(j) = midicontrols(1*1000 + 16 + (j-1), 'MIDIDevice',deviceName);
         midicallback(midiPoles(j), @(obj)setPole(obj, j));
     end
+    
+    gainMidi = midicontrols(1*1000 + 24, 'MIDIDevice',deviceName);
+    midicallback(gainMidi, @(obj)setGain(obj));
     
 %% ECG Data
     
@@ -143,6 +148,9 @@ function main
         update;
     end
 
+    function setGain(obj);
+        gain = (midiread(obj)-0.5) * 20;
+
 %% Calculate and update plots
 
     function calculateZ
@@ -208,13 +216,13 @@ function main
         
         % figure, freqz(b_coeff, a_coeff, 720, fs)
 
-        logH = 10*log10(H_sq);
+        logH = 10*log10(H_sq)+gain;
 
-        logZ = 10*log10(Z_sq);
-        logZ(logZ<-60) = -60;
+        logZ = 10*log10(Z_sq)+gain;
+        logZ(logZ<-120) = -120;
 
-        logCircZ = 10*log10(circZ_sq);
-        logCircZ(logCircZ<-60) = -60;
+        logCircZ = 10*log10(circZ_sq)+gain;
+        logCircZ(logCircZ<-120) = -120;
     end
 
     function update

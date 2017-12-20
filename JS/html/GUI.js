@@ -61,7 +61,7 @@ const message_type = {
 /* ---------------------------------------------------------------------- */
 
 const downsampleamount = 2;
-const ECG_samplefreq = 360;
+const ECG_samplefreq = 120;
 
 const PPG_samplefreq = 50;
 const SPO2limit = 90;
@@ -77,7 +77,7 @@ const DC_offset = 240;
 
 const ECG_lines = 4;
 
-const ECG_YLim_max = 720;
+const ECG_YLim_max = 800;
 const ECG_YLim_min = (DC_offset * (ECG_lines + 1) - ECG_YLim_max) / ECG_lines;
 
 const ECG_gain = (ECG_YLim_max - DC_offset) * 5000 / 1023 / ECG_lines;

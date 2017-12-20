@@ -27,9 +27,9 @@ const framerate = 30;
 
 const ECGdownsampleamount = 2;
 
-const ECG_samplefreq = 360;
+const ECG_samplefreq = 120;
 
-const ECG_DC_offset = 250;
+const ECG_DC_offset = 409;
 const RpeakThres = 30; // of square !
 const diffThres = 12;  // of square !
 
