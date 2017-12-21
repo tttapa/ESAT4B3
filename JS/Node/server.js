@@ -30,8 +30,8 @@ const ECGdownsampleamount = 2;
 const ECG_samplefreq = 120;
 
 const ECG_DC_offset = 409;
-const RpeakThres = 30; // of square !
-const diffThres = 12;  // of square !
+const RpeakThres = 20; // of square !
+const diffThres = 10;  // of square !
 
 const minBPM = 30;
 const maxBPM = 240;
@@ -336,30 +336,30 @@ function handleSerialMessage(message) {
       pressbufA[0] = Sender.message_type.PRESSURE_A;
       pressbufA[1] = message.value;
       wss.broadcast(pressbufA);
-      if (LeftStepCounter.add(message.value)) {
-        sendSteps();
-      }
       break;
     case Receiver.message_type.PRESSURE_B:
       let pressbufB = new Uint16Array(2);
       pressbufB[0] = Sender.message_type.PRESSURE_B;
       pressbufB[1] = message.value;
       wss.broadcast(pressbufB);
+      if (LeftStepCounter.add(message.value)) {
+        sendSteps();
+      }
       break;
     case Receiver.message_type.PRESSURE_C:
       let pressbufC = new Uint16Array(2);
       pressbufC[0] = Sender.message_type.PRESSURE_C;
       pressbufC[1] = message.value;
       wss.broadcast(pressbufC);
-      if (RightStepCounter.add(message.value)) {
-        sendSteps();
-      }
       break;
     case Receiver.message_type.PRESSURE_D:
       let pressbufD = new Uint16Array(2);
       pressbufD[0] = Sender.message_type.PRESSURE_D;
       pressbufD[1] = message.value;
       wss.broadcast(pressbufD);
+      if (RightStepCounter.add(message.value)) {
+        sendSteps();
+      }
       break;
     case Receiver.message_type.COMMAND:
       console.log(`Command: ${message.value}`);

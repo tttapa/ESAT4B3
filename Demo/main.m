@@ -3,67 +3,34 @@ function main
 %% MIDI
 
     deviceName = 'Arduino Leonardo';
+
+    midicontrolsAngle = midicontrols(1*1000+8, 'MIDIDevice',deviceName);
+    midicallback(midicontrolsAngle,@midiAngle)
     
-    try 
-        load('angles', 'angles');
-    catch
-        angles = zeros(1,8);
-    end
-    
-    try 
-        load('radii', 'radii');
-    catch
-        radii = zeros(1,8);
-    end
-    
-    try 
-        load('poles', 'poles');
-    catch
-        poles = false(1,8);
-    end
-    
-    gain = 0;
-        
-    midiAngles = midicontrols.empty();
-    for j = 1:8
-        midiAngles(j) = midicontrols(1*1000 + 8 + (j-1), 'MIDIDevice',deviceName);
-        midicallback(midiAngles(j), @(obj)setAngle(obj, j));
-    end
-    
-    midiRadii = midicontrols.empty();
-    for j = 1:8
-        midiRadii(j) = midicontrols(1*1000 + 0 + (j-1), 'MIDIDevice',deviceName);
-        midicallback(midiRadii(j), @(obj)setRadius(obj, j));
-    end
-    
-    midiPoles = midicontrols.empty();
-    for j = 1:8
-        midiPoles(j) = midicontrols(1*1000 + 16 + (j-1), 'MIDIDevice',deviceName);
-        midicallback(midiPoles(j), @(obj)setPole(obj, j));
-    end
-    
-    gainMidi = midicontrols(1*1000 + 24, 'MIDIDevice',deviceName);
-    midicallback(gainMidi, @(obj)setGain(obj));
-    
+    midicontrolsRadius = midicontrols(1*1000+0, 'MIDIDevice',deviceName);
+    midicallback(midicontrolsRadius,@midiRadius)
+
 %% ECG Data
     
     fs = 360;
     seconds = 2;
-    % DC_offset = 250;
+    DC_offset = 250;
     
     data = csvread('../Data/RealDataArduino.csv');
-    data = data(1:seconds*fs);
+    data = data(1:seconds*fs) - DC_offset;
         
     f = figure;
     aOrigECG = subplot(2, 3, 1);
     pECG = plot(aOrigECG, data);
-    aOrigECG.set('XLim',[0 length(data)-1],'YLim',[-200,700]);
+    aOrigECG.set('XLim',[0 length(data)-1],'YLim',[-200,400]);
     
-    % data = data - DC_offset;
+    title('Raw ECG signal');
     
     aECG = subplot(2, 3, 4);
     pECG = plot(aECG, data);
-    aECG.set('XLim',[0 length(data)-1],'YLim',[-200,700]);
+    aECG.set('XLim',[0 length(data)-1],'YLim',[-200,400]);
+    
+    title('Filtered ECG signal');
     
     aFFT = subplot(2, 3, 5);
     yFFT = real(fft(data));
@@ -71,12 +38,13 @@ function main
     xFFT = linspace(0,fs/2, length(yFFT));
     pFFT = plot(aFFT, xFFT, yFFT);
     aFFT.set('XLim',[0 fs/2],'YLim',[-20,100]);
+    
+    title('Frequency spectrum');
 
 %% Z domain stuff
 
-    z = sym('z');
-    H_T = symfun(1, z);
-    H_N = symfun(1, z);
+    theta = 0;
+    radius = 0;
 
     [Re,Im] = meshgrid(-2:0.01:2, -2:0.01:2);
     omega = 0:0.01:pi;
@@ -88,7 +56,6 @@ function main
     circY = sin(circT);
     
     b_coeff = [];
-    a_coeff = [];
     logH = [];
     logZ = [];
     logCircZ = [];
@@ -104,12 +71,16 @@ function main
     plot(freqResp,[50 50],[-60 20],'--k');
     freqResp.set('XLim',[0,fs/2],'YLim',[-60,20]);
         
+    title('Filter requency response');
+    
     asTop = subplot(2, 3, 3);
     hold(asTop,'on');
     surfTop = surf(asTop, Re, Im, logZ,'FaceAlpha',0.7,'EdgeColor', 'none');
     unitCircleTop = plot3(circX, circY, logCircZ,'r');
     campos([2,2,100]);
     asTop.set('XLim',[-2,2],'YLim',[-2,2],'ZLim',[-60,30]);
+
+    title('Transfer function');
 
     asBottom = subplot(2, 3, 6);
     hold(asBottom,'on');
@@ -118,111 +89,43 @@ function main
     campos([2,2,-20]);
     asBottom.set('XLim',[-2,2],'YLim',[-2,2],'ZLim',[-60,30]);
     
-    update;
+    xlabel('Re(z)');
+    ylabel('Im(z)');
+    zlabel('10 log(|H(z)|²)');
 
-%% Loop
+%% Loop and callbacks
 
     while ishandle(f)
         pause(0.2);
     end
-    
-    save('angles', 'angles');
-    save('radii', 'radii');
-    save('poles', 'poles');
 
-%% MIDI callbacks
-
-    function setAngle(obj, j)
+    function midiAngle(obj)
         theta = midiread(obj)*pi;
-        angles(j) = theta;
         update;
     end
 
-    function setRadius(obj, j)
-        radii(j) = midiread(obj);
+    function midiRadius(obj)
+        radius = midiread(obj);
         update;
     end
-
-    function setPole(obj, j)
-        poles(j) = midiread(obj);
-        update;
-    end
-
-    function setGain(obj);
-        gain = (midiread(obj)-0.5) * 20;
 
 %% Calculate and update plots
 
     function calculateZ
-        H_T(z) = 1;
-        H_N(z) = 1;
-        H_sq = ones(size(omega));
-        Z_sq = ones(length(Re), length(Im));
-        circZ_sq = ones(size(circT));
-        for j = 1:8
-            disp(strcat(string(j),':',string(radii(j)),'<',string(angles(j))));
-            a = radii(j) * cos(angles(j));
-            b = radii(j) * sin(angles(j));
-            disp(strcat({'a = '}, string(a)));
-            disp(strcat({'b = '}, string(b)));
-            isReal = angles(j) == 0 || angles(j) == pi;
-            if radii(j) == 0
-            elseif isReal
-                if poles(j) == 0
-                    H_T(z) = H_T(z) * (z - a);
-                    H_sq = H_sq .* ((Z_re - a).^2 + Z_im.^2);
-                    Z_sq = Z_sq .* ((Re - a).^2 + Im.^2);
-                    circZ_sq = circZ_sq .* ((circX - a).^2+circY.^2);
-                else 
-                    H_N(z) = H_N(z) * (z - a);
-                    H_sq = H_sq ./ ((Z_re - a).^2 + Z_im.^2);
-                    Z_sq = Z_sq ./ ((Re - a).^2 + Im.^2);
-                    circZ_sq = circZ_sq ./ ((circX - a).^2+circY.^2);
-                end
-            else
-                if poles(j) == 0
-                    H_T(z) = H_T(z) * (z - (a + b*1i)) * (z - (a - b*1i));
-                    H_sq = H_sq .* (((Z_re - a).^2+(Z_im - b).^2) .* ((Z_re - a).^2+(Z_im + b).^2));
-                    Z_sq = Z_sq .* (((Re - a).^2+(Im - b).^2) .* ((Re - a).^2+(Im + b).^2));
-                    circZ_sq = circZ_sq .* ((circX - a).^2+(circY - b).^2).*((circX - a).^2+(circY + b).^2);
-                else 
-                    H_N(z) = H_N(z) * (z - (a + b*1i)) * (z - (a - b*1i));
-                    H_sq = H_sq ./ (((Z_re - a).^2+(Z_im - b).^2) .* ((Z_re - a).^2+(Z_im + b).^2));
-                    Z_sq = Z_sq ./ (((Re - a).^2+(Im - b).^2) .* ((Re - a).^2+(Im + b).^2));
-                    circZ_sq = circZ_sq ./ (((circX - a).^2+(circY - b).^2).*((circX - a).^2+(circY + b).^2));
-                end
-            end
-        end
-        
-        disp(H_T(z))
-        disp(H_N(z))
-        
-        H_sq = abs(H_T(Z_re + 1j*Z_im) ./ H_N(Z_re + 1j*Z_im));
-        
-        b_coeff = fliplr(double(coeffs(H_T(z))));
-        a_coeff = fliplr(double(coeffs(H_N(z))));
-        
-        factor = double(H_N(1) / H_T(1));
-        
-        H_sq = H_sq * factor^2;
-        Z_sq = Z_sq * factor^2;
-        circZ_sq = circZ_sq * factor^2;
-        
-        
-        disp(b_coeff);
-        disp(' ');
-        disp(a_coeff);
-        disp(' ');
-        
-        % figure, freqz(b_coeff, a_coeff, 720, fs)
+        a = radius * cos(theta);
+        b = radius * sin(theta);
+        b_coeff = [a^2 + b^2, -2*a, 1];
 
-        logH = 10*log10(H_sq)+gain;
+        H_sq = ((Z_re - a).^2+(Z_im - b).^2).*((Z_re - a).^2+(Z_im + b).^2);
+        logH = 10*log10(H_sq);
 
-        logZ = 10*log10(Z_sq)+gain;
-        logZ(logZ<-120) = -120;
+        Z_sq = ((Re - a).^2+(Im - b).^2).*((Re - a).^2+(Im + b).^2);
+        logZ = 10*log10(Z_sq);
+        logZ(logZ<-60) = -60;
 
-        logCircZ = 10*log10(circZ_sq)+gain;
-        logCircZ(logCircZ<-120) = -120;
+        circZ_sq = ((circX - a).^2+(circY - b).^2).*((circX - a).^2+(circY + b).^2);
+        logCircZ = 10*log10(circZ_sq);
+        logCircZ(logCircZ<-60) = -60;
     end
 
     function update
@@ -237,7 +140,7 @@ function main
         set(unitCircleBottom,'ZData',logCircZ);
         
         % ECG
-        filtered = filter(b_coeff, a_coeff, data);
+        filtered = filter(b_coeff, 1, data);
         pECG.set('YData', filtered);
         yFFT = real(fft(filtered));
         yFFT = 10*log10(yFFT(1:end/2+1).^2);
